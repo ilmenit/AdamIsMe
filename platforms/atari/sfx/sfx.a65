@@ -1,0 +1,90 @@
+;
+; SFX
+; example by raster/c.p.u., 2006,2009
+;
+;
+STEREOMODE	equ 0				;0 => compile RMTplayer for mono 4 tracks
+;								;1 => compile RMTplayer for stereo 8 tracks
+;								;2 => compile RMTplayer for 4 tracks stereo L1 R2 R3 L4
+;								;3 => compile RMTplayer for 4 tracks stereo L1 L2 R3 R4
+;
+;
+	icl "addresses.a65"			;include addresses
+	icl "rmtplayr.a65"			;include RMT player routine
+;
+;
+	opt h-						;RMT module is standard Atari binary file already
+	ins "sfx.rmt"				;include music RMT module
+	opt h+
+;
+;
+;
+	org SFX_CODE 
+start
+	lda #$F0					;initial value
+	sta RMTSFXVOLUME			;sfx note volume * 16 (0,16,32,...,240)
+;
+	lda #$ff					;initial value
+	sta sfx_effect
+;
+	ldx #<MODUL					;low byte of RMT module to X reg
+	ldy #>MODUL					;hi byte of RMT module to Y reg
+	lda track_to_play
+	jsr RASTERMUSICTRACKER		;Init
+
+;
+	ldy #<vbi
+	ldx #>vbi
+	lda #$07
+	jsr $e45c					;Start VBI routine
+	rts
+	
+start2
+    mwa	$224 old_vbi
+	rts
+;
+
+; restore old VBI routine
+stop    
+	ldy old_vbi
+	ldx old_vbi+1
+	lda #$07
+	jsr $e45c					;Start VBI routine
+    rts
+;
+vbi
+    lda music_plays
+    cmp #0
+    beq end_vbi
+;
+	lda sfx_effect
+	bmi lab2
+	asl @						; * 2
+	tay							;Y = 2,4,..,16	instrument number * 2 (0,2,4,..,126)
+	ldx #3						;X = 3			channel (0..3 or 0..7 for stereo module)
+	lda #0						;A = 12			note (0..60)
+	jsr RASTERMUSICTRACKER+15	;RMT_SFX start tone (It works only if FEAT_SFX is enabled !!!)
+;
+	lda #$ff
+	sta sfx_effect				;reinit value
+;
+lab2
+	jsr RASTERMUSICTRACKER+3	;1 play
+
+end_vbi
+;
+	jmp $e462					;end vbi
+;
+;
+;
+;old_vbi dta a ($C28A)
+old_vbi dta 0,0
+
+sfx_effect dta 0				;sfx number variable
+track_to_play dta 0				;track to play
+music_plays dta 0				;1 if plays
+;
+;
+;
+;
+;that's all... :-)

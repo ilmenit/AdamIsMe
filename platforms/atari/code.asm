@@ -1,0 +1,181 @@
+.case		on
+
+.include        "atari.inc"
+.macpack        atari 
+
+.export 	_local_x
+.export 	_local_y
+.export 	_local_index
+.export 	_local_type
+.export 	_local_text_type
+.export 	_local_flags
+.export 	_local_temp1
+.export 	_local_temp2
+.export 	_video_ptr1
+.export 	_video_ptr2
+.export 	_display_list1
+.export 	_display_list2
+.export     _display_font_page1
+.export     _display_font_page2
+.export     _game_font_page1
+.export     _game_font_page2
+.export		_galaxy_font_page1
+.export		_galaxy_font_page2
+.export		_dl_handler
+.export		_background_color
+
+.segment "ZEROPAGE"
+regA: .byte 0
+_local_x: .byte 0
+_local_y: .byte 0
+_local_index: .byte 0
+_local_type: .byte 0
+_local_text_type: .byte 0
+_local_flags: .byte 0
+_local_temp1: .byte 0
+_local_temp2: .byte 0
+
+.segment "GFX"
+
+game_font1:
+.repeat 4, i
+	.incbin "gfx/final.fnt",i*2*32*8,32*8
+.endrepeat
+
+game_font2:
+.repeat 4, i
+	.incbin "gfx/final.fnt",i*2*32*8+32*8,32*8
+.endrepeat
+
+_galaxy_font1:
+.repeat 4, i
+	.incbin "gfx/robbo_galaxy.fnt",i*2*32*8,32*8
+.endrepeat
+
+_galaxy_font2:
+.repeat 4, i
+	.incbin "gfx/robbo_galaxy.fnt",i*2*32*8+32*8,32*8
+.endrepeat
+
+_display_list1:
+    .byte   DL_BLK8
+    .byte   DL_BLK8 
+    .byte   DL_BLK8 | DL_DLI
+    .repeat 12, index
+		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
+		.word   (_screen_memory1 + (40*index))
+		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI 
+		.word   (_screen_memory1 + (40*index))
+    .endrepeat
+    .byte   DL_BLK1 | DL_DLI 
+    .byte   DL_JVB 
+    .word   _display_list1 
+
+_display_list2:
+    .byte   DL_BLK8
+    .byte   DL_BLK8 
+    .byte   DL_BLK8 | DL_DLI
+    .repeat 12, index
+		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
+		.word   (_screen_memory2 + (40*index))
+		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI 
+		.word   (_screen_memory2 + (40*index))
+    .endrepeat
+    .byte   DL_BLK1 | DL_DLI 
+    .byte   DL_JVB 
+    .word   _display_list2 
+
+    
+_screen_memory1:   
+    .repeat 24*40/16
+    .byte 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+    .endrepeat
+
+_screen_memory2:   
+    .repeat 24*40/16
+    .byte 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+    .endrepeat
+
+.segment "DATA"
+
+;;;;;;;;;;;;;;; These are used to display fonts and can be changed
+_display_font_page1:
+	.byte   .hibyte(game_font1)
+
+_display_font_page2:
+	.byte   .hibyte(game_font2)
+
+;;;;;;;;;;;;;;; These point to specific pages 
+
+_game_font_page1:
+	.byte   .hibyte(game_font1)
+
+_game_font_page2:
+	.byte   .hibyte(game_font2)
+
+_galaxy_font_page1:
+	.byte   .hibyte(_galaxy_font1)
+
+_galaxy_font_page2:
+	.byte   .hibyte(_galaxy_font2)
+
+_video_ptr1:    
+    .word   _screen_memory1
+_video_ptr2:    
+    .word   _screen_memory2
+
+_background_color:
+   .byte 0
+
+.segment	"CODE"
+
+.macro DLINEW handler
+	LDA	#<handler		
+	STA	VDSLST
+	LDA	#>handler
+	STA	VDSLST+1
+	lda regA
+	rti
+.endmacro 
+
+_dl_handler:
+ pha
+ lda $D40B ;VCOUNT
+ cmp #$6e ; if bottom of screen
+ bcs bottom_handler
+ cmp #$10 ; if bottom of screen
+ bcc up_handler
+ pha ; push VCOUNT
+ pla ; pop VCOUNT to a
+ ; every 8th line change the font set
+ lsr a
+ lsr a
+ lsr a
+ bcc set_second
+ ;; Set first font
+ lda _display_font_page1
+ sta $D409
+ jmp handler_end
+set_second:
+  ;; Set second font
+ lda _display_font_page2
+ sta $D409
+handler_end:
+ pla
+ rti
+
+bottom_handler:
+ ; set black color below playfield
+ sta WSYNC
+ lda #$00
+ sta $D01A
+ pla
+ rti 
+
+up_handler:
+ ; set color of the playfield (the top part is covered by OS shadow register - black color)
+ sta WSYNC
+ lda _background_color
+ sta $D01A
+ pla
+ rti 

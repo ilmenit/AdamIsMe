@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{d029aaf1-e29a-43c2-8aac-5af329259d15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\Allegro">
+      <UniqueIdentifier>{bacf4d7e-529f-4c41-8b92-e5177fa66b02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\Allegro\external">
+      <UniqueIdentifier>{4b3e8e81-6f1a-46dc-a439-83013882e92d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common\data.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\interact.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\lookup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\move.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\rules.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\you.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\external_data.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common\level.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="platforms\allegro\allegro_fn.c">
+      <Filter>platform\Allegro</Filter>
+    </ClCompile>
+    <ClCompile Include="platforms\allegro\editor.c">
+      <Filter>platform\Allegro</Filter>
+    </ClCompile>
+    <ClCompile Include="platforms\allegro\atari_gfx.c">
+      <Filter>platform\Allegro</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common\definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\extern.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\headers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\my_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\preprocess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common\level.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="platforms\allegro\allegro_fn.h">
+      <Filter>platform\Allegro</Filter>
+    </ClInclude>
+    <ClInclude Include="platforms\allegro\external\nuklear.h">
+      <Filter>platform\Allegro\external</Filter>
+    </ClInclude>
+    <ClInclude Include="platforms\allegro\external\nuklear_allegro5.h">
+      <Filter>platform\Allegro\external</Filter>
+    </ClInclude>
+    <ClInclude Include="platforms\allegro\editor.h">
+      <Filter>platform\Allegro</Filter>
+    </ClInclude>
+    <ClInclude Include="platforms\allegro\atari_gfx.h">
+      <Filter>platform\Allegro</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

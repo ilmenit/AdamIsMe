@@ -1,0 +1,11 @@
+@echo off
+cd common
+del *.o
+del *.lst
+cd ..
+cd platforms
+cd atari
+del *.o
+del *.lst
+cd ..
+cd ..

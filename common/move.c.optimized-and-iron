@@ -1,0 +1,384 @@
+#include "extern.h"
+
+/*
+ THIS FILE IS HEAVILY OPTIMIZED TO MINIMIZE NUMBER OF PASSES
+ I DON't EXPECT ANYONE EVEN MYSELF TO UNDERSTAND HOW IT WORKS AFTER A WHILE ;-)
+
+ Flags are reused because we have only 8 in byte and we want to keep only single processing of each byte in a pass
+ 1. Push flag is removed after it's replaced by move, when pushed. This flag is reused as Move Accepted that tells that object can move
+ 2. Open and Shut flags are needed only temporarily and are stored in final map only when paired. We use local_flags to pass these flags to the next check
+*/
+#define PREPROCESS_NONE		0x0
+
+// Preprocessing move
+#define PREPROCESS_MOVING	0x1
+#define PREPROCESS_PUSH		0x2
+// we are reusing the PUSH bit to make one free 
+#define PREPROCESS_MOVE_ACCEPTED 0x2
+#define PREPROCESS_STOP		0x4
+#define PREPROCESS_FINISH   0x8
+
+// additional flags
+#define PREPROCESS_OPEN     0x10
+#define PREPROCESS_SHUT     0x20
+#define PREPROCESS_IRON     0x40
+#define PREPROCESS_MAGNET   0x80
+
+bool something_moving;
+
+// MOVE
+/*
+	// Standard move and push
+
+	initial(objects)
+	.=...####@..=.
+	.====####@..=.
+
+	// preprocess - set on map helping markers (can move for PUSH, moving for MOVE, STOP for wall)
+	.S...PPPPM..S.
+	.SSSSPPPPM..S.
+
+	// process phase 1 - apply force - from right to left
+	// change all PUSH to MOVE if one to the right is MOVE
+	// if NONE and to the right is MOVE, then make it FINISH
+	.S..FMMMMM..S.
+	.SSSSMMMMM..S.
+
+	// process phase 2 - pass FINISH info back
+	// from left to right mark all MOVE as OK
+	.S..FFFFFF..S.
+	.SSSSMMMMM..S.
+
+	// process phase 3 - changing position
+	// change position of objects that stay on FINISH
+
+	////////////////////////////////////////////////////////
+	// Move and push with Open (Key) /shUt (Door) where Door is also STOP
+	////////////////////////////////////////////////////////
+	.=...DK##@..=.
+
+	// preprocess - set on map helping markers 
+	.S...SPPPM..S. - values
+	.....UO....... - flags
+
+	// process phase 1 - apply force - from right to left
+	// STANDARD: if to the right is MOVE and if current is PUSH then make it MOVE 
+	// STANDARD: if to the right is MOVE and if current is NONE then make it FINISH
+	// OPENSHUT: if to the right is MOVE and (if has flags SHUT and to he right has flags OPEN or OPEN and to the right has SHUT), then make it FINISH
+	.S...FMMMM..S.
+	.....UO....... - flags
+
+	*/
+
+void check_force()
+{
+	// local_temp1 is the previous one 
+	// local_type is the current one
+	local_type = MapGet(local_x, local_y);
+	
+	// storing these flags temporary to pass to the next check_force as previous flags 
+	local_flags = local_type & (PREPROCESS_OPEN | PREPROCESS_SHUT);
+	// if previous (to the right in "right to left") is moving
+	if ( local_temp1 & PREPROCESS_MOVING)
+	{
+		if ( local_type & PREPROCESS_PUSH)
+		{
+			local_type |= PREPROCESS_MOVING;
+		}
+		else if ( ! (local_type & PREPROCESS_STOP) )
+		{
+			local_type |= PREPROCESS_FINISH;
+		}
+	}
+	if (local_temp1 & PREPROCESS_IRON)
+	{
+		if (!(local_type & PREPROCESS_STOP) && !(local_type & PREPROCESS_MAGNET))
+			local_type |= PREPROCESS_IRON;
+	}
+	if ( local_type & PREPROCESS_OPEN )
+	{
+		if (!(local_temp1 & PREPROCESS_SHUT))
+			local_type &= (~PREPROCESS_OPEN);
+		else
+		{
+			// this one can be moved-in
+			if (local_temp1 & PREPROCESS_MOVING)
+				local_type |= PREPROCESS_FINISH;
+		}
+	}
+	if ( local_type & PREPROCESS_SHUT )
+	{
+		if (!(local_temp1 & PREPROCESS_OPEN))
+			local_type &= (~PREPROCESS_SHUT);
+		else
+		{
+			// this one can be moved-in
+			if (local_temp1 & PREPROCESS_MOVING)
+				local_type |= PREPROCESS_FINISH;
+		}
+	}
+
+	local_type &= (~PREPROCESS_PUSH); 
+	MapSet(local_x, local_y, local_type);
+
+	local_temp1 = local_type | local_flags;
+}
+
+void pass_info_back()
+{
+	local_type = MapGet(local_x, local_y);
+
+	local_flags = local_type & PREPROCESS_MAGNET;
+	// local_temp1 is previous
+	// local_type is current
+	if ( (local_temp1 & PREPROCESS_FINISH) || (local_temp1 & PREPROCESS_MOVE_ACCEPTED) )
+	{		
+		if ( local_type & PREPROCESS_MOVING)
+		{
+			local_type |= PREPROCESS_MOVE_ACCEPTED;
+		}
+	}
+
+	// we do not mark magnet itself as magnet, only it's ray
+	if (local_type & PREPROCESS_MAGNET)
+	{
+		local_type &= (~PREPROCESS_MAGNET);
+	}
+
+	if (local_type & PREPROCESS_IRON)
+	{
+		// pull to magnet itself only if it's not STOP
+		if (local_temp1 & PREPROCESS_MAGNET)
+		{
+			if (local_temp1 & PREPROCESS_STOP)
+				local_flags = PREPROCESS_MAGNET;
+			else
+				local_type |= PREPROCESS_MAGNET;
+		}
+	}
+
+	// local_temp1 is the previous one
+	// local_type is the current one
+
+	if (local_temp1 & PREPROCESS_OPEN)
+	{
+		local_type |= PREPROCESS_SHUT;
+	}
+	if (local_type & PREPROCESS_SHUT)
+	{
+		local_type |= PREPROCESS_OPEN;
+	}
+
+	MapSet(local_x, local_y, local_type);
+	local_temp1 = local_type | local_flags;
+}
+
+void apply_force(byte direction)
+{
+	switch (direction)
+	{
+	case DIR_LEFT:
+		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+		{
+			local_temp1 = MapGet(MAP_SIZE_X-1, local_y);
+			// Remove from local_temp1 (previous) info about push
+			local_temp1 &= (~PREPROCESS_PUSH); // Free flags 
+			// free flags on map but keep in local_temp1 info about SHUT and OPEN
+			MapSet(MAP_SIZE_X - 1, local_y, local_temp1 & (~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)); 
+
+			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
+			{
+				check_force();
+			}
+			local_temp1 = MapGet(0, local_y);
+
+			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
+			{
+				pass_info_back();
+			}
+		}
+		break;
+	case DIR_RIGHT:
+		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+		{
+			local_temp1 = MapGet(0, local_y);
+			local_temp1 &= (~PREPROCESS_PUSH); // Free flags
+			MapSet(0, local_y, local_temp1 & (~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+
+			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
+			{
+				check_force();
+			}
+			local_temp1 = MapGet(MAP_SIZE_X - 1, local_y);
+
+			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
+			{
+				pass_info_back();
+			}
+		}
+		break;
+	case DIR_DOWN:
+		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+		{
+			local_temp1 = MapGet(local_x, 0);
+			local_temp1 &= (~PREPROCESS_PUSH); // Free flags 
+			MapSet(local_x, 0, local_temp1 & (~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)); 
+
+			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
+			{
+				check_force();
+			}
+			local_temp1 = MapGet(local_x, MAP_SIZE_Y - 1);
+
+			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
+			{
+				pass_info_back();
+			}
+		}
+		break;
+	case DIR_UP:
+		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+		{
+			local_temp1 = MapGet(local_x, MAP_SIZE_Y - 1);
+			local_temp1 &= (~PREPROCESS_PUSH); 
+			MapSet(local_x, MAP_SIZE_Y - 1, local_temp1 & (~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)); 
+
+			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
+			{
+				check_force();
+			}
+			local_temp1 = MapGet(local_x, 0);
+
+			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
+			{
+				pass_info_back();
+			}
+		}
+		break;
+	}
+
+
+}
+
+// this function goes through objects and according to their properties prepares temp map for quick interactions
+void preprocess_move_and_push(byte preprocess_type, byte direction) // preprocess type can be YOU or MOVE,  depending if the player is moving or other objects
+{
+	bool magnet_moving = false;
+	bool iron_exists = false;
+
+	// clear preprocessed data
+	memset(level.map, PREPROCESS_NONE, sizeof(level.map));
+	something_moving = false;
+
+	for (local_index = 0; local_index < last_obj_index; ++local_index)
+	{
+		if (IS_KILLED(local_index))
+			continue;
+
+		local_type = obj_type[local_index];
+		// open/shut flags
+		local_flags = 0;
+		if (obj_prop[local_type][PROP_OPEN])
+			local_flags |= PREPROCESS_OPEN;
+		if (obj_prop[local_type][PROP_SHUT])
+			local_flags |= PREPROCESS_SHUT;
+		if (obj_prop[local_type][PROP_IRON])
+		{
+			local_flags |= PREPROCESS_IRON;
+			iron_exists = true;
+		}
+		// magnet has reversed impact to current move check
+		if (obj_prop[local_type][PROP_PULL] && direction == reverted_direction_lookup[obj_direction[local_index] & DIR_MASK])
+		{
+			local_flags |= PREPROCESS_MAGNET;
+			magnet_moving = true;
+		}
+		if (obj_prop[local_type][preprocess_type] && obj_direction[local_index] == direction)
+		{
+			local_flags |= PREPROCESS_MOVING;
+			something_moving = true;
+		}
+		else if (obj_prop[local_type][PROP_PUSH])
+		{
+			local_flags |= PREPROCESS_PUSH;
+		}
+		else if (obj_prop[local_type][PROP_STOP])
+		{
+			local_flags |= PREPROCESS_STOP;
+		}
+
+		if (local_flags != PREPROCESS_NONE)
+		{
+			local_x = obj_x[local_index];
+			local_y = obj_y[local_index];
+			local_flags |= MapGet(local_x, local_y);
+			MapSet(local_x, local_y, local_flags);
+		}
+	}
+	if (iron_exists && magnet_moving)
+		something_moving = true;
+}
+
+void move_ok_ones(byte preprocess_type, byte direction)
+{
+	for (local_index = 0; local_index < last_obj_index; ++local_index)
+	{
+		if (IS_KILLED(local_index))
+			continue;
+
+		local_type = obj_type[local_index];
+		if (obj_prop[local_type][PROP_PUSH] || obj_prop[local_type][preprocess_type] || obj_prop[local_type][PROP_IRON])
+		{
+			local_x = obj_x[local_index];
+			local_y = obj_y[local_index];
+			local_temp1 = MapGet(local_x, local_y);
+
+			if (
+					/* if FINISH, then always can move*/
+					(local_temp1 & PREPROCESS_MOVE_ACCEPTED ||
+					/* if MOVING but it's blocked, then can only move if has paired OPEN/SHUT*/
+						( 
+							/* if MOVING but it's blocked, then can only move if has paired OPEN/SHUT*/
+							(local_temp1 & PREPROCESS_MOVING &&
+								( 
+									((local_temp1 & PREPROCESS_OPEN) && obj_prop[local_type][PROP_OPEN]) ||
+									((local_temp1 & PREPROCESS_SHUT) && obj_prop[local_type][PROP_SHUT])
+								)
+							)
+						) 
+					)
+					||
+					(
+						(local_temp1 & PREPROCESS_MAGNET && obj_prop[local_type][PROP_IRON])
+					)
+				)
+			{
+				obj_x[local_index] += move_direction_lookup_x[direction];
+				obj_y[local_index] += move_direction_lookup_y[direction];
+			}
+			else
+			{
+				if (obj_prop[local_type][preprocess_type] && direction == obj_direction[local_index] && !obj_prop[local_type][PROP_YOU])
+					obj_direction[local_index] = reverted_direction_lookup[obj_direction[local_index] & DIR_MASK] | DIR_CHANGED;
+			}
+		}
+	}
+}
+
+void perform_move(byte preprocess_type, byte direction)
+{
+	preprocess_move_and_push(preprocess_type, direction);
+	if (!something_moving)
+		return;
+	apply_force(direction);
+	move_ok_ones(preprocess_type, direction);
+}
+
+void handle_move()
+{
+	// move of objects with PROP_MOVE
+	perform_move(PROP_MOVE, DIR_RIGHT);
+	perform_move(PROP_MOVE, DIR_UP);
+	perform_move(PROP_MOVE, DIR_LEFT);
+	perform_move(PROP_MOVE, DIR_DOWN);
+}

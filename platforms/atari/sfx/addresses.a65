@@ -1,0 +1,3 @@
+PLAYER    equ $2300
+MODUL     equ $2700
+SFX_CODE  equ $4930

@@ -1,0 +1,1 @@
+subst d: c:\d

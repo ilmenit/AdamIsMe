@@ -1,0 +1,694 @@
+#define ALLEGRO_STATICLINK 1
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_native_dialog.h>
+#include "../../common/platform.h"
+#include "../../common/extern.h"
+#include "allegro_fn.h"
+#include "atari_gfx.h"
+#include <stdio.h>
+#include <sys/types.h>
+#include <io.h>
+
+//////////////////////////////////////////////////////
+const char *level_set_name;
+
+// just one character
+#define REPRESENTATION_SINGLE     0x0
+// four next characters, according to direction
+#define REPRESENTATION_DIRECTIONS 0x1
+#define REPRESENTATION_ANIMATED   0x2
+
+bool editor_active = false;
+
+byte representation_obj[TYPE_MAX] = {
+	36, // robbo
+	35, // ship
+	54, // wall
+	57, // box
+	62, // void
+	60, // key
+	59, // door
+	56, // bolt
+	61, // bush
+	50, // bat // !!!!
+	55, // bomb
+	48, // bang
+	52, // imp
+	58, // rock
+	44, // magnet
+	0xFF // text
+};
+
+byte representation_type[TYPE_MAX] = {
+	REPRESENTATION_DIRECTIONS | REPRESENTATION_ANIMATED,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE | REPRESENTATION_ANIMATED,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_SINGLE | REPRESENTATION_ANIMATED,
+	REPRESENTATION_SINGLE | REPRESENTATION_ANIMATED,
+	REPRESENTATION_SINGLE,
+	REPRESENTATION_DIRECTIONS,
+	REPRESENTATION_SINGLE
+};
+
+byte representation_text[] = {
+	// objects
+	16, 17, 18, 19, 20, 21, 22, 23,
+	24, 25, 26, 27, 28, 29, 30, 31,
+
+	// properties
+	0, 1, 2, 3, 4, 5, 6, 7,
+	8, 9, 10, 11, 12, 13, 14, 15,
+
+	// operators
+	32, 33, 34
+};
+
+byte representation_galaxy[] = {
+	// worlds (8)
+	22, 23, 24, 25, 26, 27, 28, 29,
+
+	// walls (8)
+	54, 55, 56, 57, 58, 59, 60, 61,
+
+	// level numbers (8)
+	7, 8, 9, 10, 11, 12, 13, 14,
+
+	// locks (8)
+	38, 39, 40, 41, 42, 43, 44, 45,
+
+	// backgrounds (6)
+	32, 33, 34, 35, 36, 37, 
+
+	// shuttle + shuttle landed (1) 
+	5, 53
+};
+
+//////////////////////////////////////////////////////
+FILE *level_set_file_pointer;
+
+ALLEGRO_DISPLAY * display;
+ALLEGRO_FONT * font;
+ALLEGRO_EVENT_QUEUE *queue;
+ALLEGRO_TIMER *timer;
+ALLEGRO_EVENT event;
+
+ALLEGRO_BITMAP *tiles_atlas[TILESET_MAX];
+ALLEGRO_BITMAP *tiles_atlas_indices[TILESET_MAX];
+
+ALLEGRO_BITMAP *current_tiles_atlas;
+
+ALLEGRO_BITMAP *tiles[TILES_COLUMNS * TILES_ROWS];
+const char *dialog_tile = "Robbo is You";
+
+/// Required functions by game engine
+
+void audio_music(unsigned char music_id)
+{
+}
+
+void audio_sfx(unsigned char sfx_id)
+{
+
+}
+
+
+
+void load_level_data()
+{
+	long offset = sizeof(struct level_set_header_def);
+	offset += (long)level_number * ((long) sizeof(struct level_def));
+	fseek(level_set_file_pointer, offset, SEEK_SET);
+	fread(&level, sizeof(struct level_def), 1, level_set_file_pointer);
+}
+
+void set_tileset()
+{
+	current_tiles_atlas = tiles_atlas[level.tileset_number];
+
+	for (int i = 0; i < TILES_COLUMNS * TILES_ROWS; ++i)
+	{
+		// remove old bitmaps
+		if (tiles[i] != NULL)
+		{
+			al_destroy_bitmap(tiles[i]);
+			tiles[i] = NULL;
+		}
+		// create new bitmap
+		tiles[i] = al_create_bitmap(SCREEN_TILE_SIZE, SCREEN_TILE_SIZE);
+
+		al_set_target_bitmap(tiles[i]);
+
+		int tile_x = i % TILES_COLUMNS;
+		int tile_y = i / TILES_COLUMNS;
+		int bitmap_x = tile_x * PNG_TILE_SIZE;
+		int bitmap_y = tile_y * PNG_TILE_SIZE;
+
+		al_draw_scaled_bitmap(current_tiles_atlas,
+			bitmap_x, bitmap_y, PNG_TILE_SIZE, PNG_TILE_SIZE,
+			0, 0, SCREEN_TILE_SIZE, SCREEN_TILE_SIZE, 0);
+	}
+	al_set_target_bitmap(al_get_backbuffer(display));
+}
+
+void draw_tile(int map_x, int map_y, int tile_id)
+{
+	int dest_x = SCREEN_MAP_POS_X + map_x * SCREEN_TILE_SIZE;
+	int dest_y = SCREEN_MAP_POS_Y + map_y * SCREEN_TILE_SIZE;
+	if (tile_id < _countof(tiles))
+		al_draw_bitmap(tiles[tile_id], dest_x, dest_y, 0);
+}
+
+void draw_direction(int map_x, int map_y, int dir)
+{
+	int dest_x = SCREEN_MAP_POS_X + map_x * SCREEN_TILE_SIZE + SCREEN_TILE_SIZE / 2;
+	int dest_y = SCREEN_MAP_POS_Y + map_y * SCREEN_TILE_SIZE + SCREEN_TILE_SIZE / 2;
+	al_draw_scaled_bitmap(tiles[FIRST_DIRECTION_TILE + dir], 0, 0, SCREEN_TILE_SIZE, SCREEN_TILE_SIZE, dest_x, dest_y, SCREEN_TILE_SIZE / 2, SCREEN_TILE_SIZE / 2, 0);
+}
+
+byte get_representation(byte obj, byte index)
+{
+	byte representation;
+	byte type;
+	if (obj == TYPE_TEXT)
+	{
+		type = obj_text_type[index];
+		representation = representation_text[type];
+	}
+	else
+		representation = representation_obj[obj];
+	return representation;
+}
+
+void galaxy_draw_screen()
+{
+#if (!EDITOR_ENABLED)
+	al_clear_to_color(al_map_rgb(20, 20, 40));
+#endif
+
+	// draw border over the playfield
+	al_draw_filled_rounded_rectangle(SCREEN_MAP_POS_X - 10, SCREEN_MAP_POS_Y - 10,
+		SCREEN_MAP_POS_X + MAP_SIZE_X * SCREEN_TILE_SIZE + 10, SCREEN_MAP_POS_Y + MAP_SIZE_Y * SCREEN_TILE_SIZE + 10,
+		10, 10,
+		atari_color_to_allegro_color(level.level_colors[0]));
+
+	// draw background
+	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+	{
+		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+		{
+			local_type = MapGet(local_x, local_y);
+			if (local_type == LEVEL_DECODE_EMPTY)
+				draw_tile(local_x, local_y, local_type);
+			else if (local_type >= DECODE_LEVEL_NUMBERS_MIN && local_type < DECODE_BACKGROUND_MAX)
+			{
+				draw_tile(local_x, local_y, representation_galaxy[local_type]);
+			}
+			else
+				draw_tile(local_x, local_y, representation_galaxy[local_type]);
+		}
+	}
+
+	// draw collected nuts
+	if (!editor_active)
+	{
+		if (game_progress.completed_levels > 0)
+		{
+			byte lo = game_progress.completed_levels % 10;
+			draw_tile(MAP_SIZE_X - 1, 0, representation_galaxy[lo + DECODE_LEVEL_NUMBERS_MIN-1]);
+			byte hi = game_progress.completed_levels / 10;
+			draw_tile(MAP_SIZE_X - 2, 0, representation_galaxy[hi + DECODE_LEVEL_NUMBERS_MIN-1]);
+		}
+	}
+
+	// draw robbo or shuttle
+	if (game_progress.landed_on_world_number == SHUTTLE_IN_SPACE)
+		draw_tile(game_progress.galaxy_x, game_progress.galaxy_y, representation_galaxy[DECODE_SHUTTLE]);
+	else
+		draw_tile(game_progress.galaxy_x, game_progress.galaxy_y, (you_move_direction % 4));
+
+	// finish drawing
+	if (!editor_active)
+		al_flip_display();
+}
+
+extern byte editor_selected_direction;
+
+
+char *obj_names[] =
+{
+	"ROBO",
+	"SHIP",
+	"WALL",
+	"BOX ",
+	"VOID",
+	"KEY ",
+	"DOOR",
+	"BOLT",
+	"BUSH",
+	"BAT ",
+	"BOMB", 
+	"BANG",
+	"IMP ",
+	"ROCK",
+	"COIL",
+	"TEXT"
+};
+
+
+char *prop_names[] =
+{
+	"YOU",
+	"WIN",
+	"STOP",
+	"PUSH",
+	"SINK",
+	"OPEN",
+	"SHUT",
+	"PICK",
+	"KILL",
+	"MOVE",
+	"BOOM",
+	"FADE",
+	"ACID",
+	"TELE",
+	"MAGNET",
+	"IRON",
+};
+
+void show_rules()
+{
+	// draw border over the playfield
+	const int rules_width = 400;
+	const int pos_x = WINDOW_WIDTH - rules_width - 30;
+	al_draw_filled_rounded_rectangle(pos_x, 30,
+		WINDOW_WIDTH - 30, 770,
+		10, 10,
+		al_map_rgb(0, 20, 40));
+
+	int line = 1;
+	int i,j;
+	for (i = 0; i < TYPE_MAX; ++i)
+	{
+		for (j = 0; j < PROPERTY_MAX; ++j)
+		{
+			if (ObjPropGet(i,j))
+			{
+				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 10, line * 30 + 10, 0, obj_names[i]);
+				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 100, line * 30 + 10, 0, "is");
+				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 154, line * 30 + 10, 0, prop_names[j]);
+				++line;
+			}
+		}
+	}
+	// show has
+	for (j = 0; j < TYPE_MAX; ++j)
+	{
+		for (i = 0; i < TYPE_MAX; ++i)
+		{
+			if ( obj_has[j] & (one_lshift_lookup[i]) )
+			{
+				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 10, line * 30 + 10, 0, obj_names[j]);
+					al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 100, line * 30 + 10, 0, "has");
+					al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 174, line * 30 + 10, 0, obj_names[i]);
+					++line;
+			}
+		}
+	}
+}
+
+bool load_game_progress()
+{
+	return false;
+}
+
+void save_game_progress()
+{
+
+}
+
+void game_lost()
+{
+
+}
+
+bool drawing_front_buffer;
+
+void game_draw_screen()
+{
+	int local_type;
+	int pos_x;
+	int pos_y;
+	byte representation;
+	byte tile_buffer[MAP_SIZE_Y][MAP_SIZE_X];
+	const byte EMPTY_TILE = 63;
+	memset(tile_buffer, EMPTY_TILE, sizeof(tile_buffer));
+
+#if (!EDITOR_ENABLED)
+	al_clear_to_color(al_map_rgb(20, 20, 40));
+#endif
+	if (!editor_active)
+		show_rules();
+
+	// draw border over the playfield
+	al_draw_filled_rounded_rectangle(SCREEN_MAP_POS_X - 10, SCREEN_MAP_POS_Y - 10,
+		SCREEN_MAP_POS_X + MAP_SIZE_X * SCREEN_TILE_SIZE + 10, SCREEN_MAP_POS_Y + MAP_SIZE_Y * SCREEN_TILE_SIZE + 10,
+		10, 10,
+		atari_color_to_allegro_color(level.level_colors[0]));
+
+	for (int local_index = 0; local_index < last_obj_index; ++local_index)
+	{
+		if (IS_KILLED(local_index))
+			continue;
+		local_type = obj_type[local_index];
+		pos_x = obj_x[local_index];
+		pos_y = obj_y[local_index];
+		representation = get_representation(local_type, local_index);
+
+		if (local_type != TYPE_TEXT)
+		{
+			if (representation_type[local_type] & REPRESENTATION_DIRECTIONS)
+				representation += (obj_direction[local_index] & DIR_MASK);
+
+			if (drawing_front_buffer)
+			{
+				if (representation_type[local_type] & REPRESENTATION_ANIMATED)
+				{
+					if (representation_type[local_type] & REPRESENTATION_DIRECTIONS)
+						representation += 4;
+					else
+						representation += 1;
+				}
+			}
+		}
+
+		byte previous = tile_buffer[pos_y][pos_x];
+		if (previous == EMPTY_TILE ||
+			(
+				(drawing_front_buffer && representation < previous) ||
+				((!drawing_front_buffer) && representation >= previous)				
+			)
+			)
+		{
+			draw_tile(pos_x, pos_y, representation);
+			tile_buffer[pos_y][pos_x] = representation;
+		}
+
+		if (editor_active && editor_selected_direction != DIR_NONE)
+			draw_direction(pos_x, pos_y, obj_direction[local_index]);
+	}
+	if (!editor_active)
+		al_flip_display();
+};
+
+void game_get_action()
+{
+	bool action_taken = false;
+	while (!action_taken) {
+		al_wait_for_event(queue, &event);
+
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			drawing_front_buffer = !drawing_front_buffer;
+			game_draw_screen();
+		}
+		if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+		{
+#if (EDITOR_ENABLED)
+			game_state = LEVEL_QUIT;
+			action_taken = true;
+			break;
+#else
+			exit(0);
+#endif
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_ESCAPE:
+				game_state = LEVEL_QUIT;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_UP:
+				you_move_direction = DIR_UP;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_DOWN:
+				you_move_direction = DIR_DOWN;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_LEFT:
+				you_move_direction = DIR_LEFT;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_RIGHT:
+				you_move_direction = DIR_RIGHT;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_SPACE:
+			case ALLEGRO_KEY_LSHIFT:
+			case ALLEGRO_KEY_RSHIFT:
+			case ALLEGRO_KEY_LCTRL:
+			case ALLEGRO_KEY_RCTRL:
+				you_move_direction = DIR_NONE;
+				action_taken = true;
+				break;
+			}
+		}
+	}
+}
+
+
+void galaxy_get_action()
+{
+	bool action_taken = false;
+	while (!action_taken) {
+		al_wait_for_event(queue, &event);
+		if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+		{
+#if (EDITOR_ENABLED)
+			game_state = LEVEL_QUIT;
+			action_taken = true;
+			break;
+#else
+			exit(0);
+#endif
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_ESCAPE:
+				game_state = LEVEL_QUIT;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_UP:
+				if (game_progress.galaxy_y > 0)
+				{
+					local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1);
+					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
+						--game_progress.galaxy_y;
+				}
+				you_move_direction = DIR_UP;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_DOWN:
+				if (game_progress.galaxy_y < MAP_SIZE_Y - 1)
+				{
+					local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1);
+					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
+						++game_progress.galaxy_y;
+				}
+				you_move_direction = DIR_DOWN;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_LEFT:
+				if (game_progress.galaxy_x > 0)
+				{
+					local_type = MapGet(game_progress.galaxy_x-1, game_progress.galaxy_y);
+					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
+						--game_progress.galaxy_x;
+				}
+				action_taken = true;
+				you_move_direction = DIR_LEFT;
+				break;
+
+			case ALLEGRO_KEY_RIGHT:
+				if (game_progress.galaxy_x < MAP_SIZE_X - 1)
+				{
+					local_type = MapGet(game_progress.galaxy_x+1, game_progress.galaxy_y);
+					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
+						++game_progress.galaxy_x;
+				}
+				you_move_direction = DIR_RIGHT;
+				action_taken = true;
+				break;
+
+			case ALLEGRO_KEY_SPACE:
+			case ALLEGRO_KEY_LSHIFT:
+			case ALLEGRO_KEY_RSHIFT:
+			case ALLEGRO_KEY_LCTRL:
+			case ALLEGRO_KEY_RCTRL:
+				action_taken = true;
+				if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
+					game_state = GALAXY_TRIGGER;
+				break;
+			}
+		}
+	}
+	return;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+
+void galaxy_land_anim()
+{
+
+}
+
+void show_error(const char *error)
+{
+	al_show_native_message_box(
+		display,
+		dialog_tile,
+		"Error:",
+		error,
+		NULL,
+		ALLEGRO_MESSAGEBOX_ERROR
+	);
+}
+
+bool open_level_set()
+{
+	long file_size;
+	FILE *fp = fopen(level_set_name, "rb+");
+	if (fp == NULL)
+	{
+		al_show_native_message_box(
+			display,
+			"Robbo is You",
+			"Error:",
+			"Cannot open level set",
+			NULL,
+			ALLEGRO_MESSAGEBOX_ERROR
+		);
+		return false;
+	}
+
+	fseek(fp, 0L, SEEK_END);
+	file_size = ftell(fp);
+	fseek(fp, 0L, SEEK_SET);
+
+	// TO DO (allow loading set with smaller number of levels? or set is always full and only it's set as parameters?)
+
+	if (file_size != sizeof(struct level_set_def))
+	{
+		char message[2048];
+		sprintf(message,
+			"Wrong file size of level set! This compilation of editor requires:\n"
+			"NUMBER_OF_LEVELS:%d\n"
+			"MAP_SIZE_X:%d\n"
+			"MAP_SIZE_Y:%d\n",
+			LEVELS_MAX, MAP_SIZE_X, MAP_SIZE_Y
+		);
+		show_error(message);
+		return false;
+	}
+	if (level_set_file_pointer != NULL)
+	{
+		fclose(level_set_file_pointer);
+	}
+	level_set_file_pointer = fp;
+	return true;
+}
+
+void init_platform()
+{
+	const float FPS = 5;
+
+	al_init();
+	al_init_font_addon();
+	al_init_ttf_addon();
+	al_init_image_addon();
+	al_init_primitives_addon();
+
+	al_install_mouse();
+	al_install_keyboard();
+
+	al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
+	display = al_create_display(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	al_set_window_title(display, "Robbo is You - Level Editor");
+
+	// load assets
+	font = al_load_ttf_font("font/MapMaker.ttf", 22, 0);
+
+	tiles_atlas[0] = al_load_bitmap("gfx/final.png");
+	tiles_atlas_indices[0] = al_load_bitmap_flags("gfx/final.png", ALLEGRO_KEEP_INDEX);
+
+	tiles_atlas[1] = al_load_bitmap("gfx/robbo_galaxy.png");
+	tiles_atlas_indices[1] = al_load_bitmap_flags("gfx/robbo_galaxy.png", ALLEGRO_KEEP_INDEX);
+
+	// convert tiles_atlas to Atari FNT
+#if (EDITOR_ENABLED)
+	save_tiles_to_font(tiles_atlas_indices[0], "gfx/final.fnt");
+	save_tiles_to_font(tiles_atlas_indices[1], "gfx/robbo_galaxy.fnt");
+#endif
+
+	// load palette
+	load_atari_palette("gfx/palette/altirra.act");
+
+	// register events
+
+	queue = al_create_event_queue();
+	timer = al_create_timer(1.0 / FPS);
+
+	al_register_event_source(queue, al_get_mouse_event_source());
+	al_register_event_source(queue, al_get_keyboard_event_source());
+	al_register_event_source(queue, al_get_display_event_source(display));
+	al_register_event_source(queue, al_get_timer_event_source(timer));
+
+	al_start_timer(timer);
+
+#if (!EDITOR_ENABLED)
+	// open file pointer
+	level_set_name = "level_set/levels.riu";
+	level_set_file_pointer = fopen(level_set_name, "rb+");
+#endif
+}
+
+void set_palette()
+{
+	remap_palette(tiles_atlas_indices[level.tileset_number], tiles_atlas[level.tileset_number]);
+}
+
+void deinit()
+{
+	al_destroy_display(display);
+	al_destroy_event_queue(queue);
+
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+}
