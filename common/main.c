@@ -1,17 +1,9 @@
+// TODO: Move Atari platform specific things out of editor and Allegro
+// TODO: Make initial build for other CC65 platform using CONIO?
+// TODO: Undo - only when more memory is available?
+//       Not to interfere with game speed Undo could save state only if wait_for_timer has time to process (?) - SFX_VBI_COUNTER > 0
 // TODO: FIX rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
 //       How to do it? IDEA: mark on Map MULTIPLE and parse this one differently (reading from all objects) - how not to influence performance (skip reading)
-// TODO: performance for bottleneck operations (rules, move?) can be improved using map_lookup[index] insteadof MapGet/Set
-// TODO: ObjProp
-
-/*
-STORY:
-Chapter 2
-Returning to Earth with plans of enemy planetary system allowed to win long-lasting war.
-For this extraordinary achievement Robbo was granted the highest award - "Bolt of Valor".
-Meanwhile scientists discovered anomalous meta-galaxy, where standard laws of physics did not apply.
-Brave Robbo decided to join the research expedition and use extraterrestrial experience to scout this mysterious environment.
-The journey took 30 light-years and in a moment Robbo is going to land on the first of the strange worlds...
-*/
 
 #include "extern.h"
 #include "main.h"
@@ -22,12 +14,15 @@ void init_editor();
 void editor_loop();
 #endif
 
-byte planet_data[5][5] = {
-	{DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN },
-	{DECODE_WALLS_MIN, DECODE_LEVEL_NUMBERS_MIN + 0, DECODE_LEVEL_NUMBERS_MIN + 1, DECODE_LEVEL_NUMBERS_MIN + 2, DECODE_WALLS_MIN},
-	{DECODE_WALLS_MIN, DECODE_SHUTTLE_LANDED, DECODE_LEVEL_NUMBERS_MIN + 3, DECODE_LEVEL_NUMBERS_MIN + 4, DECODE_WALLS_MIN},
-	{DECODE_WALLS_MIN, DECODE_LEVEL_NUMBERS_MIN + 5, DECODE_LEVEL_NUMBERS_MIN + 6, DECODE_LEVEL_NUMBERS_MIN + 7, DECODE_WALLS_MIN},
-	{DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN},
+#define PLANET_DATA_X 5
+#define PLANET_DATA_Y 5
+
+byte planet_data[PLANET_DATA_X * PLANET_DATA_Y] = {
+	 DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN ,
+	 DECODE_WALLS_MIN, DECODE_LEVEL_NUMBERS_MIN + 0, DECODE_LEVEL_NUMBERS_MIN + 1, DECODE_LEVEL_NUMBERS_MIN + 2, DECODE_WALLS_MIN,
+	 DECODE_WALLS_MIN, DECODE_SHUTTLE_LANDED, DECODE_LEVEL_NUMBERS_MIN + 3, DECODE_LEVEL_NUMBERS_MIN + 4, DECODE_WALLS_MIN,
+	 DECODE_WALLS_MIN, DECODE_LEVEL_NUMBERS_MIN + 5, DECODE_LEVEL_NUMBERS_MIN + 6, DECODE_LEVEL_NUMBERS_MIN + 7, DECODE_WALLS_MIN,
+	 DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN, DECODE_WALLS_MIN
 };
 
 void clear_preprocess_helper()
@@ -37,11 +32,11 @@ void clear_preprocess_helper()
 
 void galaxy_display_planet()
 {
-	for (local_y = 0; local_y < 5; ++local_y)
+	for (local_y = 0; local_y < PLANET_DATA_Y; ++local_y)
 	{
-		for (local_x = 0; local_x < 5; ++local_x)
+		for (local_x = 0; local_x < PLANET_DATA_X; ++local_x)
 		{
-			local_type = planet_data[local_y][local_x];
+			local_type = planet_data[local_y * PLANET_DATA_X + local_x];
 
 			// set specific wall to the planet
 			if (local_type >= DECODE_WALLS_MIN && local_type < DECODE_WALLS_MAX)
@@ -82,11 +77,11 @@ void complete_level()
 void galaxy_check_trigger()
 {
 	local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y);
-	if (game_state == GALAXY_TRIGGER)
+	if (game_phase == GALAXY_TRIGGER)
 	{
 		if (local_type == DECODE_SHUTTLE_LANDED)
 		{
-			game_state = GALAXY_ONGOING;
+			game_phase = GALAXY_ONGOING;
 			game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
 			galaxy_takeoff();
 		}
@@ -94,17 +89,16 @@ void galaxy_check_trigger()
 		{
 			local_temp1 = local_type - DECODE_LEVEL_NUMBERS_MIN;
 			level_number = local_temp1 + game_progress.landed_on_world_number * LEVELS_PER_WORLD;
-			game_state = LEVEL_LOAD;
+			game_phase = LEVEL_LOAD;
 		}
 	}
-	else if (game_state == GALAXY_ONGOING)
+	else if (game_phase == GALAXY_ONGOING)
 	{
 		if (local_type >= DECODE_WORLDS_MIN && local_type < DECODE_WORLDS_MAX)
 		{
 			game_progress.landed_on_world_number = local_type - DECODE_WORLDS_MIN;
 			game_progress.landed_x = game_progress.galaxy_x;
 			game_progress.landed_y = game_progress.galaxy_y;
-			galaxy_land_anim();
 			audio_sfx(SFX_LANDING);
 			galaxy_display_planet();
 		}
@@ -131,25 +125,17 @@ void level_pass()
 
 	set_game_rules(); // on the beginning of level and after move of other objects
 
-	/*
-	if (!rule_exists[PROP_YOU])
-	{
-		game_state = LEVEL_LOST;
-		return;
-	};
-	*/
-
 	// there must be at least one object with YOU state
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
 			continue;
-		if (ObjPropGet(obj_type[local_index], PROP_YOU))
+		if (ObjPropGet(objects.type[local_index], PROP_YOU))
 			break;
 	}
 	if (local_index == last_obj_index)
 	{
-		game_state = LEVEL_LOST;
+		game_phase = LEVEL_LOST;
 		return;
 	}
 
@@ -176,7 +162,8 @@ void level_pass()
 void init_new_game()
 {
 	level_number = 0;
-	game_progress.completed_levels = 0;
+	memset(&game_progress, 0, sizeof(game_progress));
+	//game_progress.completed_levels = 0;
 	game_progress.galaxy_x = 0xFF; // position on the galaxy map
 	game_progress.galaxy_y = 0xFF; // position on the galaxy map
 	game_progress.landed_x = 0xFF; // position on the galaxy map
@@ -186,21 +173,28 @@ void init_new_game()
 void init_level()
 {
 	// initial setting of rules, before any move
-	game_state = LEVEL_ONGOING;
+	game_phase = LEVEL_ONGOING;
 	helpers.you_move_at_least_once = false;
+
+	helpers.rules_may_have_changed = true;
+
+	// initial parsing to extract "Something Is WORD", to have it used in the next processing
+	set_game_rules(); // on the beginning of level and after move of other objects
+
+	// parse then again
+	helpers.rules_may_have_changed = true;
 
 	// set at the beginning if there is something to PICK (to blink WIN objects from start)
 	helpers.pick_exists_as_object = false;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		if (ObjPropGet(obj_type[local_index], PROP_PICK))
+		if (ObjPropGet(objects.type[local_index], PROP_PICK))
 		{
 			helpers.pick_exists_as_object = true;
 			break;
 		}
 	}
 
-	helpers.rules_may_have_changed = true;
 }
 
 void title_screen()
@@ -211,33 +205,33 @@ void title_screen()
 
 void level_loop()
 {
-	while (game_state == LEVEL_LOAD || game_state == LEVEL_ONGOING)
+	while (game_phase == LEVEL_LOAD || game_phase == LEVEL_ONGOING)
 	{
-		if (game_state == LEVEL_LOAD)
+		if (game_phase == LEVEL_LOAD)
 		{
 			load_level();
 			init_level();
 			audio_music(MUSIC_LEVEL_1 + game_progress.landed_on_world_number % MUSIC_LEVEL_MAX);
 		}
-		while (game_state == LEVEL_ONGOING)
+		while (game_phase == LEVEL_ONGOING)
 		{
 			level_pass();
 		}
-		if (game_state == LEVEL_WON)
+		if (game_phase == LEVEL_WON)
 		{
 			audio_sfx(SFX_LEVEL_WON);
 			complete_level();
 		}
-		else if (game_state == LEVEL_LOST)
+		else if (game_phase == LEVEL_LOST)
 		{
 			if (helpers.you_move_at_least_once)
 			{
 				audio_sfx(SFX_LEVEL_LOST);
-				game_state = LEVEL_LOAD;
+				game_phase = LEVEL_LOAD;
 				game_lost();
 			}
 			else
-				game_state = LEVEL_QUIT;
+				game_phase = LEVEL_QUIT;
 		}
 	}
 }
@@ -252,8 +246,8 @@ void galaxy_loop()
 	else
 		audio_music(MUSIC_GALAXY);
 
-	game_state = GALAXY_ONGOING;
-	while (game_state == GALAXY_ONGOING)
+	game_phase = GALAXY_ONGOING;
+	while (game_phase == GALAXY_ONGOING)
 	{
 		galaxy_pass();
 	}
@@ -281,7 +275,7 @@ int main(void)
 	}
 
 	game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
-	game_state = LEVEL_LOAD;
+	game_phase = LEVEL_LOAD;
 
 #if EDITOR_ENABLED
 	init_editor();

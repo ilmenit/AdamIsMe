@@ -22,3 +22,4 @@ bool load_atari_palette(const char *filename);
 void remap_palette(struct ALLEGRO_BITMAP *indices, struct ALLEGRO_BITMAP *bitmap);
 ALLEGRO_COLOR atari_color_to_allegro_color(byte atari_color);
 void save_tiles_to_font(struct ALLEGRO_BITMAP *indices, char *fnt_name);
+void save_inverse_information(struct ALLEGRO_BITMAP *indices, char *fnt_name);

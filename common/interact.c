@@ -1,4 +1,6 @@
 // This file handles interactions of objects on the same cell, after move
+// OPEN/SHUT interaction happens AFTER move, therefore if during the move object is losing one of these properties (e.g. KEY IS WORD), 
+// it won't interact, so object can pass through closed door.
 #include "extern.h"
 
 #define INTERACT_NONE 0x0
@@ -22,21 +24,26 @@ void create_object(byte type)
 	{
 		if (!IS_KILLED(local_text_type))
 			continue;
-		obj_type[local_text_type] = type;
+		objects.type[local_text_type] = type;
 
 		// check if text
 		if (type == TYPE_TEXT)
 		{
 			if (local_text_type >= last_text_index)
 				last_text_index = local_text_type + 1;
+
+			// created TEXT should go through all interactions
+			if (last_text_index > last_obj_index)
+				last_obj_index = last_text_index;
 		}
+		if (ObjPropGet(type, PROP_PICK))
+			++helpers.pick_exists_as_object;
 
+		objects.text_type[local_text_type] = local_type;
 
-		obj_text_type[local_text_type] = local_type;
-
-		obj_x[local_text_type] = local_temp1;
-		obj_y[local_text_type] = local_temp2;
-		obj_direction[local_text_type] = create_direction | DIR_CREATED;
+		objects.x[local_text_type] = local_temp1;
+		objects.y[local_text_type] = local_temp2;
+		objects.direction[local_text_type] = create_direction | DIR_CREATED;
 
 		// move last_obj_index
 		if (local_text_type >= last_obj_index)
@@ -54,17 +61,13 @@ void teleport()
 	// find current TELE object
 	for (local_temp1 = 0; local_temp1 < last_obj_index; ++local_temp1)
 	{
-		if (IS_KILLED(local_temp1))
-			continue;
-
-		local_temp2 = obj_type[local_temp1];
-		if (!ObjPropGet(local_temp2, PROP_TELE))
+		if (!ObjPropGet(objects.type[local_temp1], PROP_TELE) || IS_KILLED(local_temp1))
 			continue;
 
 		// local_text_type is index of current TELE object
 		local_text_type = local_temp1;
 
-		if (obj_x[local_temp1] == local_x && obj_y[local_temp1] == local_y)
+		if (objects.x[local_temp1] == local_x && objects.y[local_temp1] == local_y)
 		{
 			// find new TELE on different location
 			do
@@ -73,21 +76,16 @@ void teleport()
 				if (local_temp1 == last_obj_index)
 					local_temp1 = 0;
 
-				if (IS_KILLED(local_temp1))
+				if (!ObjPropGet(objects.type[local_temp1], PROP_TELE) || IS_KILLED(local_temp1))
 					continue;
 
-				// local_temp2 - obj_type
-				local_temp2 = obj_type[local_temp1];
-				if (!ObjPropGet(local_temp2, PROP_TELE))
-					continue;
-
-				if (obj_x[local_temp1] == local_x && obj_y[local_temp1] == local_y)
+				if (objects.x[local_temp1] == local_x && objects.y[local_temp1] == local_y)
 					continue;
 
 				// done!
-				obj_x[local_index] = obj_x[local_temp1];
-				obj_y[local_index] = obj_y[local_temp1];
-				if (local_type == TYPE_TEXT)
+				objects.x[local_index] = objects.x[local_temp1];
+				objects.y[local_index] = objects.y[local_temp1];
+				if (local_type == TYPE_TEXT || obj_is_word[local_type])
 				{
 					helpers.rules_may_have_changed = true;
 				}
@@ -114,14 +112,16 @@ void kill()
 	// we don't have zero page local_XXX variable free, but speed is not necessary here
 	byte has_type;
 
-	create_direction = obj_direction[local_index];
-	obj_direction[local_index] = DIR_KILLED;
+	create_direction = objects.direction[local_index];
+	objects.direction[local_index] = DIR_KILLED;
 
 	// check if text
-	if (local_type == TYPE_TEXT)
+	if (local_type == TYPE_TEXT || obj_is_word[local_type])
 	{
 		helpers.rules_may_have_changed = true;
 	}
+	if (ObjPropGet(local_type, PROP_PICK))
+		--helpers.pick_exists_as_object;
 
 	// process HAS
 	for (has_type = 0; has_type < TYPE_MAX; ++has_type)
@@ -183,8 +183,8 @@ void kill()
 
 void process_teleports()
 {
-	memset(level.map, INTERACT_NONE, sizeof(level.map));
-	// preprocess tele
+	memset(map, INTERACT_NONE, sizeof(map));
+	// preprocess tele 
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
@@ -196,9 +196,9 @@ void process_teleports()
 
 		// set on map properties
 
-		local_type = obj_type[local_index];
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_type = objects.type[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 		if (ObjPropGet(local_type, PROP_TELE))
 			MapSet(local_x, local_y, PREPROCESS_TELE);
 	}
@@ -213,9 +213,9 @@ void process_teleports()
 			continue;
 
 
-		local_type = obj_type[local_index];
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_type = objects.type[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 		local_flags = MapGet(local_x, local_y);
 		if ((local_flags & PREPROCESS_TELE) && !ObjPropGet(local_type, PROP_TELE))
 		{
@@ -229,8 +229,8 @@ void process_teleports()
 void preprocess_interactions()
 {
 	// preprocess
-	helpers.pick_exists_as_object = false;
-	memset(level.map, INTERACT_NONE, sizeof(level.map));
+	helpers.pick_exists_as_object = 0;
+	memset(map, INTERACT_NONE, sizeof(map));
 
 	// perform interactions - from TEXTs (0), because TEXT can be destroyed too, 
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
@@ -238,16 +238,15 @@ void preprocess_interactions()
 		if (IS_KILLED(local_index))
 			continue;
 
-		// disable CREATED flag in direction and skip interaction for this one in this turn
-		if (IS_CREATED(local_index))
-			obj_direction[local_index] = obj_direction[local_index] & (~(DIR_CREATED));
-
+		// disable CREATED flag and DIR_CHANGED flag
+		objects.direction[local_index] &= ( (~DIR_CREATED) & (~DIR_CHANGED));
+		
 		// set on map properties
 
-		local_type = obj_type[local_index];
+		local_type = objects.type[local_index];
 		local_temp1 = INTERACT_NONE; // interaction flags
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 		local_flags = MapGet(local_x, local_y);
 
 
@@ -272,7 +271,7 @@ void preprocess_interactions()
 			local_flags |= INTERACT_ACID;
 
 		if (ObjPropGet(local_type, PROP_PICK))
-			helpers.pick_exists_as_object = true;
+			++helpers.pick_exists_as_object;
 
 		MapSet(local_x, local_y, local_flags);
 	}
@@ -287,14 +286,11 @@ void handle_interactions()
 		if (IS_KILLED(local_index) || IS_CREATED(local_index))
 			continue;
 
-		// first some cleanup, remove DIR_CHANGED flag from objects, which was set during moving
-		obj_direction[local_index] = obj_direction[local_index] & DIR_MASK;
-
 		// process interactions
-		local_type = obj_type[local_index];
+		local_type = objects.type[local_index];
 
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 
 		local_flags = MapGet(local_x, local_y); // interaction flags
 		if (local_flags == INTERACT_NONE)
@@ -306,7 +302,7 @@ void handle_interactions()
 			// to win all there must be 0 'pick' objects
 			if ( (!helpers.pick_exists_as_object) && ObjPropGet(local_type, PROP_WIN))
 			{
-				game_state = LEVEL_WON;
+				game_phase = LEVEL_WON;
 				break;
 			}
 			else if (ObjPropGet(local_type, PROP_PICK))
@@ -346,13 +342,8 @@ void handle_interactions()
 			continue;
 		}
 
-		// these are without dedicated sounds
-		if (
-			// check KILL
-			( (local_flags & INTERACT_KILL) && (ObjPropGet(local_type, PROP_YOU) )) ||
-			// check FADE - only if it was not created this turn
-			((!(obj_direction[local_index] & DIR_CREATED)) && ObjPropGet(local_type, PROP_FADE))
-			)
+		// check KILL (no sound)
+		if ( (local_flags & INTERACT_KILL) && (ObjPropGet(local_type, PROP_YOU) ) )
 		{
 			kill();
 			continue;

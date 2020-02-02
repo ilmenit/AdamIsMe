@@ -32,16 +32,30 @@ start
 	lda track_to_play
 	jsr RASTERMUSICTRACKER		;Init
 
-;
-	ldy #<vbi
-	ldx #>vbi
+; SET VBI
+	ldy vbi_address
+	ldx vbi_address+1
 	lda #$07
 	jsr $e45c					;Start VBI routine
 	rts
 	
-start2
-    mwa	$224 old_vbi
-	rts
+new_init                        ; Set VBI address depending on the NTSC or PAL	
+	 sei
+loop lda $D40B; vcount
+     cmp $D40B; vcount
+     beq *-3
+     bcc loop
+     cmp #131 ;; BCC #132
+	 cli
+     BCS finish_init ; PAL
+	 ;ntsc
+	 lda #<ntsc_vbi   ; low byte
+	 sta vbi_address ; low
+	 lda #>ntsc_vbi   ; hi byte
+	 sta vbi_address+1 ; hi
+finish_init
+	 mwa $224 old_vbi			; Store old VBI
+	 rts
 ;
 
 ; restore old VBI routine
@@ -52,7 +66,19 @@ stop
 	jsr $e45c					;Start VBI routine
     rts
 ;
+
+ntsc_vbi
+	dec	ntsc_counter
+	bne	vbi
+	lda #5
+	sta ntsc_counter	
+    jmp end_vbi
+
 vbi
+	#if .byte vbi_counter > #0 
+		dec vbi_counter
+	#end
+
     lda music_plays
     cmp #0
     beq end_vbi
@@ -77,14 +103,10 @@ end_vbi
 ;
 ;
 ;
-;old_vbi dta a ($C28A)
 old_vbi dta 0,0
-
 sfx_effect dta 0				;sfx number variable
 track_to_play dta 0				;track to play
 music_plays dta 0				;1 if plays
-;
-;
-;
-;
-;that's all... :-)
+ntsc_counter dta 5
+vbi_address dta .LO(vbi), .HI(vbi)
+vbi_counter dta 0

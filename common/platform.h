@@ -26,11 +26,10 @@ void save_game_progress();
 void load_level_data();
 void set_tileset();
 void set_palette();
+
 // galaxy (map)
 void galaxy_draw_screen();
 void galaxy_get_action();
-void galaxy_land_anim();
-void galaxy_takeoff_anim();
 
 // game (during level)
 void game_lost();

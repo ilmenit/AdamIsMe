@@ -1,8 +1,9 @@
 #include "extern.h"
 
 /*
--- In this game parser does not accept multiple IS e.g. "WALL is ROBO is You" or cycle "BABA IS KEKE IS BABA" 
--- TODO: Parser does not allow to have OPERATOR and noun in one place. If this happens, they are considered as invalid (EMPTY)
+In this game parser does not accept multiple IS e.g. "WALL is ROBO is You" or cycle "BABA IS KEKE IS BABA" nor order of operators 
+Reason is simplification of the parser.
+-- TODO???: Text stacking? OR not allowing to have OPERATOR and noun in one place. If this happens, they are considered as invalid (EMPTY) (?)
 */
 
 
@@ -20,21 +21,33 @@ byte extracted_dst_count;
 byte extracted_src_count;
 byte extracted_dst[MAP_SIZE_X/2]; // there won't be more on screen, because they are separated by operators
 byte extracted_src[MAP_SIZE_X/2]; // there won't be more on screen
+bool parsing_horizontally;
+byte expression_start_position;
 
 // go through the objects and put related items on the map
 void preprocess_game_rules()
 {
 	clear_preprocess_helper();
-	memset(level.map,PREPROCESS_EMPTY,sizeof(level.map));
+	memset(map,PREPROCESS_EMPTY,sizeof(map));
 	
 	for (local_index=0;local_index < last_text_index;++local_index)
 	{
-		if (IS_KILLED(local_index) || obj_type[local_index] != TYPE_TEXT)
+		if (IS_KILLED(local_index))
 			continue;
 
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
-		MapSet(local_x, local_y, obj_text_type[local_index]);
+		local_type = objects.type[local_index];
+		if (local_type == TYPE_TEXT)
+			local_temp1 = objects.text_type[local_index];
+		else if (obj_is_word[local_type])
+			local_temp1 = local_type;
+		else
+			continue;
+
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
+		// remove flag IS_ACTIVE_RULE
+		objects.direction[local_index] &= (~DIR_ACTIVE_RULE);
+		MapSet(local_x, local_y, local_temp1);
 		preproc_helper.preprocess_object_exists_x[local_x] = true;
 		preproc_helper.preprocess_object_exists_y[local_y] = true;
 	}
@@ -65,13 +78,18 @@ void new_parsing()
 								if (IS_KILLED(local_index))
 									continue;
 
-								if (obj_type[local_index] == dst_type)
+								if (objects.type[local_index] == dst_type)
 								{
 									// if we are changing object to text, make the object type according to original text
 									// if we are changing text to text, we keep previous text value
-									if (obj_type[local_index] != TYPE_TEXT)
-										obj_text_type[local_index] = obj_type[local_index];
-									obj_type[local_index] = src_type;
+									if (objects.type[local_index] != TYPE_TEXT)
+										objects.text_type[local_index] = objects.type[local_index];
+									if (src_type == TYPE_TEXT)
+									{
+										if (local_index >= last_text_index)
+											last_text_index = local_index + 1;
+									}
+									objects.type[local_index] = src_type;
 									helpers.something_transformed = true;
 									helpers.rules_may_have_changed = true;
 								}
@@ -90,6 +108,19 @@ void new_parsing()
 				}
 			}			
 		}
+		// mark on map that this expression is active. operator_type is not used anymore so we can reuse it
+		if (parsing_horizontally)
+		{
+			do {
+				MapSet(expression_start_position, local_y, MapGet(expression_start_position, local_y) | DIR_ACTIVE_RULE);
+			} while (expression_start_position++ < local_x-1);			
+		}
+		else
+		{
+			do {
+				MapSet(local_x, expression_start_position, MapGet(local_x, expression_start_position) | DIR_ACTIVE_RULE);
+			} while (expression_start_position++ < local_y-1);
+		}
 	}
 	// reset state
 	parsing_state = PARSING_STATE_STARTING_EXPRESSION;
@@ -103,19 +134,23 @@ void new_parsing()
 void parse_next()
 {
 	bool unexpected_text;
-	byte text = MapGet(local_x, local_y);
+	byte current_text = MapGet(local_x, local_y) & (~DIR_ACTIVE_RULE);
 again:
 	unexpected_text = false;
 	switch (parsing_state)
 	{
 		case PARSING_STATE_STARTING_EXPRESSION:
+			if (parsing_horizontally)
+				expression_start_position = local_x;
+			else
+				expression_start_position = local_y;
 		case PARSING_STATE_SET_DST_AND:
 			// if not started or Noun+And then we are expecting Noun
-			if (IS_NOUN(text)) // only nouns
+			if (IS_NOUN(current_text)) // only nouns
 			{
 				// after Noun we need to have operator IS or AND
 				parsing_state = PARSING_STATE_SET_DST;
-				extracted_dst[extracted_dst_count] = text;
+				extracted_dst[extracted_dst_count] = current_text;
 				++extracted_dst_count;
 				return;
 			}
@@ -125,20 +160,20 @@ again:
 			}
 			break;
 		case PARSING_STATE_SET_DST:
-			if (text == (OPERATOR_IS | AS_OPERATOR))
+			if (current_text == (OPERATOR_IS | AS_OPERATOR))
 			{
 				// If IS then we are changing to extract SRC
 				parsing_state = PARSING_STATE_STARTING_SRC;
 				operator_type = OPERATOR_IS;
 				return;
 			}
-			else if (text == (OPERATOR_AND | AS_OPERATOR))
+			else if (current_text == (OPERATOR_AND | AS_OPERATOR))
 			{
 				// with AND we will look for the next Noun
 				parsing_state = PARSING_STATE_SET_DST_AND;
 				return;
 			}
-			else if (text == (OPERATOR_HAS | AS_OPERATOR))
+			else if (current_text == (OPERATOR_HAS | AS_OPERATOR))
 			{
 				parsing_state = PARSING_STATE_STARTING_SRC;
 				operator_type = OPERATOR_HAS;
@@ -148,10 +183,10 @@ again:
 			break;
 		case PARSING_STATE_STARTING_SRC:
 		case PARSING_STATE_SET_SRC_AND:
-			if (IS_PROPERTY(text) || IS_NOUN(text)) // both Nouns and Props are accepted
+			if (IS_PROPERTY(current_text) || IS_NOUN(current_text)) // both Nouns and Props are accepted
 			{
 				parsing_state = PARSING_STATE_SET_SRC;
-				extracted_src[extracted_src_count] = text;
+				extracted_src[extracted_src_count] = current_text;
 				++extracted_src_count;				
 				return;
 			}
@@ -159,7 +194,7 @@ again:
 			break;
 		case PARSING_STATE_SET_SRC:
 			// if we are parsing SRC, then only AND operator is accepted
-			if (text == (OPERATOR_AND | AS_OPERATOR))
+			if (current_text == (OPERATOR_AND | AS_OPERATOR))
 			{
 				parsing_state = PARSING_STATE_SET_SRC_AND;
 				return;				
@@ -177,12 +212,84 @@ again:
 	}
 }
 
+
+void do_parsing()
+{
+	// not needed if initial memory is set properly
+	parsing_state = PARSING_STATE_STARTING_EXPRESSION;
+	new_parsing();
+
+	// parse horizontally
+	parsing_horizontally = true;
+	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+	{
+		if (!preproc_helper.preprocess_object_exists_y[local_y])
+			continue;
+		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+		{
+			parse_next();
+		}
+		new_parsing();
+	}
+	// parse vertically
+	parsing_horizontally = false;
+	for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+	{
+		if (!preproc_helper.preprocess_object_exists_x[local_x])
+			continue;
+		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+		{
+			parse_next();
+		}
+		new_parsing();
+	}
+}
+
+void finalize_parsing()
+{
+	// mark objects that stay on active cells on map
+	for (local_index = 0; local_index < last_text_index; ++local_index)
+	{
+		if (IS_KILLED(local_index))
+			continue;
+		if (MapGet(objects.x[local_index], objects.y[local_index]) & DIR_ACTIVE_RULE)
+			objects.direction[local_index] |= DIR_ACTIVE_RULE;
+		else
+			objects.direction[local_index] &= (~DIR_ACTIVE_RULE);
+	}
+
+	// copy IS WORD to helper array for the next rules pass
+	memset(obj_is_word, false, sizeof(obj_is_word));
+	for (local_type = 0; local_type < TYPE_MAX; ++local_type)
+	{
+		if (ObjPropGet(local_type, PROP_WORD))
+		{
+			obj_is_word[local_type] = true;
+			helpers.rules_may_have_changed = true;
+		}
+	}
+	if (helpers.rules_may_have_changed) // this should be set only if some object IS WORD
+	{
+		// we also need to parse non-text objects as TEXT from now on
+		if (last_text_index < last_obj_index)
+			last_text_index = last_obj_index;
+	}
+	// if something WAS WORD previously and now nothing is WORD, we need to do parsing again
+	if (helpers.something_was_word)
+		helpers.rules_may_have_changed = true;
+}
+
 void set_game_rules()
 {
 	if (!helpers.rules_may_have_changed)
 		return;
 
 	helpers.rules_may_have_changed = false;
+
+	if (rule_exists[PROP_WORD])
+		helpers.something_was_word = true;
+	else
+		helpers.something_was_word = false;
 
 	// clear rules
 	memset(obj_prop,0,sizeof(obj_prop));
@@ -193,32 +300,8 @@ void set_game_rules()
 	ObjPropSet(TYPE_TEXT,PROP_PUSH,true);
 
 	preprocess_game_rules();
+	do_parsing();
+	finalize_parsing();
 
-	// not needed if initial memory is set properly?
-	parsing_state = PARSING_STATE_STARTING_EXPRESSION;
-	new_parsing(); 
-	
-	// parse horizontally
-	for (local_y=0;local_y<MAP_SIZE_Y;++local_y)
-	{
-		if (!preproc_helper.preprocess_object_exists_y[local_y])
-			continue;
-		for (local_x=0;local_x<MAP_SIZE_X;++local_x)
-		{
-			parse_next();
-		}
-		new_parsing();
-	}	
-	// parse vertically
-	for (local_x=0;local_x<MAP_SIZE_X;++local_x)
-	{
-		if (!preproc_helper.preprocess_object_exists_x[local_x])
-			continue;
-		for (local_y=0;local_y<MAP_SIZE_Y;++local_y)
-		{
-			parse_next();
-		}
-		new_parsing();
-	}	
 }
 

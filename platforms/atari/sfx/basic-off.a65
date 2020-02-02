@@ -1,0 +1,63 @@
+       ORG $2E00
+
+       ICHID = $0340 ;IOCB 0 S:
+       ICCOM = $0342 ;IOCB Command
+       ICBAL = $0344 ;Xfer Buffer Adr
+       ICBAH = $0345
+       ICPTL = $0346 ;PutByte Adr
+       ICPTH = $0347
+       ICBLL = $0348 ;Buffer Len
+       ICBLH = $0349
+       CIOV = $E456 ; CIO Vector
+
+LOADER
+       LDA #$c0 ;Check if RAMTOP is already OK
+       CMP $6a ;This prevent flickering if BASIC is already off
+       BEQ RAMOK
+       STA $6a ;Set RAMTOP to end of BASIC
+       STA $2E4 ;Set RAMSIZ also
+
+       LDA $d301 ;Disable BASIC bit in PORTB for MMU
+       ORA #$02
+       STA $d301
+
+       LDA $a000 ;Check if BASIC ROM area is now writeable
+       INC $a000
+       CMP $a000
+       BEQ RAMNOK ;If not, perform error handling....
+
+       LDA #$01 ;Set BASICF for OS, so BASIC remains OFF after RESET
+       STA $3f8
+
+       LDX #2 ;Close "E:" before re-openining it again
+       JSR EDITOR
+       LDX #0 ;Open "E:" to ensure screen is not at $9C00
+EDITOR
+       LDA $e401,x ;This prevents garbage when loading up to $bc000
+       PHA
+       LDA $e400,x
+       PHA
+RAMOK
+       RTS
+
+
+RAMNOK
+       ; Setup CIO Call
+       LDX #0 ;IOCB 0
+       LDA #9 ;Put Cmd Val
+       STA ICCOM,X ;Set it as the cmd
+       LDA #TOPRINT&255 ;Str low byte
+       STA ICBAL,X
+       LDA #TOPRINT/256 ;Str high byte
+       STA ICBAH,X
+       LDA #0 ;Str Len low byte
+       STA ICBLL,X
+       LDA #$FF ;Str Len high byte
+       STA ICBLH,X
+       ; Call CIO
+       JSR CIOV
+       RTS
+TOPRINT .BYTE "Turn off Basic!",$9B
+
+       INI LOADER
+;Make sure the loader is executed before the main program is loaded

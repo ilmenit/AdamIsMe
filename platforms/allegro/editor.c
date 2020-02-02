@@ -8,6 +8,11 @@
 #include "atari_gfx.h"
 #include "editor.h"
 
+#if EDITOR_ATARI || PLATFORM_ATARI
+extern struct atari_tiles_info_def atari_tiles_info[WORLDS_MAX + 1];
+extern FILE *atari_tiles_info_file_pointer;
+#endif
+
 ALLEGRO_FILECHOOSER *file_chooser;
 
 extern bool editor_active;
@@ -16,6 +21,7 @@ extern ALLEGRO_EVENT event;
 extern ALLEGRO_DISPLAY * display;
 extern ALLEGRO_EVENT_QUEUE *queue;
 extern ALLEGRO_FONT * font;
+ALLEGRO_FONT * font_small;
 
 extern ALLEGRO_BITMAP *tiles[TILES_COLUMNS * TILES_ROWS];
 
@@ -27,13 +33,13 @@ extern const char *level_set_name;
 
 extern struct rgb atari_palette[128]; // 128 colors
 
-#define MY_MAX_PATH 2048
-char level_set_name_buffer[MY_MAX_PATH];
+char level_set_name_buffer[_MAX_PATH];
 extern const char *dialog_tile;
 
 byte editor_selected_object = 0;
 byte editor_selected_color_button = 0;
 byte editor_selected_palette_item = 0;
+byte editor_selected_tileset_button = 0;
 byte editor_selected_direction = DIR_NONE;
 byte editor_selected_swap_level = false;
 
@@ -70,7 +76,7 @@ void test_level_click_handler(ui_button *button)
 
 	load_level();
 	init_level();
-	while (game_state == LEVEL_ONGOING)
+	while (game_phase == LEVEL_ONGOING)
 	{
 		level_pass();
 	}
@@ -82,10 +88,14 @@ void save_level(byte level_no)
 {
 	long offset;
 	offset = (long) sizeof(struct level_set_header_def);
-	offset += (long) level_no * ((long) sizeof(struct level_def));
+	offset += (long) level_no * ((long) sizeof(map));
 	fseek(level_set_file_pointer, offset, SEEK_SET);
-	fwrite(&level, sizeof(level), 1, level_set_file_pointer);
+	fwrite(map, sizeof(map), 1, level_set_file_pointer);
 	fflush(level_set_file_pointer);
+
+	// save Atari Tiles information
+	fseek(atari_tiles_info_file_pointer, 0, SEEK_SET);
+	fwrite(atari_tiles_info, sizeof(atari_tiles_info), 1, atari_tiles_info_file_pointer);
 }
 
 void create_level_set()
@@ -93,8 +103,8 @@ void create_level_set()
 	level_set_header.magic[0] = 'I';
 	level_set_header.magic[1] = 'l';
 	level_set_header.magic[2] = 'm';
-	level_set_header.magic[3] = '!';
-	level_set_header.number_of_levels = LEVELS_MAX;
+	level_set_header.magic[3] = '!'; 
+ 	level_set_header.number_of_levels = LEVELS_MAX;
 	level_set_header.map_size_x = MAP_SIZE_X;
 	level_set_header.map_size_y = MAP_SIZE_Y;
 
@@ -104,7 +114,7 @@ void create_level_set()
 	for (int i = 0; i < LEVELS_MAX; ++i)
 	{
 		level_number=i;
-		clear_level();
+		clear_level(true);
 		save_level(i);
 
 	}
@@ -125,9 +135,9 @@ void save_level_set_as_click_handler(ui_button *button)
 		return;
 	}
 	const char *new_level_set_name = al_get_native_file_dialog_path(file_chooser, 0);
-	if (strlen(new_level_set_name) >= MY_MAX_PATH)
+	if (strlen(new_level_set_name) >= _MAX_PATH)
 	{
-		show_error("Path too long, extend MY_MAX_PATH");
+		show_error("Path too long, extend _MAX_PATH");
 		al_destroy_native_file_dialog(file_chooser);
 		return;
 	}
@@ -181,13 +191,13 @@ void import_level_click_handler(ui_button *button)
 		return;
 	}
 	long file_size = get_file_size(fp);
-	if (file_size != sizeof(struct level_def))
+	if (file_size != sizeof(map))
 	{
 		al_destroy_native_file_dialog(file_chooser);
 		show_error("Wrong size of LVL file!");
 		return;
 	}
-	fread(&level, sizeof(struct level_def), 1, fp);
+	fread(map, sizeof(map), 1, fp);
 	fclose(fp);
 
 	save_level(level_number);
@@ -197,7 +207,7 @@ void import_level_click_handler(ui_button *button)
 
 void export_level_click_handler(ui_button *button)
 {
-	char filename[MY_MAX_PATH];
+	char filename[_MAX_PATH];
 	sprintf(filename, "%d%d.lvl", (level_number / LEVELS_PER_WORLD + 1), (level_number % LEVELS_PER_WORLD) + 1);
 	file_chooser = al_create_native_file_dialog(filename, "Exporting single level (*.lvl)", "*.*;*.lvl;", ALLEGRO_FILECHOOSER_SAVE);
 
@@ -217,7 +227,7 @@ void export_level_click_handler(ui_button *button)
 		al_destroy_native_file_dialog(file_chooser);
 		return;
 	}
-	fwrite(&level, sizeof(struct level_def), 1, fp);
+	fwrite(map, sizeof(map), 1, fp);
 	fclose(fp);
 	al_destroy_native_file_dialog(file_chooser);
 }
@@ -250,9 +260,9 @@ void open_level_set_click_handler(ui_button *button)
 	}
 
 	const char *new_level_set_name = al_get_native_file_dialog_path(file_chooser, 0);
-	if (strlen(new_level_set_name) >= MY_MAX_PATH)
+	if (strlen(new_level_set_name) >= _MAX_PATH)
 	{
-		show_error("Path too long, extend MY_MAX_PATH");
+		show_error("Path too long, extend _MAX_PATH");
 		al_destroy_native_file_dialog(file_chooser);
 		return;
 	}
@@ -269,16 +279,16 @@ void open_level_set_click_handler(ui_button *button)
 
 void board_set(int x, int y, byte val)
 {
-	level.map[MAP_SIZE_X * y + x] = val;
+	MapSet(x, y, val);
 }
 
 // for cases when only one object is allowed
 void board_remove_all(int obj)
 {
-	for (size_t i = 0; i < _countof(level.map); ++i)
+	for (size_t i = 0; i < _countof(map); ++i)
 	{
-		if (level.map[i] == obj)
-			level.map[i] = LEVEL_DECODE_EMPTY;
+		if (map[i] == obj)
+			map[i] = LEVEL_DECODE_EMPTY;
 	}
 }
 
@@ -363,17 +373,19 @@ ui_button editor_menu_buttons[] =
 	{ BUTTON_MENU_IMPORT_LEVEL, 950, 260, 210, 30, "Import level", NO_TILE, true, import_level_click_handler},
 	{ BUTTON_MENU_CLEAR_LEVEL, 950, 300, 210, 30,  "Clear level", NO_TILE, true, clear_level_click_handler},
 	{ BUTTON_MENU_SWAP_LEVEL, 950, 340, 210, 30,   "Swap level", NO_TILE, true, swap_level_click_handler},
+
+	{ BUTTON_MENU_SWAP_LEVEL, 950, 380, 210, 30,   "Build game", NO_TILE, true, build_game_click_handler},
 };
 
-ui_button editor_planet_buttons[LEVELS_MAX];
+ui_button editor_level_buttons[LEVELS_MAX];
 ui_button editor_map_object_buttons[TYPE_MAX + TYPE_MAX + PROPERTY_MAX + OPERATOR_MAX];
 
 ui_button editor_map_direction_buttons[5] = {
 	{ BUTTON_DIR_DOWN, 560, 700, 34, 34, "", FIRST_DIRECTION_TILE, true, direction_click_handler   },
-	{ BUTTON_DIR_LEFT, 520, 660, 34, 34, "", FIRST_DIRECTION_TILE + 1, true, direction_click_handler  },
-	{ BUTTON_DIR_UP, 560, 620, 34, 34, "", FIRST_DIRECTION_TILE + 2, true, direction_click_handler  },
-	{ BUTTON_DIR_RIGHT, 600, 660, 34, 34, "", FIRST_DIRECTION_TILE + 3, true, direction_click_handler  },
-	{ BUTTON_DIR_NONE, 560, 660, 34, 34, "", FIRST_DIRECTION_TILE + 4, true, direction_click_handler, true },
+	{ BUTTON_DIR_LEFT, 520, 660, 34, 34, "", FIRST_DIRECTION_TILE+1, true, direction_click_handler  },
+	{ BUTTON_DIR_UP, 560, 620, 34, 34, "", FIRST_DIRECTION_TILE+2, true, direction_click_handler  },
+	{ BUTTON_DIR_RIGHT, 600, 660, 34, 34, "", FIRST_DIRECTION_TILE+3, true, direction_click_handler  },
+	{ BUTTON_DIR_NONE, 560, 660, 34, 34, "", FIRST_DIRECTION_TILE+4, true, direction_click_handler, true },
 };
 
 ui_button editor_map_color_buttons[COLORS_MAX] = {
@@ -391,20 +403,24 @@ ui_button editor_palette_actions_buttons[] = {
 	{ BUTTON_PALETTE_PASTE, 30, 696, 240, 32, "Paste palette", NO_TILE, true, paste_palette_click_handler },
 };
 
+// we don't allow to set galaxy tileset
+ui_button editor_map_tileset_buttons[TILESET_MAX - 1];
 
 ui_button editor_galaxy_object_buttons[GALAXY_OBJECTS_MAX];
 
 ui_button *all_buttons[
 	_countof(editor_menu_buttons) +
-		_countof(editor_planet_buttons) +
+		_countof(editor_level_buttons) +
 		_countof(editor_map_object_buttons) +
 		_countof(editor_map_direction_buttons) +
 		_countof(editor_map_color_buttons) +
+		_countof(editor_map_tileset_buttons) +
 		_countof(editor_palette_items) +
 		_countof(editor_palette_actions_buttons) +
 		_countof(editor_galaxy_object_buttons)
 ];
 
+// TODO: Atari related - move out of editor.c to atari specific editor extension
 void select_palette_item(int new_one)
 {
 	editor_palette_items[editor_selected_palette_item].selected = false;
@@ -413,6 +429,19 @@ void select_palette_item(int new_one)
 	redraw_editor = true;
 }
 
+// TODO: Atari related - move out of editor.c to atari specific editor extension
+void select_tileset(int new_one)
+{
+	editor_map_tileset_buttons[editor_selected_tileset_button].selected = false;
+	editor_selected_tileset_button = new_one;
+	redraw_editor = true;
+	editor_map_tileset_buttons[editor_selected_tileset_button].selected = true;
+	atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number = new_one + 1;
+	save_level(level_number);
+	load_level();
+}
+
+// TODO: Atari related - move out of editor.c to atari specific editor extension
 void select_color(int new_one)
 {
 	editor_map_color_buttons[editor_selected_color_button].selected = false;
@@ -432,7 +461,7 @@ void select_color(int new_one)
 	}
 	editor_map_color_buttons[editor_selected_color_button].selected = true;
 
-	int palette_item = level.level_colors[editor_selected_color_button] / 2;
+	int palette_item = atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors[editor_selected_color_button] / 2;
 	select_palette_item(palette_item);
 
 	// show palette button
@@ -445,6 +474,7 @@ void select_color(int new_one)
 
 }
 
+// TODO: Atari related - move out of editor.c to atari specific editor extension
 void color_click_handler(ui_button *button)
 {
 	int new_one = button->button_id - BUTTON_COLOR0;
@@ -457,15 +487,22 @@ void color_click_handler(ui_button *button)
 	select_color(new_one);
 }
 
+void tileset_click_handler(ui_button *button)
+{
+	int new_one = button->button_id - BUTTON_TILESET1;
+	select_tileset(new_one);
+	select_color(COLORS_MAX);
+}
+
+
 void copy_palette_click_handler(ui_button *button)
 {
-	memcpy(copied_palette, level.level_colors, sizeof(copied_palette));
+	memcpy(copied_palette, atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors, sizeof(copied_palette));
 }
 
 void paste_palette_click_handler(ui_button *button)
 {
-	memcpy(level.level_colors, copied_palette, sizeof(level.level_colors));
-	memcpy(level.level_colors, copied_palette, sizeof(level.level_colors));
+	memcpy(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors, copied_palette, sizeof(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors));
 	set_palette();
 	set_tileset();
 	redraw_editor = true;
@@ -486,6 +523,60 @@ void swap_level_click_handler(ui_button *button)
 	redraw_editor = true;
 }
 
+int file_copy(const char *source, const char *destination)
+{
+	char    c[4096]; 
+	FILE    *stream_R = fopen(source, "rb");
+	FILE    *stream_W = fopen(destination, "wb+");   
+
+	while (!feof(stream_R)) {
+		size_t bytes = fread(c, 1, sizeof(c), stream_R);
+		if (bytes) {
+			fwrite(c, 1, bytes, stream_W);
+		}
+	}
+	fclose(stream_R);
+	fclose(stream_W);
+	return 0;
+}
+
+// this one should be written better with error handling
+void build_game_click_handler(ui_button *button)
+{
+	save_level(level_number);
+#ifdef _MSC_VER
+	char destination[_MAX_PATH];
+	char drive[_MAX_DRIVE];
+	char dir[_MAX_DIR];
+	char fname[_MAX_FNAME];
+	char ext[_MAX_EXT];
+	// copy level set to build_atr directory
+	_splitpath(level_set_name, drive, dir, fname, ext);
+	_getcwd(destination, sizeof(destination));
+	strncat(destination, "\\build_atr\\", _MAX_PATH);
+	strncat(destination, "levels.riu", _MAX_PATH);
+	file_copy(level_set_name, destination);
+
+	// copy level set to build_atr directory
+	_getcwd(destination, sizeof(destination));
+	strncat(destination, "\\build_atr\\", _MAX_PATH);
+	strncat(destination, "levels.atl", _MAX_PATH);
+
+	char source[_MAX_PATH] = "";
+	strncat(source, drive, _MAX_PATH);
+	strncat(source, dir, _MAX_PATH);
+	strncat(source, fname, _MAX_PATH);
+	strncat(source, ".atl", _MAX_PATH);
+	file_copy(source, destination);
+
+	// build game
+	_chdir("build_atr");
+	system("build-disk.bat");
+	_chdir("..");
+#else
+#error Add additional build platform!
+#endif
+}
 
 void clear_level_click_handler(ui_button *button)
 {
@@ -498,7 +589,8 @@ void clear_level_click_handler(ui_button *button)
 		ALLEGRO_MESSAGEBOX_OK_CANCEL);
 	if (result == 1)
 	{
-		clear_level();
+		clear_level(false);
+		load_level();
 		select_level();
 	}
 }
@@ -520,8 +612,7 @@ void palette_click_handler(ui_button *button)
 	// deselect previous button
 	int new_one = button->button_id - BUTTON_PALETTE_FIRST;
 	select_palette_item(new_one);
-	level.level_colors[editor_selected_color_button] = new_one * 2;
-	level.level_colors[editor_selected_color_button] = new_one * 2;
+	atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors[editor_selected_color_button] = new_one * 2;
 	set_palette();
 	set_tileset();
 	redraw_editor = true;
@@ -529,40 +620,41 @@ void palette_click_handler(ui_button *button)
 
 void swap_level(byte old_level, byte new_level)
 {
-	struct level_def temp_new;
-	struct level_def temp_old;
+	byte temp_new[MAP_SIZE_Y*MAP_SIZE_X];
+	byte temp_old[MAP_SIZE_Y*MAP_SIZE_X];
+
 	long offset_new, offset_old;
 
 	// read new one to temp1
 	offset_new = (long) sizeof(struct level_set_header_def);
-	offset_new += (long)new_level * ((long) sizeof(struct level_def));
+	offset_new += (long)new_level * ((long) sizeof(map));
 
 	fseek(level_set_file_pointer, offset_new, SEEK_SET);
-	fread(&temp_new, sizeof(level), 1, level_set_file_pointer);
+	fread(temp_new, sizeof(temp_new), 1, level_set_file_pointer);
 
 	// read new one to temp2
 	offset_old = (long) sizeof(struct level_set_header_def);
-	offset_old += (long)old_level * ((long) sizeof(struct level_def));
+	offset_old += (long)old_level * ((long) sizeof(map));
 
 	fseek(level_set_file_pointer, offset_old, SEEK_SET);
-	fread(&temp_old, sizeof(level), 1, level_set_file_pointer);
+	fread(temp_old, sizeof(temp_old), 1, level_set_file_pointer);
 
 	// write new to old
 	fseek(level_set_file_pointer, offset_old, SEEK_SET);
-	fwrite(&temp_new, sizeof(level), 1, level_set_file_pointer);
+	fwrite(temp_new, sizeof(temp_new), 1, level_set_file_pointer);
 
 	// write old to new
 	fseek(level_set_file_pointer, offset_new, SEEK_SET);
-	fwrite(&temp_old, sizeof(level), 1, level_set_file_pointer);
+	fwrite(temp_old, sizeof(temp_old), 1, level_set_file_pointer);
 }
 
-void planet_click_handler(ui_button *button)
+void level_click_handler(ui_button *button)
 {
 	save_level(level_number);
 
-	editor_planet_buttons[level_number].selected = false;
+	editor_level_buttons[level_number].selected = false;
 
-	int new_level_number = (button->button_id - BUTTON_PLANET_FIRST);
+	int new_level_number = (button->button_id - BUTTON_LEVEL_FIRST);
 	if (editor_selected_swap_level)
 	{
 		if (new_level_number != LEVEL_GALAXY && level_number != LEVEL_GALAXY)
@@ -588,34 +680,56 @@ void galaxy_object_click_handler(ui_button *button)
 	select_object_to_draw(new_id);
 }
 
-void clear_level()
+void clear_level(bool clear_palette)
 {
-	byte default_level_colors[COLORS_MAX] =  { 0xB4, 0x1C, 0x0E, 0x82, 0x00 };
+	byte default_level_colors[COLORS_MAX] =  { 0xB4, 0x1C, 0x0E, 0x88, 0x00 };
 	byte default_galaxy_colors[COLORS_MAX] = { 0x00, 0x84, 0x0E, 0xC6, 0x26 };
 
-	// set default colors
-	if (level_number == LEVEL_GALAXY)
+	if (clear_palette)
 	{
-		memcpy(level.level_colors, default_galaxy_colors, sizeof(level.level_colors));
-		level.tileset_number = 1;
+		// set default colors
+		if (level_number == LEVEL_GALAXY)
+		{
+			memcpy(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors, default_galaxy_colors, sizeof(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors));
+			atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number = 0;
+		}
+		else
+		{
+			memcpy(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors, default_level_colors, sizeof(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors));
+			atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number = 1;
+		}
 	}
-	else
-	{
-		memcpy(level.level_colors, default_level_colors, sizeof(level.level_colors));
-		level.tileset_number = 0;
-	}
-	memset(level.map, LEVEL_DECODE_EMPTY, sizeof(level.map));
+	memset(map, LEVEL_DECODE_EMPTY, sizeof(map));
 	save_level(level_number);
-	load_level();
 }
 
 void clear_level_set()
 {
-	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.riu", MAP_SIZE_X, MAP_SIZE_Y);
-
-	FILE *fp = fopen(level_set_name_buffer, "wb+");
+	FILE *fp;
+	// first open ATL file
+	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.atl", MAP_SIZE_X, MAP_SIZE_Y);
+	fp = fopen(level_set_name_buffer, "wb+");
 	if (fp == NULL)
 	{
+		char message[2048];
+		sprintf(message, "Cannot create new level set file: %s", level_set_name_buffer);
+		show_error(message);
+		return;
+	}
+	if (atari_tiles_info_file_pointer != NULL)
+		fclose(atari_tiles_info_file_pointer);
+
+	atari_tiles_info_file_pointer = fp;
+
+	// then open actual level set
+	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.riu", MAP_SIZE_X, MAP_SIZE_Y);
+
+	fp = fopen(level_set_name_buffer, "wb+");
+	if (fp == NULL)
+	{
+		char message[2048];
+		sprintf(message, "Cannot create new level set: %s", level_set_name_buffer);
+		show_error(message);
 		return;
 	}
 
@@ -630,9 +744,10 @@ void clear_level_set()
 void select_level()
 {
 	load_level();
-	editor_planet_buttons[level_number].selected = true;
+	editor_level_buttons[level_number].selected = true;
 	select_object_to_draw(0);
 	select_color(COLORS_MAX);
+	select_tileset(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number-1);
 	redraw_editor = true;
 	redraw_game_screen = true;
 
@@ -649,6 +764,12 @@ void select_level()
 		for (i = 0; i < _countof(editor_galaxy_object_buttons); ++i)
 			editor_galaxy_object_buttons[i].enabled = true;
 
+		for (i = 0; i < _countof(editor_map_tileset_buttons); ++i)
+			editor_map_tileset_buttons[i].enabled = false;
+
+		for (i = 0; i < _countof(editor_map_direction_buttons); ++i)
+			editor_map_direction_buttons[i].enabled = false;
+
 		editor_menu_buttons[BUTTON_MENU_SWAP_LEVEL - BUTTON_MENU_FIRST].enabled = false;
 		editor_menu_buttons[BUTTON_MENU_TEST_LEVEL - BUTTON_MENU_FIRST].enabled = false;
 	}
@@ -662,6 +783,12 @@ void select_level()
 
 		for (i = 0; i < _countof(editor_galaxy_object_buttons); ++i)
 			editor_galaxy_object_buttons[i].enabled = false;
+
+		for (i = 0; i < _countof(editor_map_tileset_buttons); ++i)
+			editor_map_tileset_buttons[i].enabled = true;
+
+		for (i = 0; i < _countof(editor_map_direction_buttons); ++i)
+			editor_map_direction_buttons[i].enabled = true;
 
 		editor_menu_buttons[BUTTON_MENU_SWAP_LEVEL - BUTTON_MENU_FIRST].enabled = true;
 		editor_menu_buttons[BUTTON_MENU_TEST_LEVEL - BUTTON_MENU_FIRST].enabled = true;
@@ -703,13 +830,15 @@ void init_editor()
 	size_t all = 0;
 	ui_button *button;
 
+	font_small = al_load_ttf_font("font/MapMaker.ttf", 18, 0);
+
 	//////// SET-UP GUI BUTTONS
 
 	// add all buttons for quick drawing
 	for (i = 0; i < _countof(editor_menu_buttons); ++i)
 		all_buttons[all++] = &editor_menu_buttons[i];
-	for (i = 0; i < _countof(editor_planet_buttons); ++i)
-		all_buttons[all++] = &editor_planet_buttons[i];
+	for (i = 0; i < _countof(editor_level_buttons); ++i)
+		all_buttons[all++] = &editor_level_buttons[i];
 	for (i = 0; i < _countof(editor_map_object_buttons); ++i)
 		all_buttons[all++] = &editor_map_object_buttons[i];
 	for (i = 0; i < _countof(editor_map_direction_buttons); ++i)
@@ -718,6 +847,8 @@ void init_editor()
 		all_buttons[all++] = &editor_map_color_buttons[i];
 	for (i = 0; i < _countof(editor_palette_items); ++i)
 		all_buttons[all++] = &editor_palette_items[i];
+	for (i = 0 ; i < _countof(editor_map_tileset_buttons) ; ++i)
+		all_buttons[all++] = &editor_map_tileset_buttons[i];
 	for (i = 0; i < _countof(editor_palette_actions_buttons); ++i)
 		all_buttons[all++] = &editor_palette_actions_buttons[i];
 	for (i = 0; i < _countof(editor_galaxy_object_buttons); ++i)
@@ -731,28 +862,28 @@ void init_editor()
 		all_buttons[i]->color = al_map_rgb(64, 64, 128);
 	}
 
-	// set planet buttons
-	const int planet_button_size_x = 42;
-	const int planet_button_size_y = 30;
-	const int planets_in_row = 24;
+	// set level buttons
+	const int level_button_size_x = 42;
+	const int level_button_size_y = 30;
+	const int levels_in_row = 24;
 	int x, y;
 	int p, w;
 
-	for (i = 0; i < _countof(editor_planet_buttons); ++i)
+	for (i = 0; i < _countof(editor_level_buttons); ++i)
 	{
-		button = &editor_planet_buttons[i];
-		x = i % planets_in_row;
-		y = i / planets_in_row;
+		button = &editor_level_buttons[i];
+		x = i % levels_in_row;
+		y = i / levels_in_row;
 
-		button->button_id = BUTTON_PLANET_FIRST + i;
-		button->x = x * (planet_button_size_x + 2);
+		button->button_id = BUTTON_LEVEL_FIRST + i;
+		button->x = x * (level_button_size_x + 2);
 		button->x += 10 * (x / LEVELS_PER_WORLD);
-		button->y = y * (planet_button_size_y + 4) + 60;
-		button->width = planet_button_size_x;
-		button->height = planet_button_size_y;
+		button->y = y * (level_button_size_y + 4) + 60;
+		button->width = level_button_size_x;
+		button->height = level_button_size_y;
 		button->selected = false;
 		button->enabled = true;
-		button->click_handler = planet_click_handler;
+		button->click_handler = level_click_handler;
 		button->tile_id = NO_TILE;
 
 		p = i % LEVELS_PER_WORLD + 1;
@@ -760,11 +891,12 @@ void init_editor()
 		sprintf(button->text, "%d%d", w, p);
 	}
 	// set galaxy map button
-	button = &editor_planet_buttons[i - 1];
+	button = &editor_level_buttons[i - 1];
 	sprintf(button->text, "GM");
 
 	// set map objects
-	const int texts_in_column = 16; // !!!TODO FIX - change to 15 or make TEXT disabled?
+	const int texts_in_column = 16; 
+
 	for (i = 0; i < _countof(editor_map_object_buttons); ++i)
 	{
 		button = &editor_map_object_buttons[i];
@@ -780,7 +912,7 @@ void init_editor()
 		if (i < TYPE_MAX)
 		{
 			if (i == TYPE_TEXT) // last tile change to empty one
-				button->tile_id = 63;
+				button->tile_id = EMPTY_TILE;
 			else
 				button->tile_id = representation_obj[i];
 		}
@@ -837,6 +969,26 @@ void init_editor()
 		button->click_handler = galaxy_object_click_handler;
 	}
 
+	// set tileset buttons
+	const int tileset_rows = 4;
+	const int tileset_button_size = 32;
+	for (i = 0; i < _countof(editor_map_tileset_buttons); ++i)
+	{
+		button = &editor_map_tileset_buttons[i];
+		x = i % tileset_rows;
+		y = i / tileset_rows;
+		button->x = 300 + x * (tileset_button_size + 2);
+		button->y = 620 + y * (tileset_button_size + 2);
+		button->width = tileset_button_size;
+		button->height = tileset_button_size;
+		button->selected = false;
+		button->button_id = BUTTON_TILESET1 + i;
+		sprintf(button->text, "%d", i+1);
+		button->enabled = true;
+		button->tile_id = NO_TILE;
+		button->click_handler = tileset_click_handler;
+	}
+
 	// set color selector buttons
 	const int color_rows = 8;
 	const int palette_item_size = 17;
@@ -846,7 +998,7 @@ void init_editor()
 		x = i / color_rows;
 		y = i % color_rows;
 		button->x = 30 + x * (palette_item_size + 1);
-		button->y = y * (palette_item_size + 1) + 620 + SCREEN_TILE_SIZE;
+		button->y = y * (palette_item_size + 1) + 622 + SCREEN_TILE_SIZE;
 		button->width = palette_item_size;
 		button->height = palette_item_size;
 		button->selected = false;
@@ -890,7 +1042,7 @@ void draw_button(ui_button *button)
 
 	if (button->button_id >= BUTTON_COLOR0 && button->button_id <= BUTTON_COLOR4)
 	{
-		byte atari_color = level.level_colors[button->button_id - BUTTON_COLOR0];
+		byte atari_color = atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors[button->button_id - BUTTON_COLOR0];
 		button->color = atari_color_to_allegro_color(atari_color);
 	}
 
@@ -958,7 +1110,27 @@ void draw_editor()
 		draw_button(all_buttons[i]);
 
 	// draw path
-	al_draw_text(font, al_map_rgb(255, 255, 255), 0, 35, 0, (const char *)level_set_name);
+	al_draw_text(font_small, al_map_rgb(255, 255, 255), 320, 0, 0, "Level set:");
+	al_draw_text(font_small, al_map_rgb(255, 255, 255), 320, 15, 0, (const char *)level_set_name);
+
+	// draw additional descriptions
+	char text[100];
+
+	if (level_number != LEVEL_GALAXY)
+	{
+		sprintf(text, "World %d, Level %d", (level_number / LEVELS_PER_WORLD) + 1, (level_number % LEVELS_PER_WORLD) + 1);
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 00, 40, 0, text);
+		sprintf(text, "World %d Colors", (level_number/LEVELS_PER_WORLD) + 1);
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 30, 600, 0, text);
+		sprintf(text, "World %d Tiles", (level_number / LEVELS_PER_WORLD) + 1);
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 300, 600, 0, text);
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 512, 600, 0, "Direction");
+	}
+	else
+	{
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 00, 40, 0, "Game Map");
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 30, 600, 0, "Map Colors");
+	}
 
 	// draw playfied
 	al_draw_rounded_rectangle(SCREEN_MAP_POS_X - 10, SCREEN_MAP_POS_Y - 10,
@@ -1062,9 +1234,36 @@ void editor_loop()
 		}
 
 		al_wait_for_event(queue, &event);
+		ui_button temp;
+		byte new_level_number;
 
 		switch (event.type)
 		{
+		case ALLEGRO_EVENT_KEY_UP:
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_OPENBRACE:
+				if (level_number > 0)
+					new_level_number=level_number-1;
+				else
+					new_level_number = LEVELS_MAX - 1;
+
+				temp.button_id = BUTTON_LEVEL_FIRST + new_level_number;
+				level_click_handler(&temp);
+				break;
+			case ALLEGRO_KEY_CLOSEBRACE:
+				if (level_number < LEVELS_MAX - 1)
+					new_level_number = level_number + 1;
+				else
+					new_level_number = 0;
+
+				temp.button_id = BUTTON_LEVEL_FIRST + new_level_number;
+				level_click_handler(&temp);
+				break;
+			}
+			break;
+
+
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
 			int result = al_show_native_message_box(
 				display,

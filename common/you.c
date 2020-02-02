@@ -9,14 +9,12 @@ void handle_you()
 	// move of objects with PROP_YOU
 	if (you_move_direction != DIR_NONE)
 	{
+		// we change direction of YOU objects before doing anything else, because YOU can be also MAGNET
 		for (local_index = 0; local_index < last_obj_index; ++local_index)
 		{
-			if (IS_KILLED(local_index))
-				continue;
-
-			local_type = obj_type[local_index];
-			if (ObjPropGet(local_type,PROP_YOU))
-				obj_direction[local_index] = you_move_direction;
+			// is KILLED moved to be second condition checked for small performance gain, because we won't have many KILLED up to last_obj_index
+			if (ObjPropGet(objects.type[local_index],PROP_YOU) && (!IS_KILLED(local_index)) )
+				objects.direction[local_index] = you_move_direction;
 		}
 		move_direction = you_move_direction;
 		perform_move(PROP_YOU);

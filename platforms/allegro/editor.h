@@ -43,11 +43,12 @@ typedef struct ui_button ui_button;
 #define BUTTON_MENU_IMPORT_LEVEL  1005
 #define BUTTON_MENU_CLEAR_LEVEL   1006
 #define BUTTON_MENU_SWAP_LEVEL    1007
+#define BUTTON_MENU_BUILD_GAME	  1008
 
 // 1 shuttle + 6 backgrounds + 8 planets + 8 walls 
 #define GALAXY_OBJECTS_MAX (1+6+8+8)
 
-#define BUTTON_PLANET_FIRST 1500
+#define BUTTON_LEVEL_FIRST 1500
 
 #define BUTTON_DIR_DOWN     2000
 #define BUTTON_DIR_LEFT     2001
@@ -61,8 +62,10 @@ typedef struct ui_button ui_button;
 #define BUTTON_COLOR3       3003
 #define BUTTON_COLOR4       3004
 
-#define BUTTON_PALETTE_COPY        4000
-#define BUTTON_PALETTE_PASTE       4001
+#define BUTTON_PALETTE_COPY        3100
+#define BUTTON_PALETTE_PASTE       3101
+
+#define BUTTON_TILESET1       4000
 
 //#define BUTTON_BOARD        4000
 
@@ -76,9 +79,11 @@ void save_level(byte level_no);
 void select_level();
 void select_object_to_draw();
 void color_click_handler(ui_button *button);
+void tileset_click_handler(ui_button *button);
 void direction_click_handler(ui_button *button);
 void clear_level_click_handler(ui_button *button);
 void swap_level_click_handler(ui_button *button);
+void build_game_click_handler(ui_button *button);
 void select_color(int new_one);
 void clear_level();
 void clear_level_set();

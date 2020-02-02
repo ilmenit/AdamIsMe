@@ -74,7 +74,7 @@ void decode_standard_level()
 {
 	local_index = 0;
 	// set all objects as free to use
-	memset(obj_direction, DIR_KILLED, sizeof(obj_direction));
+	memset(objects.direction, DIR_KILLED, sizeof(objects.direction));
 
 	// local_temp1 = decoding_type
 	for (local_temp1 = DECODING_WORDS; local_temp1 <= DECODING_OBJECTS; ++local_temp1)
@@ -129,11 +129,11 @@ void decode_standard_level()
 				// add object to the list
 				if (local_type != LEVEL_DECODE_EMPTY)
 				{
-					obj_type[local_index] = local_type;
-					obj_text_type[local_index] = local_text_type;
-					obj_x[local_index] = local_x;
-					obj_y[local_index] = local_y;
-					obj_direction[local_index] = local_temp2;
+					objects.type[local_index] = local_type;
+					objects.text_type[local_index] = local_text_type;
+					objects.x[local_index] = local_x;
+					objects.y[local_index] = local_y;
+					objects.direction[local_index] = local_temp2;
 					++local_index;
 				}
 			}

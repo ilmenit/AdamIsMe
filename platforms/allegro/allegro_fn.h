@@ -14,6 +14,9 @@
 
 #define FIRST_DIRECTION_TILE (4 * TILES_COLUMNS)
 
+#define TILES_MAX 64
+#define EMPTY_TILE 63
+
 void init_editor();
 bool open_level_set();
 void show_error(const char *error);

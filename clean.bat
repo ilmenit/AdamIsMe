@@ -1,4 +1,6 @@
 @echo off
+del game.lst
+del game.map
 cd common
 del *.o
 del *.lst

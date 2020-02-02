@@ -15,7 +15,15 @@
 #include <sys/types.h>
 #include <io.h>
 
+#pragma pack(1)
+
+#if EDITOR_ATARI || PLATFORM_ATARI
+struct atari_tiles_info_def atari_tiles_info[WORLDS_MAX + 1];
+FILE *atari_tiles_info_file_pointer;
+#endif
+
 //////////////////////////////////////////////////////
+FILE *level_set_file_pointer;
 const char *level_set_name;
 
 // just one character
@@ -25,6 +33,8 @@ const char *level_set_name;
 #define REPRESENTATION_ANIMATED   0x2
 
 bool editor_active = false;
+
+struct level_set_header_def level_set_header;
 
 byte representation_obj[TYPE_MAX] = {
 	36, // robbo
@@ -98,11 +108,10 @@ byte representation_galaxy[] = {
 };
 
 //////////////////////////////////////////////////////
-FILE *level_set_file_pointer;
-
 ALLEGRO_DISPLAY * display;
 ALLEGRO_FONT * font;
 ALLEGRO_EVENT_QUEUE *queue;
+ALLEGRO_TIMER *game_clock;
 ALLEGRO_TIMER *timer;
 ALLEGRO_EVENT event;
 
@@ -125,19 +134,17 @@ void audio_sfx(unsigned char sfx_id)
 
 }
 
-
-
 void load_level_data()
 {
 	long offset = sizeof(struct level_set_header_def);
-	offset += (long)level_number * ((long) sizeof(struct level_def));
+	offset += (long)level_number * ((long) sizeof(map));
 	fseek(level_set_file_pointer, offset, SEEK_SET);
-	fread(&level, sizeof(struct level_def), 1, level_set_file_pointer);
+	fread(map, sizeof(map), 1, level_set_file_pointer);
 }
 
 void set_tileset()
 {
-	current_tiles_atlas = tiles_atlas[level.tileset_number];
+	current_tiles_atlas = tiles_atlas[atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number];
 
 	for (int i = 0; i < TILES_COLUMNS * TILES_ROWS; ++i)
 	{
@@ -185,7 +192,7 @@ byte get_representation(byte obj, byte index)
 	byte type;
 	if (obj == TYPE_TEXT)
 	{
-		type = obj_text_type[index];
+		type = objects.text_type[index];
 		representation = representation_text[type];
 	}
 	else
@@ -198,12 +205,11 @@ void galaxy_draw_screen()
 #if (!EDITOR_ENABLED)
 	al_clear_to_color(al_map_rgb(20, 20, 40));
 #endif
-
 	// draw border over the playfield
 	al_draw_filled_rounded_rectangle(SCREEN_MAP_POS_X - 10, SCREEN_MAP_POS_Y - 10,
 		SCREEN_MAP_POS_X + MAP_SIZE_X * SCREEN_TILE_SIZE + 10, SCREEN_MAP_POS_Y + MAP_SIZE_Y * SCREEN_TILE_SIZE + 10,
 		10, 10,
-		atari_color_to_allegro_color(level.level_colors[0]));
+		atari_color_to_allegro_color(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors[0]));
 
 	// draw background
 	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
@@ -264,7 +270,7 @@ char *obj_names[] =
 	"BANG",
 	"IMP ",
 	"ROCK",
-	"COIL",
+	"ARC",
 	"TEXT"
 };
 
@@ -282,11 +288,11 @@ char *prop_names[] =
 	"KILL",
 	"MOVE",
 	"BOOM",
-	"FADE",
-	"ACID",
 	"TELE",
-	"MAGNET",
+	"ACID",
 	"IRON",
+	"MAGNET",
+	"WORD",
 };
 
 void show_rules()
@@ -354,7 +360,6 @@ void game_draw_screen()
 	int pos_y;
 	byte representation;
 	byte tile_buffer[MAP_SIZE_Y][MAP_SIZE_X];
-	const byte EMPTY_TILE = 63;
 	memset(tile_buffer, EMPTY_TILE, sizeof(tile_buffer));
 
 #if (!EDITOR_ENABLED)
@@ -367,21 +372,21 @@ void game_draw_screen()
 	al_draw_filled_rounded_rectangle(SCREEN_MAP_POS_X - 10, SCREEN_MAP_POS_Y - 10,
 		SCREEN_MAP_POS_X + MAP_SIZE_X * SCREEN_TILE_SIZE + 10, SCREEN_MAP_POS_Y + MAP_SIZE_Y * SCREEN_TILE_SIZE + 10,
 		10, 10,
-		atari_color_to_allegro_color(level.level_colors[0]));
+		atari_color_to_allegro_color(atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].world_colors[0]));
 
 	for (int local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
 			continue;
-		local_type = obj_type[local_index];
-		pos_x = obj_x[local_index];
-		pos_y = obj_y[local_index];
+		local_type = objects.type[local_index];
+		pos_x = objects.x[local_index];
+		pos_y = objects.y[local_index];
 		representation = get_representation(local_type, local_index);
 
 		if (local_type != TYPE_TEXT)
 		{
 			if (representation_type[local_type] & REPRESENTATION_DIRECTIONS)
-				representation += (obj_direction[local_index] & DIR_MASK);
+				representation += (objects.direction[local_index] & DIR_MASK);
 
 			if (drawing_front_buffer)
 			{
@@ -407,9 +412,20 @@ void game_draw_screen()
 			tile_buffer[pos_y][pos_x] = representation;
 		}
 
+
+		if (objects.direction[local_index] & DIR_ACTIVE_RULE)
+		{
+			int dest_x = SCREEN_MAP_POS_X + pos_x * SCREEN_TILE_SIZE;
+			int dest_y = SCREEN_MAP_POS_Y + pos_y * SCREEN_TILE_SIZE;
+
+			al_draw_rectangle(dest_x, dest_y, dest_x + SCREEN_TILE_SIZE, dest_y + SCREEN_TILE_SIZE, al_map_rgb(255, 30, 255), 2);
+		}
+
+
 		if (editor_active && editor_selected_direction != DIR_NONE)
-			draw_direction(pos_x, pos_y, obj_direction[local_index]);
+			draw_direction(pos_x, pos_y, objects.direction[local_index] & DIR_MASK);
 	}
+
 	if (!editor_active)
 		al_flip_display();
 };
@@ -417,63 +433,62 @@ void game_draw_screen()
 void game_get_action()
 {
 	bool action_taken = false;
-	while (!action_taken) {
-		al_wait_for_event(queue, &event);
+	ALLEGRO_KEYBOARD_STATE keyboard_state;
+	you_move_direction = DIR_NONE;
 
-		if (event.type == ALLEGRO_EVENT_TIMER) {
+	const int timer_limit = 12;
+	while (al_get_timer_count(timer) < timer_limit)
+	{
+	};
+
+	while (action_taken==false)
+	{
+		if (al_get_timer_count(game_clock) > 16)
+		{
 			drawing_front_buffer = !drawing_front_buffer;
 			game_draw_screen();
+			al_set_timer_count(game_clock, 0);
 		}
-		if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+
+		al_get_keyboard_state(&keyboard_state);
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_ESCAPE))
 		{
-#if (EDITOR_ENABLED)
-			game_state = LEVEL_QUIT;
+			game_phase = LEVEL_QUIT;
 			action_taken = true;
-			break;
-#else
-			exit(0);
-#endif
 		}
-		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_UP))
 		{
-			switch (event.keyboard.keycode)
-			{
-			case ALLEGRO_KEY_ESCAPE:
-				game_state = LEVEL_QUIT;
-				action_taken = true;
-				break;
-
-			case ALLEGRO_KEY_UP:
-				you_move_direction = DIR_UP;
-				action_taken = true;
-				break;
-
-			case ALLEGRO_KEY_DOWN:
-				you_move_direction = DIR_DOWN;
-				action_taken = true;
-				break;
-
-			case ALLEGRO_KEY_LEFT:
-				you_move_direction = DIR_LEFT;
-				action_taken = true;
-				break;
-
-			case ALLEGRO_KEY_RIGHT:
-				you_move_direction = DIR_RIGHT;
-				action_taken = true;
-				break;
-
-			case ALLEGRO_KEY_SPACE:
-			case ALLEGRO_KEY_LSHIFT:
-			case ALLEGRO_KEY_RSHIFT:
-			case ALLEGRO_KEY_LCTRL:
-			case ALLEGRO_KEY_RCTRL:
-				you_move_direction = DIR_NONE;
-				action_taken = true;
-				break;
-			}
+			you_move_direction = DIR_UP;
+			action_taken = true;
 		}
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_DOWN))
+		{
+			you_move_direction = DIR_DOWN;
+			action_taken = true;
+		}
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_LEFT))
+		{
+			you_move_direction = DIR_LEFT;
+			action_taken = true;
+		}
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_RIGHT))
+		{
+			you_move_direction = DIR_RIGHT;
+			action_taken = true;
+		}
+		if (al_key_down(&keyboard_state, ALLEGRO_KEY_SPACE) ||
+			al_key_down(&keyboard_state, ALLEGRO_KEY_LCTRL) ||
+			al_key_down(&keyboard_state, ALLEGRO_KEY_RCTRL) ||
+			al_key_down(&keyboard_state, ALLEGRO_KEY_LSHIFT) ||
+			al_key_down(&keyboard_state, ALLEGRO_KEY_RSHIFT)
+			)
+		{
+			you_move_direction = DIR_NONE;
+			action_taken = true;
+		}
+
 	}
+	al_set_timer_count(timer, 0);
 }
 
 
@@ -485,7 +500,7 @@ void galaxy_get_action()
 		if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
 		{
 #if (EDITOR_ENABLED)
-			game_state = LEVEL_QUIT;
+			game_phase = LEVEL_QUIT;
 			action_taken = true;
 			break;
 #else
@@ -497,7 +512,7 @@ void galaxy_get_action()
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_ESCAPE:
-				game_state = LEVEL_QUIT;
+				game_phase = LEVEL_QUIT;
 				action_taken = true;
 				break;
 
@@ -552,20 +567,12 @@ void galaxy_get_action()
 			case ALLEGRO_KEY_RCTRL:
 				action_taken = true;
 				if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
-					game_state = GALAXY_TRIGGER;
+					game_phase = GALAXY_TRIGGER;
 				break;
 			}
 		}
 	}
 	return;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-
-void galaxy_land_anim()
-{
-
 }
 
 void show_error(const char *error)
@@ -578,6 +585,35 @@ void show_error(const char *error)
 		NULL,
 		ALLEGRO_MESSAGEBOX_ERROR
 	);
+}
+
+void open_atari_tiles_info()
+{
+#ifdef _MSC_VER
+	char buffer[_MAX_PATH] = "";
+	char drive[_MAX_DRIVE] = "";
+	char dir[_MAX_DIR] = "";
+	char fname[_MAX_FNAME] = "";
+	char ext[_MAX_EXT] = "";
+	_splitpath(level_set_name, drive, dir, fname, ext);
+	strncat(buffer, drive, _MAX_PATH);
+	if (strlen(drive)!=0)
+		strncat(buffer, "\\", _MAX_PATH);
+	strncat(buffer, dir, _MAX_PATH);
+	if (strlen(dir) != 0)
+		strncat(buffer, "\\", _MAX_PATH);
+	strncat(buffer, fname, _MAX_PATH);
+	strncat(buffer, ".atl", _MAX_PATH);
+	if (atari_tiles_info_file_pointer != NULL)
+	{
+		fclose(atari_tiles_info_file_pointer);
+	}
+	atari_tiles_info_file_pointer = fopen(buffer, "rb+");
+	fread(atari_tiles_info, sizeof(atari_tiles_info), 1, atari_tiles_info_file_pointer);
+#else
+#error Add additional build platform!
+#endif
+
 }
 
 bool open_level_set()
@@ -602,8 +638,7 @@ bool open_level_set()
 	fseek(fp, 0L, SEEK_SET);
 
 	// TO DO (allow loading set with smaller number of levels? or set is always full and only it's set as parameters?)
-
-	if (file_size != sizeof(struct level_set_def))
+	if (file_size != sizeof(struct level_set_header_def) + LEVELS_MAX * sizeof(map))
 	{
 		char message[2048];
 		sprintf(message,
@@ -621,12 +656,14 @@ bool open_level_set()
 		fclose(level_set_file_pointer);
 	}
 	level_set_file_pointer = fp;
+
+	open_atari_tiles_info();
 	return true;
 }
 
 void init_platform()
 {
-	const float FPS = 5;
+	const float FPS = 50;
 
 	al_init();
 	al_init_font_addon();
@@ -645,32 +682,51 @@ void init_platform()
 	// load assets
 	font = al_load_ttf_font("font/MapMaker.ttf", 22, 0);
 
-	tiles_atlas[0] = al_load_bitmap("gfx/final.png");
-	tiles_atlas_indices[0] = al_load_bitmap_flags("gfx/final.png", ALLEGRO_KEEP_INDEX);
+	char filename[50];
+	for (int i = 0; i < TILESET_MAX; ++i)
+	{
+		sprintf(filename, "gfx_atari/%d.png", i);
+		ALLEGRO_BITMAP *loaded = al_load_bitmap(filename);
+		if (loaded == NULL)
+		{
+			al_show_native_message_box(
+				display,
+				dialog_tile,
+				"Cannot load TILESET bitmap",
+				filename,
+				NULL,
+				ALLEGRO_MESSAGEBOX_ERROR
+			);
+			exit(1);
+		}
+		tiles_atlas[i] = loaded;
+		tiles_atlas_indices[i] = al_load_bitmap_flags(filename, ALLEGRO_KEEP_INDEX);
 
-	tiles_atlas[1] = al_load_bitmap("gfx/robbo_galaxy.png");
-	tiles_atlas_indices[1] = al_load_bitmap_flags("gfx/robbo_galaxy.png", ALLEGRO_KEEP_INDEX);
-
-	// convert tiles_atlas to Atari FNT
+		// convert tiles_atlas to Atari FNT
 #if (EDITOR_ENABLED)
-	save_tiles_to_font(tiles_atlas_indices[0], "gfx/final.fnt");
-	save_tiles_to_font(tiles_atlas_indices[1], "gfx/robbo_galaxy.fnt");
+		sprintf(filename, "gfx_atari/%d.fnt", i);
+		save_tiles_to_font(tiles_atlas_indices[i], filename);
+
+		sprintf(filename, "gfx_atari/%d.inv", i);
+		save_inverse_information(tiles_atlas_indices[i], filename);
 #endif
+	}
+
 
 	// load palette
-	load_atari_palette("gfx/palette/altirra.act");
+	load_atari_palette("gfx_atari/palette/altirra.act");
 
 	// register events
 
 	queue = al_create_event_queue();
 	timer = al_create_timer(1.0 / FPS);
+	game_clock = al_create_timer(1.0 / FPS);
 
 	al_register_event_source(queue, al_get_mouse_event_source());
 	al_register_event_source(queue, al_get_keyboard_event_source());
 	al_register_event_source(queue, al_get_display_event_source(display));
-	al_register_event_source(queue, al_get_timer_event_source(timer));
-
 	al_start_timer(timer);
+	al_start_timer(game_clock);
 
 #if (!EDITOR_ENABLED)
 	// open file pointer
@@ -681,7 +737,9 @@ void init_platform()
 
 void set_palette()
 {
-	remap_palette(tiles_atlas_indices[level.tileset_number], tiles_atlas[level.tileset_number]);
+	if (atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number > TILESET_MAX)
+		atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number = 1;
+	remap_palette(tiles_atlas_indices[atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number], tiles_atlas[atari_tiles_info[WORLD_OF_LEVEL_NUMBER()].tileset_number]);
 }
 
 void deinit()

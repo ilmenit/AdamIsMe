@@ -19,8 +19,10 @@
 .export     _display_font_page2
 .export     _game_font_page1
 .export     _game_font_page2
+.export		_game_font_address
 .export		_galaxy_font_page1
 .export		_galaxy_font_page2
+.export		_galaxy_font_address
 .export		_dl_handler
 .export		_background_color
 
@@ -39,32 +41,30 @@ _local_temp2: .byte 0
 
 game_font1:
 .repeat 4, i
-	.incbin "gfx/final.fnt",i*2*32*8,32*8
+	.incbin "gfx_atari/1.fnt",i*2*32*8,32*8
 .endrepeat
 
 game_font2:
 .repeat 4, i
-	.incbin "gfx/final.fnt",i*2*32*8+32*8,32*8
+	.incbin "gfx_atari/1.fnt",i*2*32*8+32*8,32*8
 .endrepeat
 
 _galaxy_font1:
 .repeat 4, i
-	.incbin "gfx/robbo_galaxy.fnt",i*2*32*8,32*8
+	.incbin "gfx_atari/0.fnt",i*2*32*8,32*8
 .endrepeat
 
 _galaxy_font2:
 .repeat 4, i
-	.incbin "gfx/robbo_galaxy.fnt",i*2*32*8+32*8,32*8
+	.incbin "gfx_atari/0.fnt",i*2*32*8+32*8,32*8
 .endrepeat
 
 _display_list1:
     .byte   DL_BLK8
     .byte   DL_BLK8 
     .byte   DL_BLK8 | DL_DLI
-    .repeat 12, index
+    .repeat 24, index
 		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
-		.word   (_screen_memory1 + (40*index))
-		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI 
 		.word   (_screen_memory1 + (40*index))
     .endrepeat
     .byte   DL_BLK1 | DL_DLI 
@@ -75,27 +75,25 @@ _display_list2:
     .byte   DL_BLK8
     .byte   DL_BLK8 
     .byte   DL_BLK8 | DL_DLI
-    .repeat 12, index
+    .repeat 24, index
 		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
-		.word   (_screen_memory2 + (40*index))
-		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI 
 		.word   (_screen_memory2 + (40*index))
     .endrepeat
     .byte   DL_BLK1 | DL_DLI 
     .byte   DL_JVB 
     .word   _display_list2 
 
-    
 _screen_memory1:   
-    .repeat 24*40/16
-    .byte 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+    .repeat 24*40
+    .byte 0
     .endrepeat
 
 _screen_memory2:   
-    .repeat 24*40/16
-    .byte 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+    .repeat 24*40
+    .byte 0
     .endrepeat
 
+    
 .segment "DATA"
 
 ;;;;;;;;;;;;;;; These are used to display fonts and can be changed
@@ -107,12 +105,16 @@ _display_font_page2:
 
 ;;;;;;;;;;;;;;; These point to specific pages 
 
+_game_font_address:
+	.byte   0
 _game_font_page1:
 	.byte   .hibyte(game_font1)
 
 _game_font_page2:
 	.byte   .hibyte(game_font2)
 
+_galaxy_font_address:
+	.byte   0
 _galaxy_font_page1:
 	.byte   .hibyte(_galaxy_font1)
 
@@ -145,22 +147,17 @@ _dl_handler:
  bcs bottom_handler
  cmp #$10 ; if bottom of screen
  bcc up_handler
- pha ; push VCOUNT
- pla ; pop VCOUNT to a
  ; every 8th line change the font set
- lsr a
- lsr a
- lsr a
- bcc set_second
+ and #%00000100
+ beq set_second
  ;; Set first font
  lda _display_font_page1
- sta $D409
  jmp handler_end
 set_second:
   ;; Set second font
  lda _display_font_page2
- sta $D409
 handler_end:
+ sta $D409
  pla
  rti
 

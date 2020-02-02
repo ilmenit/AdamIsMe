@@ -43,24 +43,24 @@ extern byte local_temp2;
 /*****************************************************************************/
 /*                                Externs                                    */
 /*****************************************************************************/
-extern byte game_state; // LLEVEL_WON, LEVEL_FAILED
+extern byte game_phase; // LLEVEL_WON, LEVEL_FAILED
 extern byte level_number;
 extern byte you_move_direction;
 
 extern struct game_progress_def game_progress;
 
-extern byte obj_x[MAX_OBJECTS]; // pos
-extern byte obj_y[MAX_OBJECTS]; // pos
-extern byte obj_type[MAX_OBJECTS];
-extern byte obj_text_type[MAX_OBJECTS]; // if obj_type[x] is word then obj_word_type[x] tells what word it is
-extern direction obj_direction[MAX_OBJECTS]; // direction object
+extern struct objects_def objects;
+
 // objects types that has specific property, value tells how many times not to disable if more than once
 extern byte obj_prop[TYPE_MAX*PROPERTY_MAX];
 extern uint obj_has[TYPE_MAX];
+extern bool obj_is_word[TYPE_MAX];
 extern byte rule_exists[PROPERTY_MAX];
 
 extern struct level_set_header_def level_set_header;
-extern struct level_def level; // current level
+
+extern byte map[MAP_SIZE_Y*MAP_SIZE_X];
+
 extern struct preprocess_info_data preproc_helper;
 extern struct helpers_def helpers;
 

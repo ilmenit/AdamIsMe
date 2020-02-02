@@ -1,9 +1,14 @@
+#ifndef DEFINITION_S
+#define DEFINITION_S
+
 #include "my_types.h"
 
 #ifdef __CC65__
 #define EDITOR_ENABLED 0
+#define PLATFORM_ATARI 1
 #else
 #define EDITOR_ENABLED 1
+#define EDITOR_ATARI 1
 #endif
 
 // SOUNDS
@@ -42,11 +47,14 @@
 #define LEVELS_MAX ( (WORLDS_MAX*LEVELS_PER_WORLD) + 1)
 #define LEVEL_GALAXY (LEVELS_MAX - 1)
 
+#define WORLD_OF_LEVEL_NUMBER() (level_number / LEVELS_PER_WORLD)
+
 // colors
 #define COLORS_MAX 5
 
 // tilesets
-#define TILESET_MAX 2
+#define TILESET_MAX 9
+#define TILES_MAX 64
 
 // map definition
 
@@ -74,7 +82,9 @@
 #define DIR_CHANGED 0x10
 // if created this turn, then ignore
 #define DIR_CREATED 0x20
-#define DIR_MASK 0x0F
+// if this object (TEXT) is part of active game RULE (to "highlight" it)
+#define DIR_ACTIVE_RULE 0x40
+#define DIR_MASK 0x07
 
 ////////////////////////////////////////////////////////
 // Object types
@@ -114,13 +124,13 @@
 // robbo game specific for BOMB - on destroy creates BANG around 
 #define PROP_BOOM  0x0a 
 //  gets destroyed next turn
-#define PROP_FADE  0x0b 
+#define PROP_TELE  0x0b 
 //  ACID is melts IRON melts (similarly to HOT & MELT)
 #define PROP_ACID  0x0c 
-#define PROP_TELE  0x0d 
+#define PROP_IRON  0x0d 
 // Magnets pull IRON
 #define PROP_MAGNET  0x0e 
-#define PROP_IRON  0x0f 
+#define PROP_WORD    0x0f 
 #define PROPERTY_MAX 0x10
 
 //////////////////////////
@@ -141,13 +151,12 @@
 #define IS_NOUN(text)  ((text & 0xF0)==0)
 #define IS_PROPERTY(text) (text & AS_PROPERTY)
 #define IS_OPERATOR(text) (text & AS_OPERATOR)
-
 ////////////////////////////////////////////////////////
 // MACROS for quick setting or checking of object state
 ////////////////////////////////////////////////////////
-#define IS_KILLED(index) (obj_direction[index] & DIR_KILLED)
-#define IS_CREATED(index) (obj_direction[index] & DIR_CREATED)
-
+#define IS_KILLED(index) (objects.direction[index] & DIR_KILLED)
+#define IS_CREATED(index) (objects.direction[index] & DIR_CREATED)
+#define IS_ACTIVE_RULE(index) (objects.direction[index] & DIR_ACTIVE_RULE)
 ////////////////////////////////////////////////////////
 /// LEVEL STATES
 ////////////////////////////////////////////////////////
@@ -164,3 +173,59 @@
 #define GALAXY_TRIGGER  8
 
 #define SHUTTLE_IN_SPACE 0xFF
+
+struct helpers_def
+{
+	bool pick_exists_as_object;
+	bool something_moving;
+	bool something_pushed;
+	bool you_move_at_least_once;
+	// reasons why rules may change: text is destroyed, created, moved, transformed, teleported
+	bool rules_may_have_changed;
+	bool something_was_word;
+	bool something_exploded;
+	bool something_transformed;
+};
+
+// 6502 processor cannot handle well "array of structs" like struct objects[MAX_OBJECTS], but can handle well "struct of arrays"
+// You need to use objects.x[index] instead of objects[index].x, but still nicely grouped and readable
+
+struct objects_def
+{
+	// x and y depending on MAP_SIZE could be encoded in one byte, but having it separated is faster (no need to and + bitshift)
+	byte x[MAX_OBJECTS]; // pos
+	byte y[MAX_OBJECTS]; // pos
+
+	// TYPE and TEXT_TYPE could also be encoded in one byte, but this is faster
+	byte type[MAX_OBJECTS];
+	byte text_type[MAX_OBJECTS]; // if obj_type[x] is word then obj_word_type[x] tells what word it is
+
+	direction direction[MAX_OBJECTS]; // direction object + additional state flags
+};
+
+struct game_progress_def {
+	byte galaxy_x; // position on the galaxy map
+	byte galaxy_y; // position on the galaxy map
+	byte landed_x; // position on the galaxy map
+	byte landed_y; // position on the galaxy map
+	byte completed_levels; // how many levels player completed
+	byte landed_on_world_number;
+	byte worlds_state[WORLDS_MAX]; // each bit in byte represents finished level in world
+};
+
+// used for optimization, grouped as struct for cleaning by single memset
+struct preprocess_info_data {
+	bool preprocess_object_exists_x[MAP_SIZE_X];
+	bool preprocess_object_exists_y[MAP_SIZE_Y];
+};
+
+#if EDITOR_ATARI || PLATFORM_ATARI
+struct atari_tiles_info_def
+{
+	byte tileset_number;
+	byte world_colors[COLORS_MAX];
+};
+#endif
+
+
+#endif
