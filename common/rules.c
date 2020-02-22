@@ -103,8 +103,9 @@ void new_parsing()
 					}
 				}
 				else // operator_has
-				{
-					obj_has[dst_type] |= one_lshift_lookup [(src_type & VALUE_MASK)];
+				{					
+					if (IS_NOUN(src_type)) // HAS works only for objects, to fit in uint
+						obj_has[dst_type] |= one_lshift_lookup [(src_type & VALUE_MASK)];
 				}
 			}			
 		}
