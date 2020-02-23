@@ -74,7 +74,7 @@ void check_force()
 {
 	// local_temp1 is the previous one 
 	// local_type is the current one
-	local_type = MapGet(local_x, local_y);
+	local_type = *local_ptr;
 
 	// if previous (to the right in "right to left") is moving
 	if ( local_temp1 & PREPROCESS_MOVING)
@@ -95,13 +95,13 @@ void check_force()
 		local_type &= (~PREPROCESS_PUSH);
 	}
 
-	MapSet(local_x, local_y, local_type);
+	*local_ptr = local_type;
 	local_temp1 = local_type;
 }
 
 void pass_info_back()
 {
-	local_type = MapGet(local_x, local_y);
+	local_type = *local_ptr;
 
 	// storing these flags temporary to pass to the next check_force as previous flags 
 	local_flags = local_type & (PREPROCESS_OPEN | PREPROCESS_SHUT);
@@ -126,7 +126,7 @@ void pass_info_back()
 			local_type |= PREPROCESS_MOVE_ACCEPTED;
 		}
 	}
-	MapSet(local_x, local_y, local_type);
+	*local_ptr = local_type;
 	local_temp1 = local_type | local_flags;
 }
 
@@ -140,19 +140,24 @@ void apply_force()
 			if (!preproc_helper.preprocess_object_exists_y[local_y])
 				continue;
 
-			local_temp1 = MapGet(MAP_SIZE_X-1, local_y);
+			local_ptr = &MapGet(MAP_SIZE_X - 1, local_y);
+			local_temp1 = *local_ptr;
+
 			// first one is for sure not pushed, so we remove this flag from map
-			MapSet(MAP_SIZE_X - 1, local_y, local_temp1 & (~PREPROCESS_PUSH));
+			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
 			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
 			{
+				--local_ptr;
 				check_force();
 			}
-			local_temp1 = MapGet(0, local_y);
-			MapSet(0, local_y, local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)));
+			local_ptr = &MapGet(0, local_y);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
 			{
+				++local_ptr;
 				pass_info_back();
 			}
 		}
@@ -163,18 +168,22 @@ void apply_force()
 			if (!preproc_helper.preprocess_object_exists_y[local_y])
 				continue;
 
-			local_temp1 = MapGet(0, local_y);
-			MapSet(0, local_y, local_temp1 & (~PREPROCESS_PUSH) );
+			local_ptr = &MapGet(0, local_y);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
 			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
 			{
+				++local_ptr;
 				check_force();
 			}
-			local_temp1 = MapGet(MAP_SIZE_X - 1, local_y);
-			MapSet(MAP_SIZE_X - 1, local_y, local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)));
+			local_ptr = &MapGet(MAP_SIZE_X - 1, local_y);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
 			{
+				--local_ptr;
 				pass_info_back();
 			}
 		}
@@ -185,18 +194,22 @@ void apply_force()
 			if (!preproc_helper.preprocess_object_exists_x[local_x])
 				continue;
 
-			local_temp1 = MapGet(local_x, 0);
-			MapSet(local_x, 0, local_temp1 & (~PREPROCESS_PUSH));
+			local_ptr = &MapGet(local_x, 0);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
 			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
 			{
+				local_ptr += MAP_SIZE_X;
 				check_force();
 			}
-			local_temp1 = MapGet(local_x, MAP_SIZE_Y - 1);
-			MapSet(local_x, MAP_SIZE_Y - 1, local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)));
+			local_ptr = &MapGet(local_x, MAP_SIZE_Y - 1);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
 			{
+				local_ptr -= MAP_SIZE_X;
 				pass_info_back();
 			}
 		}
@@ -207,18 +220,23 @@ void apply_force()
 			if (!preproc_helper.preprocess_object_exists_x[local_x])
 				continue;
 
-			local_temp1 = MapGet(local_x, MAP_SIZE_Y - 1);
-			MapSet(local_x, MAP_SIZE_Y - 1, local_temp1 & (~PREPROCESS_PUSH));
+			local_ptr = &MapGet(local_x, MAP_SIZE_Y - 1);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
 			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
 			{
+				local_ptr -= MAP_SIZE_X;
 				check_force();
 			}
-			local_temp1 = MapGet(local_x, 0);
-			MapSet(local_x, 0, local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)));
+
+			local_ptr = &MapGet(local_x, 0);
+			local_temp1 = *local_ptr;
+			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
 			{
+				local_ptr += MAP_SIZE_X;
 				pass_info_back();
 			}
 		}
@@ -243,7 +261,8 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_flags = MapGet(local_x, local_y);
+		local_ptr = &MapGet(local_x, local_y);
+		local_flags = *local_ptr;
 
 		// open/shut flags
 		if (ObjPropGet(local_type, PROP_OPEN))
@@ -270,12 +289,13 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 			local_flags |= PREPROCESS_STOP;
 		}
 
-		MapSet(local_x, local_y, local_flags);
+		*local_ptr = local_flags;
 	}
 }
 
 void preprocess_magnets()
 {
+	byte reverted_move_direction = reverted_direction_lookup[move_direction];
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (!ObjPropGet(objects.type[local_index], PROP_MAGNET))
@@ -288,14 +308,14 @@ void preprocess_magnets()
 		// local_flags is magnet direction
 		local_flags = objects.direction[local_index] & DIR_MASK;
 
-		if (move_direction != reverted_direction_lookup[local_flags])
+		if (local_flags != reverted_move_direction)
 			continue;
-
-		local_x = objects.x[local_index];
-		local_y = objects.y[local_index];
 
 		local_temp1 = move_direction_lookup_x[local_flags];
 		local_temp2 = move_direction_lookup_y[local_flags];
+
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 
 		while(1) 
 		{

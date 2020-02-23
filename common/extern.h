@@ -26,6 +26,8 @@ extern byte local_flags;
 // just a local variable
 extern byte local_temp1;
 extern byte local_temp2;
+// local pointer
+extern byte *local_ptr;
 
 // these are used by CC65
 #ifdef __CC65__
@@ -38,6 +40,7 @@ extern byte local_temp2;
 #pragma zpsym ("local_flags")
 #pragma zpsym ("local_temp1")
 #pragma zpsym ("local_temp2")
+#pragma zpsym ("local_ptr")
 #endif
 
 /*****************************************************************************/

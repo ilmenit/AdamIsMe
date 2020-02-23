@@ -11,5 +11,6 @@ byte local_text_type;
 byte local_flags;
 byte local_temp1;
 byte local_temp2;
+byte* local_ptr;
 
 #endif

@@ -3,7 +3,6 @@
  - Open/Shut has higher priority than STOP
  - Difference from BabaIsYou - Open/Shut is evaluated after move, therefore pushed objects need to wait to enter cleaned space
  - Difference from BabaIsYou - Push has higher priority than Open/Shut, therefore until object can be pushed, it won't open/close
-- TODO: change PUSH when on MOVE, only if being pushed from back then it's moving. Use PUSH for this + MOVE ACCEPTED? To have levels like "Prison" or "Rocky Road" working
  - Magnets makes IRON objects moving, and moving is used in the apply_force, so magnets have magnet_preprocess. 
    They work through STOP (not like in Atari Robbo but like in real-life), because STOP property is done in other preprocess...
 */
@@ -25,9 +24,7 @@
 #define PREPROCESS_MOVE_ACCEPTED 0x40
 #define PREPROCESS_MAGNET   0x80
 
-bool something_moving;
 byte move_direction;
-
 
 // MOVE
 /*
@@ -92,6 +89,11 @@ void check_force()
 			local_type |= PREPROCESS_FINISH;
 		}
 	}
+	else
+	{
+		// if previous one is not moving, then this one is losing PUSH flag
+		local_type &= (~PREPROCESS_PUSH);
+	}
 
 	MapSet(local_x, local_y, local_type);
 	local_temp1 = local_type;
@@ -139,6 +141,8 @@ void apply_force()
 				continue;
 
 			local_temp1 = MapGet(MAP_SIZE_X-1, local_y);
+			// first one is for sure not pushed, so we remove this flag from map
+			MapSet(MAP_SIZE_X - 1, local_y, local_temp1 & (~PREPROCESS_PUSH));
 
 			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
 			{
@@ -160,7 +164,7 @@ void apply_force()
 				continue;
 
 			local_temp1 = MapGet(0, local_y);
-			MapSet(0, local_y, local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN)));
+			MapSet(0, local_y, local_temp1 & (~PREPROCESS_PUSH) );
 
 			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
 			{
@@ -182,6 +186,7 @@ void apply_force()
 				continue;
 
 			local_temp1 = MapGet(local_x, 0);
+			MapSet(local_x, 0, local_temp1 & (~PREPROCESS_PUSH));
 
 			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
 			{
@@ -203,6 +208,7 @@ void apply_force()
 				continue;
 
 			local_temp1 = MapGet(local_x, MAP_SIZE_Y - 1);
+			MapSet(local_x, MAP_SIZE_Y - 1, local_temp1 & (~PREPROCESS_PUSH));
 
 			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
 			{
@@ -225,40 +231,41 @@ void apply_force()
 // this function goes through objects and according to their properties prepares temp map for quick interactions
 void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YOU or MOVE,  depending if the player is moving or other objects
 {
-	something_moving = false;
+	helpers.something_moving = false;
+	helpers.something_pushed = false;
 
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
 			continue;
 
-		local_type = obj_type[local_index];
+		local_type = objects.type[local_index];
 
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 		local_flags = MapGet(local_x, local_y);
 
 		// open/shut flags
-		if (obj_prop[local_type][PROP_OPEN])
+		if (ObjPropGet(local_type, PROP_OPEN))
 			local_flags |= PREPROCESS_OPEN;
-		if (obj_prop[local_type][PROP_SHUT])
+		if (ObjPropGet(local_type, PROP_SHUT))
 			local_flags |= PREPROCESS_SHUT;
 
-		if ( (obj_prop[local_type][preprocess_type] && obj_direction[local_index] == move_direction ) ||
-			 ( (local_flags & PREPROCESS_MAGNET) && obj_prop[local_type][PROP_IRON])
+		// move object if going into current direction and has no DIR_CHANGED flag set (ignore other flags)
+		if ( (ObjPropGet(local_type, preprocess_type) && (objects.direction[local_index] & (DIR_MASK | DIR_CHANGED) ) == move_direction ) ||
+			 ( (local_flags & PREPROCESS_MAGNET) && ObjPropGet(local_type, PROP_IRON))
 			)
 		{
 			local_flags |= PREPROCESS_MOVING;
-			something_moving = true;
+			helpers.something_moving = true;
 			preproc_helper.preprocess_object_exists_x[local_x] = true;
 			preproc_helper.preprocess_object_exists_y[local_y] = true;
 		}
-		else if (obj_prop[local_type][PROP_PUSH])
+		else if (ObjPropGet(local_type, PROP_PUSH))
 		{
 			local_flags |= PREPROCESS_PUSH;
 		}
-		//else if (obj_prop[local_type][PROP_STOP])
-		if (obj_prop[local_type][PROP_STOP])
+		if (ObjPropGet(local_type, PROP_STOP))
 		{
 			local_flags |= PREPROCESS_STOP;
 		}
@@ -271,27 +278,29 @@ void preprocess_magnets()
 {
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
+		if (!ObjPropGet(objects.type[local_index], PROP_MAGNET))
+			continue;
+
+		// usually we don't have that many KILLED up to last_obj_index so this one is moved to be second condition
 		if (IS_KILLED(local_index))
 			continue;
 
-		local_type = obj_type[local_index];
-		if (!obj_prop[local_type][PROP_PULL])
+		// local_flags is magnet direction
+		local_flags = objects.direction[local_index] & DIR_MASK;
+
+		if (move_direction != reverted_direction_lookup[local_flags])
 			continue;
 
-		// local_temp1 is magnet direction
-		local_temp1 = obj_direction[local_index] & DIR_MASK;
-		// local_temp2 is reverted_direction
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 
-		local_temp2 = reverted_direction_lookup[ local_temp1 ];
-		if (local_temp2 != move_direction)
-			continue;
+		local_temp1 = move_direction_lookup_x[local_flags];
+		local_temp2 = move_direction_lookup_y[local_flags];
 
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
 		while(1) 
 		{
-			local_x += move_direction_lookup_x[local_temp1];
-			local_y += move_direction_lookup_y[local_temp1];
+			local_x += local_temp1;
+			local_y += local_temp2;
 			if (local_x >= MAP_SIZE_X || local_y >= MAP_SIZE_Y)
 				break;
 			MapSet(local_x,local_y, PREPROCESS_MAGNET)
@@ -306,14 +315,15 @@ void move_ok_ones(byte preprocess_type)
 		if (IS_KILLED(local_index))
 			continue;
 
-		local_type = obj_type[local_index];
-		local_x = obj_x[local_index];
-		local_y = obj_y[local_index];
+		local_type = objects.type[local_index];
+		local_x = objects.x[local_index];
+		local_y = objects.y[local_index];
 		local_temp1 = MapGet(local_x, local_y);
 		if (
-			((local_temp1 & PREPROCESS_MAGNET) && obj_prop[local_type][PROP_IRON]) ||
-			obj_prop[local_type][PROP_PUSH] || 
-			obj_prop[local_type][preprocess_type])
+			((local_temp1 & PREPROCESS_MAGNET) && ObjPropGet(local_type, PROP_IRON)) ||
+			 (local_temp1 & PREPROCESS_PUSH) && (ObjPropGet(local_type, PROP_PUSH) ) ||
+			 ( ObjPropGet(local_type, preprocess_type) && ( (objects.direction[local_index] & DIR_MASK) == move_direction) )
+			)
 		{
 
 			if (
@@ -323,22 +333,30 @@ void move_ok_ones(byte preprocess_type)
 					(
 						(local_temp1 & PREPROCESS_MOVING &&
 							(
-								((local_temp1 & PREPROCESS_OPEN) && obj_prop[local_type][PROP_OPEN]) ||
-								((local_temp1 & PREPROCESS_SHUT) && obj_prop[local_type][PROP_SHUT])
+								((local_temp1 & PREPROCESS_OPEN) && ObjPropGet(local_type, PROP_OPEN)) ||
+								((local_temp1 & PREPROCESS_SHUT) && ObjPropGet(local_type, PROP_SHUT))
 							)
 						)
 					)					
 				)			
 			{
-				obj_x[local_index] += move_direction_lookup_x[move_direction];
-				obj_y[local_index] += move_direction_lookup_y[move_direction];
-				obj_direction[local_index] = move_direction;
+				// check if text
+				if (local_type == TYPE_TEXT || obj_is_word[local_type])
+					helpers.rules_may_have_changed = true;
+				objects.x[local_index] += move_direction_lookup_x[move_direction];
+				objects.y[local_index] += move_direction_lookup_y[move_direction];
+				objects.direction[local_index] = move_direction;
+				helpers.something_moving = true;
+				if ((local_temp1 & PREPROCESS_PUSH) && ObjPropGet(local_type, PROP_PUSH))
+					helpers.something_pushed = true;
 			}
 			else
 			{
-				// we rotate the others moving, except YOU, because it looks strange
-				if (obj_prop[local_type][preprocess_type] && move_direction == obj_direction[local_index] && !obj_prop[local_type][PROP_YOU])
-					obj_direction[local_index] = reverted_direction_lookup[obj_direction[local_index] & DIR_MASK] | DIR_CHANGED;
+				// we change direction of moving when hitting STOP, except YOU, because it looks strange
+				if (ObjPropGet(local_type, preprocess_type) && move_direction == objects.direction[local_index] && !ObjPropGet(local_type, PROP_YOU))
+				{
+					objects.direction[local_index] = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;
+				}
 			}
 		}
 	}
@@ -347,17 +365,21 @@ void move_ok_ones(byte preprocess_type)
 void perform_move(byte preprocess_type)
 {
 	// clear preprocessed data
-	memset(level.map, PREPROCESS_NONE, sizeof(level.map));
+	memset(map, PREPROCESS_NONE, sizeof(map));
 	clear_preprocess_helper();
 
-	if (preprocess_type == PROP_MOVE)
+	if (preprocess_type == PROP_MOVE && (rule_exists[PROP_MAGNET] && rule_exists[PROP_IRON]))
 		preprocess_magnets();
 
 	preprocess_move_and_push(preprocess_type);
-	if (!something_moving)
+	if (!helpers.something_moving) // this one for optimization
 		return;
 	apply_force();
+
+	helpers.something_moving = false; // this one for sounds
 	move_ok_ones(preprocess_type);
+	if (helpers.something_pushed)
+		audio_sfx(SFX_PUSH);
 }
 
 void handle_move()

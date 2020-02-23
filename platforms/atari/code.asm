@@ -11,6 +11,7 @@
 .export 	_local_flags
 .export 	_local_temp1
 .export 	_local_temp2
+.export 	_local_ptr
 .export 	_video_ptr1
 .export 	_video_ptr2
 .export 	_display_list1
@@ -36,7 +37,7 @@ _local_text_type: .byte 0
 _local_flags: .byte 0
 _local_temp1: .byte 0
 _local_temp2: .byte 0
-
+_local_ptr: .word 0
 .segment "GFX"
 
 game_font1:
