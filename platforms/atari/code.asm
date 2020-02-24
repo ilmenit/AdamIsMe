@@ -38,6 +38,11 @@ _local_flags: .byte 0
 _local_temp1: .byte 0
 _local_temp2: .byte 0
 _local_ptr: .word 0
+
+.segment "SFX"
+; it has EXE header, so we skip first 2 bytes
+.incbin "sfx/sfx.xex",2
+
 .segment "GFX"
 
 game_font1:

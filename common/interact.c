@@ -3,6 +3,13 @@
 // it won't interact, so object can pass through closed door.
 #include "extern.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
 #define INTERACT_NONE 0x0
 #define INTERACT_YOU  0x1
 #define INTERACT_SINK 0x2

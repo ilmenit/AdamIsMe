@@ -1,6 +1,14 @@
 #include "headers.h"
 #include "extern.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
+
 void load_level()
 {
 	load_level_data();

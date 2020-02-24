@@ -1,6 +1,13 @@
 #include "extern.h"
 #include "main.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
 extern byte move_direction;
 
 void handle_you()

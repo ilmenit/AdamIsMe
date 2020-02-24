@@ -6,6 +6,13 @@
 #include "sounds.h"
 #include "../../common/my_types.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
 // DISABLE OPTIMIZATION!!!, we do some hacks here!
 // It will crash if the function get f.e. inlined.
 

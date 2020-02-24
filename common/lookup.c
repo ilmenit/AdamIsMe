@@ -2,6 +2,13 @@
 #include "definitions.h"
 #include "extern.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
 // we do check here for 12, because we may need different size of lookup table if MAP_SIZE_Y is different
 #if MAP_SIZE_Y == 12
 byte map_lookup[MAP_SIZE_Y] =

@@ -1,0 +1,1080 @@
+Modules list:
+-------------
+code.o:
+    CODE              Offs=000000  Size=000033  Align=00001  Fill=0000
+    DATA              Offs=000000  Size=00000D  Align=00001  Fill=0000
+    ZEROPAGE          Offs=000000  Size=00000B  Align=00001  Fill=0000
+    SFX               Offs=000000  Size=002857  Align=00001  Fill=0000
+    GFX               Offs=000000  Size=00181E  Align=00001  Fill=0000
+linker.o:
+    FILEHDR           Offs=000000  Size=000002  Align=00001  Fill=0000
+    NEXEHDR           Offs=000000  Size=000004  Align=00001  Fill=0000
+    CHKHDR            Offs=000000  Size=000004  Align=00001  Fill=0000
+atari_fn.o:
+    RODATA            Offs=000000  Size=00009B  Align=00001  Fill=0000
+    BANKDATA          Offs=000000  Size=000A05  Align=00001  Fill=0000
+    BANKRODATA        Offs=000000  Size=00009A  Align=00001  Fill=0000
+    BANKCODE          Offs=000000  Size=00100F  Align=00001  Fill=0000
+sounds.o:
+    BANKDATA          Offs=000A05  Size=000001  Align=00001  Fill=0000
+    BANKRODATA        Offs=00009A  Size=000002  Align=00001  Fill=0000
+    BANKCODE          Offs=00100F  Size=0000CE  Align=00001  Fill=0000
+level.o:
+    BANKCODE          Offs=0010DD  Size=0001D8  Align=00001  Fill=0000
+lookup.o:
+    BANKRODATA        Offs=00009C  Size=00004B  Align=00001  Fill=0000
+you.o:
+    BANKCODE          Offs=0012B5  Size=00006C  Align=00001  Fill=0000
+interact.o:
+    BANKDATA          Offs=000A06  Size=000002  Align=00001  Fill=0000
+    BANKCODE          Offs=001321  Size=00070A  Align=00001  Fill=0000
+data.o:
+    BANKDATA          Offs=000A08  Size=00071A  Align=00001  Fill=0000
+    BANKRODATA        Offs=0000E7  Size=000001  Align=00001  Fill=0000
+move.o:
+    BANKDATA          Offs=001122  Size=000002  Align=00001  Fill=0000
+    BANKCODE          Offs=001A2B  Size=000824  Align=00001  Fill=0000
+rules.o:
+    BANKDATA          Offs=001124  Size=00001E  Align=00001  Fill=0000
+    BANKCODE          Offs=00224F  Size=000527  Align=00001  Fill=0000
+main.o:
+    BANKRODATA        Offs=0000E8  Size=000019  Align=00001  Fill=0000
+    BANKCODE          Offs=002776  Size=000377  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(_directerrno.o):
+    CODE              Offs=000033  Size=00000A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(_mappederrno.o):
+    CODE              Offs=00003D  Size=000010  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(_oserror.o):
+    BSS               Offs=000000  Size=000001  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(_seterrno.o):
+    CODE              Offs=00004D  Size=000009  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(add.o):
+    CODE              Offs=000056  Size=00001C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(addysp.o):
+    CODE              Offs=000072  Size=00000E  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(and.o):
+    CODE              Offs=000080  Size=000010  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(bneg.o):
+    CODE              Offs=000090  Size=00000E  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(callmain.o):
+    CODE              Offs=00009E  Size=000017  Align=00001  Fill=0000
+    DATA              Offs=00000D  Size=000004  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(close.o):
+    CODE              Offs=0000B5  Size=00001E  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(condes.o):
+    CODE              Offs=0000D3  Size=00000C  Align=00001  Fill=0000
+    DATA              Offs=000011  Size=000025  Align=00001  Fill=0000
+    ONCE              Offs=000000  Size=00000C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(crt0.o):
+    BSS               Offs=000001  Size=000005  Align=00001  Fill=0000
+    STARTUP           Offs=000000  Size=000063  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(decsp4.o):
+    CODE              Offs=0000DF  Size=00000D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(decsp6.o):
+    CODE              Offs=0000EC  Size=00000D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(do_oserr.o):
+    CODE              Offs=0000F9  Size=000004  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(dosdetect.o):
+    DATA              Offs=000036  Size=000001  Align=00001  Fill=0000
+    ONCE              Offs=00000C  Size=00004B  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(eq.o):
+    CODE              Offs=0000FD  Size=00000A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(errno.o):
+    BSS               Offs=000006  Size=000002  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(exetrailer.o):
+    AUTOSTRT          Offs=000000  Size=000006  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(fdtab.o):
+    DATA              Offs=000037  Size=00002C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(fdtable.o):
+    CODE              Offs=000107  Size=000183  Align=00001  Fill=0000
+    BSS               Offs=000008  Size=000006  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(fdtoiocb.o):
+    CODE              Offs=00028A  Size=000022  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(findfreeiocb.o):
+    CODE              Offs=0002AC  Size=000015  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(getdefdev.o):
+    CODE              Offs=0002C1  Size=000064  Align=00001  Fill=0000
+    DATA              Offs=000063  Size=000007  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(getfd.o):
+    CODE              Offs=000325  Size=000029  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(icmp.o):
+    CODE              Offs=00034E  Size=00002E  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(incsp1.o):
+    CODE              Offs=00037C  Size=000007  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(incsp2.o):
+    CODE              Offs=000383  Size=000016  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(incsp3.o):
+    CODE              Offs=000399  Size=000005  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(incsp4.o):
+    CODE              Offs=00039E  Size=000005  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(incsp6.o):
+    CODE              Offs=0003A3  Size=000005  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(inviocb.o):
+    CODE              Offs=0003A8  Size=000005  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(joy-kernel.o):
+    CODE              Offs=0003AD  Size=00004D  Align=00001  Fill=0000
+    RODATA            Offs=00009B  Size=000004  Align=00001  Fill=0000
+    BSS               Offs=00000E  Size=000002  Align=00001  Fill=0000
+    DATA              Offs=00006A  Size=00000C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(joy_read.o):
+C:\CC65\LIB/atari.lib(joy_stat_stddrv.o):
+C:\CC65\LIB/atari.lib(laddeq.o):
+    CODE              Offs=0003FA  Size=00002D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(lcmp.o):
+    CODE              Offs=000427  Size=00003B  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(ldaxsp.o):
+    CODE              Offs=000462  Size=000009  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(libref.o):
+C:\CC65\LIB/atari.lib(lmul.o):
+    CODE              Offs=00046B  Size=00005C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(lne.o):
+    CODE              Offs=0004C7  Size=000006  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(lpush.o):
+    CODE              Offs=0004CD  Size=000021  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(lseek.o):
+    CODE              Offs=0004EE  Size=000120  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(makebool.o):
+    CODE              Offs=00060E  Size=00002C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(memcpy.o):
+    CODE              Offs=00063A  Size=00003C  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(memset.o):
+    CODE              Offs=000676  Size=00005D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(mul8.o):
+    CODE              Offs=0006D3  Size=00003A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(mulax5.o):
+    CODE              Offs=00070D  Size=000014  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(mulax6.o):
+    CODE              Offs=000721  Size=000016  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(open.o):
+    CODE              Offs=000737  Size=0000C0  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(or.o):
+    CODE              Offs=0007F7  Size=000012  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(oserror.o):
+    CODE              Offs=000809  Size=00001A  Align=00001  Fill=0000
+    RODATA            Offs=00009F  Size=000038  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(popptr1.o):
+    CODE              Offs=000823  Size=00000E  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(pusha.o):
+    CODE              Offs=000831  Size=000016  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(pushax.o):
+    CODE              Offs=000847  Size=00001A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(read.o):
+    CODE              Offs=000861  Size=0000DA  Align=00001  Fill=0000
+    BSS               Offs=000010  Size=000051  Align=00001  Fill=0000
+    EXTZP             Offs=000000  Size=000005  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(rwcommon.o):
+    CODE              Offs=00093B  Size=00002D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(staspidx.o):
+    CODE              Offs=000968  Size=000016  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(staxsp.o):
+    CODE              Offs=00097E  Size=00000B  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(staxspi.o):
+    CODE              Offs=000989  Size=00001B  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(steaxsp.o):
+    CODE              Offs=0009A4  Size=000015  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(subysp.o):
+    CODE              Offs=0009B9  Size=00000D  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(ucase_fn.o):
+    CODE              Offs=0009C6  Size=00005A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(udiv.o):
+    CODE              Offs=000A20  Size=00004F  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(umod.o):
+    CODE              Offs=000A6F  Size=000011  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(write.o):
+    CODE              Offs=000A80  Size=000028  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(zerobss.o):
+    CODE              Offs=000AA8  Size=000023  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(zeropage.o):
+    ZEROPAGE          Offs=00000B  Size=00001A  Align=00001  Fill=0000
+C:\CC65\LIB/atari.lib(atrstd-joy.o):
+    CODE              Offs=000ACB  Size=000030  Align=00001  Fill=0000
+    BSS               Offs=000061  Size=000004  Align=00001  Fill=0000
+    DATA              Offs=000076  Size=00000E  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+AUTOSTRT              000000  000005  000006  00001
+CHKHDR                000000  000003  000004  00001
+FILEHDR               000000  000001  000002  00001
+NEXEHDR               000000  000003  000004  00001
+SFX                   000000  002856  002857  00001
+ZEROPAGE              000082  0000A6  000025  00001
+EXTZP                 0000A7  0000AB  000005  00001
+GFX                   002000  00381D  00181E  00001
+STARTUP               004000  004062  000063  00001
+ONCE                  004063  0040BD  00005B  00001
+BANKDATA              0040BE  0051FF  001142  00001
+BANKRODATA            005200  005300  000101  00001
+BANKCODE              005301  007DED  002AED  00001
+DATA                  00AB00  00AB83  000084  00001
+RODATA                00AB84  00AC5C  0000D9  00001
+CODE                  00AC5D  00B757  000AFB  00001
+BSS                   00B758  00B7BC  000065  00001
+
+
+Exports list by name:
+---------------------
+__AUTOSTART__             000001 REA    __BSS_LOAD__              00B758 RLA    
+__BSS_RUN__               00B758 RLA    __BSS_SIZE__              000065 REA    
+__CONSTRUCTOR_COUNT__     000002 REA    __CONSTRUCTOR_TABLE__     0040BA RLA    
+__DESTRUCTOR_COUNT__      000001 REA    __DESTRUCTOR_TABLE__      00AC5B RLA    
+__FILEHDR__               000001 REA    __FIRST_END_LOAD__        007DEE RLA    
+__GFX_LOAD__              002000 RLA    __LOWCODE_LOAD__          00AB00 RLA    
+__LOWCODE_RUN__           00AB00 RLA    __LOWCODE_SIZE__          000000 REA    
+__RAM_AVAIL__             00BFFF REA    __RESERVED_MEMORY__       000000 REA    
+__RMT_SIZE__              002B00 REA    __STARTUP__               000001 REA    
+__defdev                  00AB66 RLA    __directerrno             00AC90 RLA    
+__do_oserror              00AD56 RLA    __dos_type                00AB36 RLA    
+__errno                   00B75E RLA    __getdefdev               00AF1E  LAI   
+__inviocb                 00B005 RLA    __mappederrno             00AC9A RLA    
+__oserror                 00B758 RLA    __osmaperrno              00B466 RLA    
+__rwsetup                 00B598 RLA    __seterrno                00ACAA RLA    
+_atrstd_joy               00AB76 RLA    _audio_music              005418 RLA    
+_audio_only_sfx           004AC3 RLA    _audio_sfx                005433 RLA    
+_background_color         00AB0C RLA    _clear_preprocess_helper  007B9F RLA    
+_close                    00AD12 RLA    _display_font_page1       00AB00 RLA    
+_display_font_page2       00AB01 RLA    _display_list1            003000 RLA    
+_display_list2            00304F RLA    _dl_handler               00AC5D RLA    
+_exit                     004041 RLA    _galaxy_draw_screen       0056E0 RLA    
+_galaxy_font_address      00AB05 RLA    _galaxy_font_page1        00AB06 RLA    
+_galaxy_font_page2        00AB07 RLA    _galaxy_get_action        0057E9 RLA    
+_game_draw_screen         005A88 RLA    _game_font_address        00AB02 RLA    
+_game_font_page1          00AB03 RLA    _game_font_page2          00AB04 RLA    
+_game_get_action          005A0A RLA    _game_lost                0059D5 RLA    
+_game_phase               004AC7 RLA    _game_progress            004AC8 RLA    
+_handle_interactions      006622 RLA    _handle_move              006D2C RLA    
+_handle_you               0065B6 RLA    _helpers                  004BE6 RLA    
+_init_level               007A93 RLA    _init_platform            005301 RLA    
+_init_sfx                 006310 RLA    _is_level_complete        007B78 RLA    
+_joy_install              00B00A RLA    _joy_read                 00AB73 REA    
+_joy_static_stddrv        00AB76 RLA    _last_obj_index           004BEE RLA    
+_last_text_index          004BEF RLA    _level_number             004AC6 RLA    
+_load_game_progress       005444 RLA    _load_level               0063DE RLA    
+_load_level_data          005586 RLA    _local_flags              000088 RLZ    
+_local_index              000085 RLZ    _local_ptr                00008B RLZ    
+_local_temp1              000089 RLZ    _local_temp2              00008A RLZ    
+_local_text_type          000087 RLZ    _local_type               000086 RLZ    
+_local_x                  000083 RLZ    _local_y                  000084 RLZ    
+_lseek                    00B164 RLA    _main                     007DCC RLA    
+_map                      004AD6 RLA    _map_lookup               00529C RLA    
+_memcpy                   00B297 RLA    _memset                   00B2DB RLA    
+_move_direction           0051E0 RLA    _move_direction_lookup_x  0052B8 RLA    
+_move_direction_lookup_y  0052BD RLA    _obj_has                  0051A0 RLA    
+_obj_is_word              0051C0 RLA    _obj_prop                 0050A0 RLA    
+_obj_prop_lookup          0052A8 RLA    _objects                  004BF0 RLA    
+_one_lshift_lookup        0052C7 RLA    _open                     00B394 RLA    
+_perform_move             006D54 RLA    _play_music               006352 RLA    
+_play_sfx                 006332 RLA    _preproc_helper           004BC6 RLA    
+_read                     00B4BE RLA    _reverted_direction_lookup 0052C2 RLA    
+_rule_exists              0051D0 RLA    _save_game_progress       005500 RLA    
+_set_game_rules           007550 RLA    _set_palette              0056DA RLA    
+_set_tileset              005686 RLA    _stop_music               0063B4 RLA    
+_video_ptr1               00AB08 RLA    _video_ptr2               00AB0A RLA    
+_wait_for_vblank          005BAF RLA    _write                    00B6DD RLA    
+_you_move_direction       0052E7 RLA    addysp                    00ACD0 RLA    
+addysp1                   00ACCF RLA    bnega                     00ACF1 RLA    
+booleq                    00B271 RLA    boolne                    00B26B RLA    
+callmain                  00ACFB RLA    closeallfiles             00B445  LAI   
+clriocb                   00ADAB RLA    decsp4                    00AD3C RLA    
+decsp6                    00AD49 RLA    detect                    00406F  LAI   
+donelib                   00AD30 RLA    fd_index                  00AB37 RLA    
+fd_table                  00AB43 RLA    fddecusage                00ADB8 RLA    
+fdt_to_fdi                00AF82 RLA    fdtoiocb                  00AEE7 RLA    
+fdtoiocb_down             00AD64 RLA    findfreeiocb              00AF09 RLA    
+incsp1                    00AFD9 RLA    incsp2                    00AFE8 RLA    
+incsp3                    00AFF6 RLA    incsp4                    00AFFB RLA    
+incsp6                    00B000 RLA    initlib                   004063 RLA    
+joy_libref                004041 RLA    joy_read                  00AB73 RLA    
+laddeq                    00B05F RLA    ldax0sp                   00B0BF RLA    
+ldaxysp                   00B0C1 RLA    mulax5                    00B36A RLA    
+mulax6                    00B37E RLA    newfd                     00ADE6 RLA    
+popax                     00AFE0 RLA    popptr1                   00B480 RLA    
+ptr1                      000095 RLZ    ptr2                      000097 RLZ    
+ptr3                      000099 RLZ    ptr4                      00009B RLZ    
+push0ax                   00B12D RLA    pusha                     00B492 RLA    
+pusha0                    00B4A6 RLA    pushax                    00B4A8 RLA    
+pusheax                   00B133 RLA    regsave                   000091 RLZ    
+sp                        00008D RLZ    sreg                      00008F RLZ    
+start                     004001 RLA    staspidx                  00B5C5 RLA    
+staxspidx                 00B5E6 RLA    staxysp                   00B5DD RLA    
+steax0sp                  00B601 RLA    subysp                    00B616 RLA    
+tmp1                      00009D RLZ    tmp2                      00009E RLZ    
+tmp3                      00009F RLZ    tmp4                      0000A0 RLZ    
+tosaddax                  00ACB5 RLA    tosandax                  00ACDF RLA    
+toseqax                   00AD5E RLA    tosicmp                   00AFAD RLA    
+tosicmp0                  00AFAB RLA    toslcmp                   00B084 RLA    
+tosmul0ax                 00B0C8 RLA    tosmula0                  00B330 RLA    
+tosneeax                  00B124 RLA    tosorax                   00B456 RLA    
+tosudiva0                 00B67D RLA    tosumoda0                 00B6CC RLA    
+tosumula0                 00B330 RLA    ucase_fn                  00B623 RLA    
+udiv16                    00B68E RLA    zerobss                   00B705 RLA    
+
+
+
+Exports list by value:
+----------------------
+__LOWCODE_SIZE__          000000 REA    __RESERVED_MEMORY__       000000 REA    
+__DESTRUCTOR_COUNT__      000001 REA    __FILEHDR__               000001 REA    
+__STARTUP__               000001 REA    __AUTOSTART__             000001 REA    
+__CONSTRUCTOR_COUNT__     000002 REA    __BSS_SIZE__              000065 REA    
+_local_x                  000083 RLZ    _local_y                  000084 RLZ    
+_local_index              000085 RLZ    _local_type               000086 RLZ    
+_local_text_type          000087 RLZ    _local_flags              000088 RLZ    
+_local_temp1              000089 RLZ    _local_temp2              00008A RLZ    
+_local_ptr                00008B RLZ    sp                        00008D RLZ    
+sreg                      00008F RLZ    regsave                   000091 RLZ    
+ptr1                      000095 RLZ    ptr2                      000097 RLZ    
+ptr3                      000099 RLZ    ptr4                      00009B RLZ    
+tmp1                      00009D RLZ    tmp2                      00009E RLZ    
+tmp3                      00009F RLZ    tmp4                      0000A0 RLZ    
+__GFX_LOAD__              002000 RLA    __RMT_SIZE__              002B00 REA    
+_display_list1            003000 RLA    _display_list2            00304F RLA    
+start                     004001 RLA    _exit                     004041 RLA    
+joy_libref                004041 RLA    initlib                   004063 RLA    
+detect                    00406F  LAI   __CONSTRUCTOR_TABLE__     0040BA RLA    
+_audio_only_sfx           004AC3 RLA    _level_number             004AC6 RLA    
+_game_phase               004AC7 RLA    _game_progress            004AC8 RLA    
+_map                      004AD6 RLA    _preproc_helper           004BC6 RLA    
+_helpers                  004BE6 RLA    _last_obj_index           004BEE RLA    
+_last_text_index          004BEF RLA    _objects                  004BF0 RLA    
+_obj_prop                 0050A0 RLA    _obj_has                  0051A0 RLA    
+_obj_is_word              0051C0 RLA    _rule_exists              0051D0 RLA    
+_move_direction           0051E0 RLA    _map_lookup               00529C RLA    
+_obj_prop_lookup          0052A8 RLA    _move_direction_lookup_x  0052B8 RLA    
+_move_direction_lookup_y  0052BD RLA    _reverted_direction_lookup 0052C2 RLA    
+_one_lshift_lookup        0052C7 RLA    _you_move_direction       0052E7 RLA    
+_init_platform            005301 RLA    _audio_music              005418 RLA    
+_audio_sfx                005433 RLA    _load_game_progress       005444 RLA    
+_save_game_progress       005500 RLA    _load_level_data          005586 RLA    
+_set_tileset              005686 RLA    _set_palette              0056DA RLA    
+_galaxy_draw_screen       0056E0 RLA    _galaxy_get_action        0057E9 RLA    
+_game_lost                0059D5 RLA    _game_get_action          005A0A RLA    
+_game_draw_screen         005A88 RLA    _wait_for_vblank          005BAF RLA    
+_init_sfx                 006310 RLA    _play_sfx                 006332 RLA    
+_play_music               006352 RLA    _stop_music               0063B4 RLA    
+_load_level               0063DE RLA    _handle_you               0065B6 RLA    
+_handle_interactions      006622 RLA    _handle_move              006D2C RLA    
+_perform_move             006D54 RLA    _set_game_rules           007550 RLA    
+_init_level               007A93 RLA    _is_level_complete        007B78 RLA    
+_clear_preprocess_helper  007B9F RLA    _main                     007DCC RLA    
+__FIRST_END_LOAD__        007DEE RLA    _display_font_page1       00AB00 RLA    
+__LOWCODE_LOAD__          00AB00 RLA    __LOWCODE_RUN__           00AB00 RLA    
+_display_font_page2       00AB01 RLA    _game_font_address        00AB02 RLA    
+_game_font_page1          00AB03 RLA    _game_font_page2          00AB04 RLA    
+_galaxy_font_address      00AB05 RLA    _galaxy_font_page1        00AB06 RLA    
+_galaxy_font_page2        00AB07 RLA    _video_ptr1               00AB08 RLA    
+_video_ptr2               00AB0A RLA    _background_color         00AB0C RLA    
+__dos_type                00AB36 RLA    fd_index                  00AB37 RLA    
+fd_table                  00AB43 RLA    __defdev                  00AB66 RLA    
+joy_read                  00AB73 RLA    _joy_read                 00AB73 REA    
+_joy_static_stddrv        00AB76 RLA    _atrstd_joy               00AB76 RLA    
+__DESTRUCTOR_TABLE__      00AC5B RLA    _dl_handler               00AC5D RLA    
+__directerrno             00AC90 RLA    __mappederrno             00AC9A RLA    
+__seterrno                00ACAA RLA    tosaddax                  00ACB5 RLA    
+addysp1                   00ACCF RLA    addysp                    00ACD0 RLA    
+tosandax                  00ACDF RLA    bnega                     00ACF1 RLA    
+callmain                  00ACFB RLA    _close                    00AD12 RLA    
+donelib                   00AD30 RLA    decsp4                    00AD3C RLA    
+decsp6                    00AD49 RLA    __do_oserror              00AD56 RLA    
+toseqax                   00AD5E RLA    fdtoiocb_down             00AD64 RLA    
+clriocb                   00ADAB RLA    fddecusage                00ADB8 RLA    
+newfd                     00ADE6 RLA    fdtoiocb                  00AEE7 RLA    
+findfreeiocb              00AF09 RLA    __getdefdev               00AF1E  LAI   
+fdt_to_fdi                00AF82 RLA    tosicmp0                  00AFAB RLA    
+tosicmp                   00AFAD RLA    incsp1                    00AFD9 RLA    
+popax                     00AFE0 RLA    incsp2                    00AFE8 RLA    
+incsp3                    00AFF6 RLA    incsp4                    00AFFB RLA    
+incsp6                    00B000 RLA    __inviocb                 00B005 RLA    
+_joy_install              00B00A RLA    laddeq                    00B05F RLA    
+toslcmp                   00B084 RLA    ldax0sp                   00B0BF RLA    
+ldaxysp                   00B0C1 RLA    tosmul0ax                 00B0C8 RLA    
+tosneeax                  00B124 RLA    push0ax                   00B12D RLA    
+pusheax                   00B133 RLA    _lseek                    00B164 RLA    
+boolne                    00B26B RLA    booleq                    00B271 RLA    
+_memcpy                   00B297 RLA    _memset                   00B2DB RLA    
+tosmula0                  00B330 RLA    tosumula0                 00B330 RLA    
+mulax5                    00B36A RLA    mulax6                    00B37E RLA    
+_open                     00B394 RLA    closeallfiles             00B445  LAI   
+tosorax                   00B456 RLA    __osmaperrno              00B466 RLA    
+popptr1                   00B480 RLA    pusha                     00B492 RLA    
+pusha0                    00B4A6 RLA    pushax                    00B4A8 RLA    
+_read                     00B4BE RLA    __rwsetup                 00B598 RLA    
+staspidx                  00B5C5 RLA    staxysp                   00B5DD RLA    
+staxspidx                 00B5E6 RLA    steax0sp                  00B601 RLA    
+subysp                    00B616 RLA    ucase_fn                  00B623 RLA    
+tosudiva0                 00B67D RLA    udiv16                    00B68E RLA    
+tosumoda0                 00B6CC RLA    _write                    00B6DD RLA    
+zerobss                   00B705 RLA    __oserror                 00B758 RLA    
+__BSS_RUN__               00B758 RLA    __BSS_LOAD__              00B758 RLA    
+__errno                   00B75E RLA    __RAM_AVAIL__             00BFFF REA    
+
+
+
+Imports list:
+-------------
+__AUTOSTART__ (exetrailer.o):
+    [linker generated]        atari-atr.cfg(10)
+__BSS_LOAD__ ([linker generated]):
+    linker.o                  platforms/atari/linker.asm(2)
+__BSS_RUN__ ([linker generated]):
+    zerobss.o                 common/zerobss.s(8)
+__BSS_SIZE__ ([linker generated]):
+    zerobss.o                 common/zerobss.s(8)
+__CONSTRUCTOR_COUNT__ ([linker generated]):
+    condes.o                  runtime/condes.s(18)
+__CONSTRUCTOR_TABLE__ ([linker generated]):
+    condes.o                  runtime/condes.s(18)
+__DESTRUCTOR_COUNT__ ([linker generated]):
+    condes.o                  runtime/condes.s(19)
+__DESTRUCTOR_TABLE__ ([linker generated]):
+    condes.o                  runtime/condes.s(19)
+__FILEHDR__ (linker.o):
+    [linker generated]        atari-atr.cfg(9)
+__FIRST_END_LOAD__ ([linker generated]):
+    linker.o                  platforms/atari/linker.asm(1)
+__GFX_LOAD__ ([linker generated]):
+    linker.o                  platforms/atari/linker.asm(1)
+__LOWCODE_LOAD__ ([linker generated]):
+    linker.o                  platforms/atari/linker.asm(2)
+__LOWCODE_RUN__ ([linker generated]):
+    crt0.o                    atari/crt0.s(18)
+__LOWCODE_SIZE__ ([linker generated]):
+    crt0.o                    atari/crt0.s(18)
+__RAM_AVAIL__ ([linker generated]):
+    [linker generated]        atari-atr.cfg(33)
+__RESERVED_MEMORY__ ([linker generated]):
+    crt0.o                    atari/crt0.s(16)
+__RMT_SIZE__ ([linker generated]):
+    [linker generated]        atari-atr.cfg(33)
+    [linker generated]        atari-atr.cfg(33)
+    [linker generated]        atari-atr.cfg(25)
+__STARTUP__ (crt0.o):
+    main.o                    common/main.s(13)
+__defdev (getdefdev.o):
+    ucase_fn.o                atari/ucase_fn.s(25)
+__directerrno (_directerrno.o):
+    open.o                    /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+    lseek.o                   /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+    inviocb.o                 /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+__do_oserror (do_oserr.o):
+    write.o                   atari/write.s(5)
+    read.o                    atari/read.s(8)
+    close.o                   atari/close.s(9)
+__dos_type (dosdetect.o):
+    getdefdev.o               atari/getdefdev.s(22)
+    lseek.o                   atari/lseek.s(13)
+__errno (errno.o):
+    _seterrno.o               /home/travis/build/cc65/cc65/asminc/errno.inc(7)
+__inviocb (inviocb.o):
+    write.o                   atari/write.s(5)
+    read.o                    atari/read.s(8)
+    lseek.o                   atari/lseek.s(12)
+    close.o                   atari/close.s(10)
+__mappederrno (_mappederrno.o):
+    open.o                    /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+    lseek.o                   /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+    do_oserr.o                /home/travis/build/cc65/cc65/asminc/errno.inc(10)
+__oserror (_oserror.o):
+    _mappederrno.o            /home/travis/build/cc65/cc65/asminc/errno.inc(7)
+    _directerrno.o            /home/travis/build/cc65/cc65/asminc/errno.inc(7)
+    write.o                   atari/write.s(5)
+    read.o                    atari/read.s(8)
+    open.o                    /home/travis/build/cc65/cc65/asminc/errno.inc(7)
+    close.o                   atari/close.s(9)
+__osmaperrno (oserror.o):
+    _mappederrno.o            /home/travis/build/cc65/cc65/asminc/errno.inc(8)
+__rwsetup (rwcommon.o):
+    write.o                   atari/write.s(5)
+    read.o                    atari/read.s(8)
+__seterrno (_seterrno.o):
+    _mappederrno.o            /home/travis/build/cc65/cc65/asminc/errno.inc(9)
+    _directerrno.o            /home/travis/build/cc65/cc65/asminc/errno.inc(9)
+_atrstd_joy (atrstd-joy.o):
+    joy_stat_stddrv.o         atari/joy_stat_stddrv.s(13)
+_audio_music (atari_fn.o):
+    main.o                    common/main.s(16)
+_audio_only_sfx (sounds.o):
+    atari_fn.o                platforms/atari/atari_fn.s(80)
+_audio_sfx (atari_fn.o):
+    main.o                    common/main.s(17)
+    move.o                    common/move.s(14)
+    interact.o                common/interact.s(14)
+    you.o                     common/you.s(13)
+_background_color (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(82)
+_clear_preprocess_helper (main.o):
+    rules.o                   common/rules.s(15)
+    move.o                    common/move.s(17)
+_close (close.o):
+    open.o                    atari/open.s(16)
+    atari_fn.o                platforms/atari/atari_fn.s(58)
+_display_font_page1 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(72)
+_display_font_page2 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(73)
+_display_list1 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(70)
+_display_list2 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(71)
+_dl_handler (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(81)
+_exit (crt0.o):
+    libref.o                  atari/libref.s(6)
+    atari_fn.o                platforms/atari/atari_fn.s(16)
+_galaxy_draw_screen (atari_fn.o):
+    main.o                    common/main.s(20)
+_galaxy_font_address (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(77)
+_galaxy_font_page1 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(78)
+_galaxy_font_page2 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(79)
+_galaxy_get_action (atari_fn.o):
+    main.o                    common/main.s(21)
+_game_draw_screen (atari_fn.o):
+    main.o                    common/main.s(23)
+_game_font_address (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(74)
+_game_font_page1 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(75)
+_game_font_page2 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(76)
+_game_get_action (atari_fn.o):
+    you.o                     common/you.s(14)
+_game_lost (atari_fn.o):
+    main.o                    common/main.s(22)
+_game_phase (data.o):
+    main.o                    common/main.s(40)
+    interact.o                common/interact.s(24)
+    atari_fn.o                platforms/atari/atari_fn.s(42)
+_game_progress (data.o):
+    main.o                    common/main.s(42)
+    level.o                   common/level.s(27)
+    atari_fn.o                platforms/atari/atari_fn.s(45)
+_handle_interactions (interact.o):
+    main.o                    common/main.s(30)
+_handle_move (move.o):
+    main.o                    common/main.s(29)
+_handle_you (you.o):
+    main.o                    common/main.s(28)
+_helpers (data.o):
+    main.o                    common/main.s(48)
+    rules.o                   common/rules.s(29)
+    move.o                    common/move.s(32)
+    interact.o                common/interact.s(31)
+    you.o                     common/you.s(21)
+    atari_fn.o                platforms/atari/atari_fn.s(49)
+_init_level (main.o):
+    atari_fn.o                platforms/atari/atari_fn.s(32)
+_init_platform (atari_fn.o):
+    main.o                    common/main.s(15)
+_init_sfx (sounds.o):
+    atari_fn.o                platforms/atari/atari_fn.s(53)
+_is_level_complete (main.o):
+    atari_fn.o                platforms/atari/atari_fn.s(33)
+_joy_install (joy-kernel.o):
+    atari_fn.o                platforms/atari/atari_fn.s(14)
+_joy_read (joy_read.o):
+    atari_fn.o                platforms/atari/atari_fn.s(15)
+_joy_static_stddrv (joy_stat_stddrv.o):
+    atari_fn.o                platforms/atari/atari_fn.s(13)
+_last_obj_index (data.o):
+    main.o                    common/main.s(49)
+    rules.o                   common/rules.s(30)
+    move.o                    common/move.s(33)
+    interact.o                common/interact.s(32)
+    you.o                     common/you.s(22)
+    level.o                   common/level.s(30)
+    atari_fn.o                platforms/atari/atari_fn.s(50)
+_last_text_index (data.o):
+    rules.o                   common/rules.s(31)
+    interact.o                common/interact.s(33)
+    level.o                   common/level.s(31)
+_level_number (data.o):
+    main.o                    common/main.s(41)
+    level.o                   common/level.s(26)
+    atari_fn.o                platforms/atari/atari_fn.s(43)
+_load_game_progress (atari_fn.o):
+    main.o                    common/main.s(18)
+_load_level (level.o):
+    main.o                    common/main.s(33)
+    atari_fn.o                platforms/atari/atari_fn.s(34)
+_load_level_data (atari_fn.o):
+    level.o                   common/level.s(14)
+_local_flags (code.o):
+    move.o                    common/move.s(22)
+    interact.o                common/interact.s(21)
+    atari_fn.o                platforms/atari/atari_fn.s(39)
+_local_index (code.o):
+    main.o                    common/main.s(36)
+    rules.o                   common/rules.s(18)
+    move.o                    common/move.s(20)
+    interact.o                common/interact.s(18)
+    you.o                     common/you.s(17)
+    level.o                   common/level.s(21)
+    atari_fn.o                platforms/atari/atari_fn.s(37)
+_local_ptr (code.o):
+    move.o                    common/move.s(25)
+_local_temp1 (code.o):
+    main.o                    common/main.s(38)
+    rules.o                   common/rules.s(20)
+    move.o                    common/move.s(23)
+    interact.o                common/interact.s(22)
+    level.o                   common/level.s(24)
+    atari_fn.o                platforms/atari/atari_fn.s(40)
+_local_temp2 (code.o):
+    main.o                    common/main.s(39)
+    rules.o                   common/rules.s(21)
+    move.o                    common/move.s(24)
+    interact.o                common/interact.s(23)
+    level.o                   common/level.s(25)
+    atari_fn.o                platforms/atari/atari_fn.s(41)
+_local_text_type (code.o):
+    interact.o                common/interact.s(20)
+    level.o                   common/level.s(23)
+_local_type (code.o):
+    main.o                    common/main.s(37)
+    rules.o                   common/rules.s(19)
+    move.o                    common/move.s(21)
+    interact.o                common/interact.s(19)
+    level.o                   common/level.s(22)
+    atari_fn.o                platforms/atari/atari_fn.s(38)
+_local_x (code.o):
+    main.o                    common/main.s(34)
+    rules.o                   common/rules.s(16)
+    move.o                    common/move.s(18)
+    interact.o                common/interact.s(16)
+    level.o                   common/level.s(19)
+    atari_fn.o                platforms/atari/atari_fn.s(35)
+_local_y (code.o):
+    main.o                    common/main.s(35)
+    rules.o                   common/rules.s(17)
+    move.o                    common/move.s(19)
+    interact.o                common/interact.s(17)
+    level.o                   common/level.s(20)
+    atari_fn.o                platforms/atari/atari_fn.s(36)
+_lseek (lseek.o):
+    atari_fn.o                platforms/atari/atari_fn.s(61)
+_main (main.o):
+    callmain.o                runtime/callmain.s(11)
+_map (data.o):
+    main.o                    common/main.s(46)
+    rules.o                   common/rules.s(27)
+    move.o                    common/move.s(30)
+    interact.o                common/interact.s(30)
+    level.o                   common/level.s(29)
+    atari_fn.o                platforms/atari/atari_fn.s(48)
+_map_lookup (lookup.o):
+    main.o                    common/main.s(50)
+    rules.o                   common/rules.s(32)
+    move.o                    common/move.s(36)
+    interact.o                common/interact.s(34)
+    level.o                   common/level.s(32)
+    atari_fn.o                platforms/atari/atari_fn.s(51)
+_memcpy (memcpy.o):
+    atari_fn.o                platforms/atari/atari_fn.s(17)
+_memset (memset.o):
+    atari_fn.o                platforms/atari/atari_fn.s(18)
+_move_direction (move.o):
+    you.o                     common/you.s(24)
+_move_direction_lookup_x (lookup.o):
+    move.o                    common/move.s(34)
+_move_direction_lookup_y (lookup.o):
+    move.o                    common/move.s(35)
+_obj_has (data.o):
+    rules.o                   common/rules.s(24)
+    interact.o                common/interact.s(27)
+_obj_is_word (data.o):
+    rules.o                   common/rules.s(25)
+    move.o                    common/move.s(28)
+    interact.o                common/interact.s(28)
+_obj_prop (data.o):
+    main.o                    common/main.s(44)
+    rules.o                   common/rules.s(23)
+    move.o                    common/move.s(27)
+    interact.o                common/interact.s(26)
+    you.o                     common/you.s(20)
+    atari_fn.o                platforms/atari/atari_fn.s(47)
+_obj_prop_lookup (lookup.o):
+    main.o                    common/main.s(51)
+    rules.o                   common/rules.s(33)
+    move.o                    common/move.s(37)
+    interact.o                common/interact.s(35)
+    you.o                     common/you.s(23)
+    atari_fn.o                platforms/atari/atari_fn.s(52)
+_objects (data.o):
+    main.o                    common/main.s(43)
+    rules.o                   common/rules.s(22)
+    move.o                    common/move.s(26)
+    interact.o                common/interact.s(25)
+    you.o                     common/you.s(19)
+    level.o                   common/level.s(28)
+    atari_fn.o                platforms/atari/atari_fn.s(46)
+_one_lshift_lookup (lookup.o):
+    main.o                    common/main.s(52)
+    rules.o                   common/rules.s(34)
+    interact.o                common/interact.s(36)
+_open (open.o):
+    atari_fn.o                platforms/atari/atari_fn.s(57)
+_perform_move (move.o):
+    you.o                     common/you.s(16)
+_play_music (sounds.o):
+    atari_fn.o                platforms/atari/atari_fn.s(55)
+_play_sfx (sounds.o):
+    atari_fn.o                platforms/atari/atari_fn.s(54)
+_preproc_helper (data.o):
+    main.o                    common/main.s(47)
+    rules.o                   common/rules.s(28)
+    move.o                    common/move.s(31)
+_read (read.o):
+    atari_fn.o                platforms/atari/atari_fn.s(60)
+_reverted_direction_lookup (lookup.o):
+    move.o                    common/move.s(38)
+_rule_exists (data.o):
+    main.o                    common/main.s(45)
+    rules.o                   common/rules.s(26)
+    move.o                    common/move.s(29)
+    interact.o                common/interact.s(29)
+_save_game_progress (atari_fn.o):
+    main.o                    common/main.s(19)
+_set_game_rules (rules.o):
+    main.o                    common/main.s(27)
+_set_palette (atari_fn.o):
+    level.o                   common/level.s(16)
+_set_tileset (atari_fn.o):
+    level.o                   common/level.s(15)
+_stop_music (sounds.o):
+    atari_fn.o                platforms/atari/atari_fn.s(56)
+_video_ptr1 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(68)
+_video_ptr2 (code.o):
+    atari_fn.o                platforms/atari/atari_fn.s(69)
+_wait_for_vblank (atari_fn.o):
+    sounds.o                  platforms/atari/sounds.s(20)
+_write (write.o):
+    atari_fn.o                platforms/atari/atari_fn.s(59)
+_you_move_direction (data.o):
+    you.o                     common/you.s(18)
+    atari_fn.o                platforms/atari/atari_fn.s(44)
+addysp (addysp.o):
+    incsp6.o                  runtime/incsp6.s(8)
+    ucase_fn.o                atari/ucase_fn.s(28)
+    open.o                    atari/open.s(21)
+    incsp4.o                  runtime/incsp4.s(8)
+    incsp3.o                  runtime/incsp3.s(8)
+addysp1 (addysp.o):
+    or.o                      runtime/or.s(9)
+    lmul.o                    runtime/lmul.s(9)
+    and.o                     runtime/and.s(8)
+bnega (bneg.o):
+    sounds.o                  platforms/atari/sounds.s(263)
+    sounds.o                  platforms/atari/sounds.s(263)
+booleq (makebool.o):
+    eq.o                      runtime/eq.s(8)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+boolne (makebool.o):
+    lne.o                     runtime/lne.s(8)
+    sounds.o                  platforms/atari/sounds.s(263)
+callmain (callmain.o):
+    crt0.o                    atari/crt0.s(15)
+clriocb (fdtable.o):
+    open.o                    atari/open.s(17)
+decsp4 (decsp4.o):
+    lpush.o                   runtime/lpush.s(12)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+decsp6 (decsp6.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+donelib (condes.o):
+    crt0.o                    atari/crt0.s(14)
+fd_index (fdtab.o):
+    fdtoiocb.o                atari/fdtoiocb.s(10)
+    getfd.o                   atari/getfd.s(11)
+    fdtable.o                 atari/fdtable.s(10)
+fd_table (fdtab.o):
+    fdtoiocb.o                atari/fdtoiocb.s(10)
+    lseek.o                   atari/lseek.s(14)
+    getfd.o                   atari/getfd.s(11)
+    fdtable.o                 atari/fdtable.s(10)
+fddecusage (fdtable.o):
+    open.o                    atari/open.s(18)
+fdt_to_fdi (getfd.o):
+    fdtable.o                 atari/fdtable.s(11)
+fdtoiocb (fdtoiocb.o):
+    rwcommon.o                atari/rwcommon.s(8)
+    lseek.o                   atari/lseek.s(12)
+fdtoiocb_down (fdtable.o):
+    close.o                   atari/close.s(10)
+findfreeiocb (findfreeiocb.o):
+    open.o                    atari/open.s(19)
+incsp1 (incsp1.o):
+    move.o                    common/move.s(1802)
+    move.o                    common/move.s(1802)
+    move.o                    common/move.s(1802)
+    interact.o                common/interact.s(1539)
+    sounds.o                  platforms/atari/sounds.s(263)
+    sounds.o                  platforms/atari/sounds.s(263)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+incsp2 (incsp2.o):
+    staxspi.o                 runtime/staxspi.s(9)
+    staspidx.o                runtime/staspidx.s(8)
+    popptr1.o                 runtime/popptr1.s(8)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+incsp3 (incsp3.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+incsp4 (incsp4.o):
+    lcmp.o                    runtime/lcmp.s(9)
+    open.o                    atari/open.s(20)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+incsp6 (incsp6.o):
+    lseek.o                   atari/lseek.s(11)
+initlib (condes.o):
+    crt0.o                    atari/crt0.s(14)
+joy_libref (libref.o):
+    joy-kernel.o              joystick/joy-kernel.s(7)
+joy_read (joy-kernel.o):
+    joy_read.o                /home/travis/build/cc65/cc65/asminc/joy-kernel.inc(71)
+laddeq (laddeq.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+ldax0sp (ldaxsp.o):
+    lseek.o                   atari/lseek.s(12)
+ldaxysp (ldaxsp.o):
+    open.o                    atari/open.s(21)
+    lseek.o                   atari/lseek.s(12)
+mulax5 (mulax5.o):
+    main.o                    common/main.s(1081)
+    level.o                   common/level.s(516)
+mulax6 (mulax6.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+newfd (fdtable.o):
+    open.o                    atari/open.s(18)
+popax (incsp2.o):
+    rwcommon.o                atari/rwcommon.s(7)
+    memset.o                  common/memset.s(19)
+    memcpy.o                  common/memcpy.s(14)
+popptr1 (popptr1.o):
+    umod.o                    runtime/umod.s(8)
+    udiv.o                    runtime/udiv.s(9)
+    mul8.o                    runtime/mul8.s(9)
+    memcpy.o                  common/memcpy.s(14)
+ptr1 (zeropage.o):
+    lcmp.o                    runtime/lcmp.s(10)
+    zerobss.o                 common/zerobss.s(9)
+    udiv.o                    runtime/udiv.s(10)
+    staxspi.o                 runtime/staxspi.s(10)
+    staspidx.o                runtime/staspidx.s(9)
+    popptr1.o                 runtime/popptr1.s(9)
+    mulax6.o                  runtime/mulax6.s(9)
+    mulax5.o                  runtime/mulax5.s(9)
+    mul8.o                    runtime/mul8.s(10)
+    memset.o                  common/memset.s(20)
+    memcpy.o                  common/memcpy.s(15)
+    lseek.o                   atari/lseek.s(15)
+    lmul.o                    runtime/lmul.s(10)
+    laddeq.o                  runtime/laddeq.s(12)
+    joy-kernel.o              joystick/joy-kernel.s(8)
+    main.o                    common/main.s(11)
+    rules.o                   common/rules.s(11)
+    move.o                    common/move.s(11)
+    interact.o                common/interact.s(11)
+    you.o                     common/you.s(11)
+    level.o                   common/level.s(11)
+    atari_fn.o                platforms/atari/atari_fn.s(11)
+ptr2 (zeropage.o):
+    memset.o                  common/memset.s(20)
+    memcpy.o                  common/memcpy.s(15)
+ptr3 (zeropage.o):
+    memset.o                  common/memset.s(20)
+    memcpy.o                  common/memcpy.s(15)
+    lseek.o                   atari/lseek.s(15)
+    lmul.o                    runtime/lmul.s(10)
+ptr4 (zeropage.o):
+    umod.o                    runtime/umod.s(9)
+    udiv.o                    runtime/udiv.s(10)
+    ucase_fn.o                atari/ucase_fn.s(27)
+    mul8.o                    runtime/mul8.s(10)
+    lseek.o                   atari/lseek.s(15)
+    lmul.o                    runtime/lmul.s(10)
+    fdtable.o                 atari/fdtable.s(9)
+push0ax (lpush.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+pusha (pusha.o):
+    move.o                    common/move.s(1802)
+    move.o                    common/move.s(1802)
+    move.o                    common/move.s(1802)
+    interact.o                common/interact.s(1539)
+    sounds.o                  platforms/atari/sounds.s(263)
+    sounds.o                  platforms/atari/sounds.s(263)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+pusha0 (pushax.o):
+    main.o                    common/main.s(1081)
+    main.o                    common/main.s(1081)
+    main.o                    common/main.s(1081)
+    rules.o                   common/rules.s(1236)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+pushax (pushax.o):
+    callmain.o                runtime/callmain.s(11)
+    main.o                    common/main.s(1081)
+    rules.o                   common/rules.s(1236)
+    move.o                    common/move.s(1802)
+    interact.o                common/interact.s(1539)
+    sounds.o                  platforms/atari/sounds.s(263)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+pusheax (lpush.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+regsave (zeropage.o):
+    atari_fn.o                platforms/atari/atari_fn.s(10)
+sp (zeropage.o):
+    subysp.o                  runtime/subysp.s(9)
+    ldaxsp.o                  runtime/ldaxsp.s(8)
+    lcmp.o                    runtime/lcmp.s(10)
+    addysp.o                  runtime/addysp.s(8)
+    ucase_fn.o                atari/ucase_fn.s(27)
+    steaxsp.o                 runtime/steaxsp.s(8)
+    staxspi.o                 runtime/staxspi.s(10)
+    staxsp.o                  runtime/staxsp.s(8)
+    staspidx.o                runtime/staspidx.s(9)
+    pushax.o                  runtime/pushax.s(8)
+    pusha.o                   runtime/pusha.s(8)
+    popptr1.o                 runtime/popptr1.s(9)
+    or.o                      runtime/or.s(10)
+    memset.o                  common/memset.s(20)
+    memcpy.o                  common/memcpy.s(15)
+    lpush.o                   runtime/lpush.s(13)
+    lmul.o                    runtime/lmul.s(10)
+    incsp2.o                  runtime/incsp2.s(8)
+    incsp1.o                  runtime/incsp1.s(8)
+    icmp.o                    runtime/icmp.s(9)
+    fdtable.o                 atari/fdtable.s(9)
+    decsp6.o                  runtime/decsp6.s(8)
+    decsp4.o                  runtime/decsp4.s(8)
+    crt0.o                    /home/travis/build/cc65/cc65/asminc/zeropage.inc(11)
+    and.o                     runtime/and.s(9)
+    add.o                     runtime/add.s(12)
+    move.o                    common/move.s(10)
+    interact.o                common/interact.s(10)
+    sounds.o                  platforms/atari/sounds.s(10)
+    atari_fn.o                platforms/atari/atari_fn.s(10)
+sreg (zeropage.o):
+    lcmp.o                    runtime/lcmp.s(10)
+    umod.o                    runtime/umod.s(9)
+    udiv.o                    runtime/udiv.s(10)
+    steaxsp.o                 runtime/steaxsp.s(8)
+    lseek.o                   atari/lseek.s(15)
+    lpush.o                   runtime/lpush.s(13)
+    lmul.o                    runtime/lmul.s(10)
+    laddeq.o                  runtime/laddeq.s(12)
+    icmp.o                    runtime/icmp.s(9)
+    main.o                    common/main.s(10)
+    rules.o                   common/rules.s(10)
+    move.o                    common/move.s(10)
+    atari_fn.o                platforms/atari/atari_fn.s(10)
+start (crt0.o):
+    exetrailer.o              atari/exetrailer.s(4)
+staspidx (staspidx.o):
+    main.o                    common/main.s(1081)
+    move.o                    common/move.s(1802)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+staxspidx (staxspi.o):
+    rules.o                   common/rules.s(1236)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+staxysp (staxsp.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+steax0sp (steaxsp.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+subysp (subysp.o):
+    ucase_fn.o                atari/ucase_fn.s(28)
+tmp1 (zeropage.o):
+    staxspi.o                 runtime/staxspi.s(10)
+    staspidx.o                runtime/staspidx.s(9)
+    or.o                      runtime/or.s(10)
+    lseek.o                   atari/lseek.s(16)
+    getfd.o                   atari/getfd.s(10)
+    fdtable.o                 atari/fdtable.s(9)
+    add.o                     runtime/add.s(12)
+    interact.o                common/interact.s(11)
+    atari_fn.o                platforms/atari/atari_fn.s(11)
+tmp2 (zeropage.o):
+    ucase_fn.o                atari/ucase_fn.s(24)
+    open.o                    /home/travis/build/cc65/cc65/asminc/zeropage.inc(13)
+    lseek.o                   atari/lseek.s(16)
+    lmul.o                    runtime/lmul.s(10)
+    fdtable.o                 atari/fdtable.s(9)
+tmp3 (zeropage.o):
+    ucase_fn.o                atari/ucase_fn.s(27)
+    open.o                    /home/travis/build/cc65/cc65/asminc/zeropage.inc(13)
+    lseek.o                   atari/lseek.s(16)
+    lmul.o                    runtime/lmul.s(10)
+    fdtable.o                 atari/fdtable.s(9)
+tmp4 (zeropage.o):
+    open.o                    /home/travis/build/cc65/cc65/asminc/zeropage.inc(13)
+    lmul.o                    runtime/lmul.s(10)
+tosaddax (add.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosandax (and.o):
+    main.o                    common/main.s(1081)
+    interact.o                common/interact.s(1539)
+toseqax (eq.o):
+    sounds.o                  platforms/atari/sounds.s(263)
+tosicmp (icmp.o):
+    eq.o                      runtime/eq.s(8)
+    rules.o                   common/rules.s(1236)
+tosicmp0 (icmp.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+toslcmp (lcmp.o):
+    lne.o                     runtime/lne.s(8)
+tosmul0ax (lmul.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosmula0 (mul8.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosneeax (lne.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosorax (or.o):
+    main.o                    common/main.s(1081)
+tosudiva0 (udiv.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosumoda0 (umod.o):
+    main.o                    common/main.s(1081)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+tosumula0 (mul8.o):
+    atari_fn.o                platforms/atari/atari_fn.s(3924)
+ucase_fn (ucase_fn.o):
+    open.o                    atari/open.s(24)
+udiv16 (udiv.o):
+    umod.o                    runtime/umod.s(8)
+zerobss (zerobss.o):
+    crt0.o                    atari/crt0.s(15)
+

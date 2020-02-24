@@ -4,10 +4,17 @@
 //       Not to interfere with game speed Undo could save state only if wait_for_timer has time to process (?) - SFX_VBI_COUNTER > 0
 // TODO: FIX rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
 //       How to do it? IDEA: mark on Map MULTIPLE and parse this one differently (reading from all objects) - how not to influence performance (skip reading)
-
 #include "extern.h"
 #include "main.h"
 #include "platform.h"
+
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
 
 #if EDITOR_ENABLED
 void init_editor();
@@ -197,12 +204,6 @@ void init_level()
 
 }
 
-void title_screen()
-{
-
-}
-
-
 void level_loop()
 {
 	while (game_phase == LEVEL_LOAD || game_phase == LEVEL_ONGOING)
@@ -256,8 +257,6 @@ void galaxy_loop()
 
 void game_loop()
 {
-	title_screen();
-
 	for (;;)
 	{
 		galaxy_loop();		

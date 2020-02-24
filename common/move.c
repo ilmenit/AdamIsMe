@@ -10,6 +10,14 @@
 // 1. Fix magnets - not to be pushed when iron is moving towards it?
 #include "extern.h"
 
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
+
+
 #define PREPROCESS_NONE		0x0
 
 // Preprocessing move

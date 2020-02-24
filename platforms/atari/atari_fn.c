@@ -1,3 +1,17 @@
+/*
+Extended todo:
+1. Compile pure code without $4000-$7FFF
+2. Add testing read/write to extended ram
+3. 
+
+Memory map for use of extended memory:
+$2000-$3FFF - GFX segment (screen + dli) - now GFX is $5000-$681D  len:00181E
+$4000-$7FFF - Banked CODE, DATA, RODATA in extended memory (no DLI, no screen mem, no music)
+$8000-$AFFF - RMT music (segment discarded from loading, loaded as separate sections)
+$B000-$BFFF - extended memory handlers and game data + BSS which must be at the end under MEMTOP
+->potentially to $D000 when RAM is turned off? (change of RAMTOP required to D0)
+*/
+
 #define PLATFORM_ATARI 1
 #include <atari.h>
 #include <joystick.h>
@@ -9,6 +23,13 @@
 #include <unistd.h>
 // this one needed for SFX_VBI_COUNTER
 #include "sfx\sfx.h"
+
+#ifdef __CC65__
+#pragma code-name(push,"BANKCODE")
+#pragma data-name(push,"BANKDATA")
+#pragma data-name(push,"BANKRODATA")
+#pragma bss-name (push,"BANKDATA")
+#endif
 
 #define EMPTY_TILE 126
 #define TIMER_VALUE 12
@@ -151,6 +172,11 @@ byte representation_galaxy[] = {
 	10, 106
 };
 
+
+bool undo_data_stored = false;
+bool undo_data_stored_this_turn = false;
+//struct objects_def undo_data;
+
 void wait_for_vblank(void)
 {
 	asm("lda $14");
@@ -270,6 +296,7 @@ void read_font_tileset(byte *font_address, byte *inverse_data)
 
 void load_level_data()
 {
+	undo_data_stored = false;
 	if (level_number == LEVEL_GALAXY)
 	{
 		if (!galaxy_cached)
@@ -630,6 +657,22 @@ void galaxy_get_action()
 	set_timer(TIMER_VALUE);
 }
 
+void restore_undo_data()
+{
+	load_level();
+	set_palette();
+	//memcpy(&objects, &undo_data, sizeof(objects));	
+	init_level();	
+}
+
+void store_undo_data()
+{
+	//memcpy(&undo_data, &objects, sizeof(objects));
+	undo_data_stored = true;
+	undo_data_stored_this_turn = true;
+}
+
+
 void game_lost()
 {
 	audio_sfx(SFX_LEVEL_LOST);
@@ -645,7 +688,10 @@ void game_lost()
 	{
 		test_joystick();
 	}
+	if (undo_data_stored)
+		restore_undo_data();
 }
+
 
 void game_get_action()
 {
@@ -655,6 +701,7 @@ void game_get_action()
 
 	while (palette_can_be_modified)
 		fade_palette_to_level_colors();
+
 
 	wait_for_timer();
 
@@ -680,6 +727,14 @@ void game_get_action()
 		{
 			switch_music();
 		}
+
+		if (you_move_direction == DIR_CREATED) // no directin selected
+		{
+			if (!undo_data_stored_this_turn)
+				store_undo_data();
+		}
+		else
+			undo_data_stored_this_turn = false; // store undo data on the next move
 	}
 	set_timer(TIMER_VALUE);
 	if (you_move_direction != DIR_NONE)
