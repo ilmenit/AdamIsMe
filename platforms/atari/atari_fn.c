@@ -24,13 +24,6 @@ $B000-$BFFF - extended memory handlers and game data + BSS which must be at the 
 // this one needed for SFX_VBI_COUNTER
 #include "sfx\sfx.h"
 
-#ifdef __CC65__
-#pragma code-name(push,"BANKCODE")
-#pragma data-name(push,"BANKDATA")
-#pragma data-name(push,"BANKRODATA")
-#pragma bss-name (push,"BANKDATA")
-#endif
-
 #define EMPTY_TILE 126
 #define TIMER_VALUE 12
 //#define TIMER_VALUE 12

@@ -1,12 +1,5 @@
 #include "headers.h"
 
-#ifdef __CC65__
-#pragma code-name(push,"BANKCODE")
-#pragma data-name(push,"BANKDATA")
-#pragma data-name(push,"BANKRODATA")
-#pragma bss-name (push,"BANKDATA")
-#endif
-
 /*****************************************************************************/
 /*                                   Data                                    */
 /*****************************************************************************/
@@ -31,20 +24,15 @@ byte last_text_index;
 
 //////////////////////// DATA - TO BE STORED FOR UNDO? ////////////////////////
 
-#ifdef __CC65__
+#if defined(__CC65__) && defined(__ATARI__)
 // Objects data need to go to non-banked space, because ee store undo data there
-#pragma code-name(pop)
-#pragma data-name(pop)
-#pragma data-name(pop)
+#pragma data-name("DATA")
 #endif
 
 struct objects_def objects;
 
-#ifdef __CC65__
-#pragma code-name(push,"BANKCODE")
-#pragma data-name(push,"BANKDATA")
-#pragma data-name(push,"BANKRODATA")
-#pragma bss-name (push,"BANKDATA")
+#if defined(__CC65__) && defined(__ATARI__)
+#pragma data-name("BANKDATA")
 #endif
 
 

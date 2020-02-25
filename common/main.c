@@ -8,14 +8,6 @@
 #include "main.h"
 #include "platform.h"
 
-#ifdef __CC65__
-#pragma code-name(push,"BANKCODE")
-#pragma data-name(push,"BANKDATA")
-#pragma data-name(push,"BANKRODATA")
-#pragma bss-name (push,"BANKDATA")
-#endif
-
-
 #if EDITOR_ENABLED
 void init_editor();
 void editor_loop();

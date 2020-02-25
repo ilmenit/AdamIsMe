@@ -22,6 +22,9 @@
     <Filter Include="platform\Allegro\external">
       <UniqueIdentifier>{4b3e8e81-6f1a-46dc-a439-83013882e92d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BuildAtari">
+      <UniqueIdentifier>{92c8c17f-2be3-4fe7-ad63-9b6e9f3e84b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -30,6 +33,12 @@
     </None>
     <None Include="level_set\levels.riu">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="atari-atr.cfg">
+      <Filter>BuildAtari</Filter>
+    </None>
+    <None Include="build.bat">
+      <Filter>BuildAtari</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

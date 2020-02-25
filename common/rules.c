@@ -1,13 +1,5 @@
 #include "extern.h"
 
-#ifdef __CC65__
-#pragma code-name(push,"BANKCODE")
-#pragma data-name(push,"BANKDATA")
-#pragma data-name(push,"BANKRODATA")
-#pragma bss-name (push,"BANKDATA")
-#endif
-
-
 /*
 In this game parser does not accept multiple IS e.g. "WALL is ROBO is You" or cycle "BABA IS KEKE IS BABA" nor order of operators 
 Reason is simplification of the parser.
