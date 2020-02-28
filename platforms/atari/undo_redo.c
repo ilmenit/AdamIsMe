@@ -16,6 +16,8 @@ byte undo_write_index=0;
 byte undo_read_index=0;
 extern struct objects_def objects;
 
+// these are separated to non-banked memory
+
 void write_to_bank()
 {
 	memcpy(get_banked_address(undo_write_index, sizeof(objects)), &objects, sizeof(objects));
@@ -31,34 +33,39 @@ void read_from_bank()
 }
 
 #pragma code-name("BANKCODE")
+#pragma data-name("BANKDATA")
+#pragma rodata-name("BANKRODATA")
+#pragma bss-name ("BANKDATA")
 
-byte undo_index_end;
+bool undo_something_stored;
 // the first we can return to
-byte undo_index_start;
+byte undo_start_index;
 byte undo_index_max;
 bool undo_buffer_crossed;
 
 void store_state()
 {
-	//printf("STOR: End:%u, RD:%u, WT:%u\n", (unsigned int) undo_index_end, (unsigned int) undo_read_index, (unsigned int) undo_write_index);
-
-	if (undo_index_end == 0)
+	if (!undo_something_stored)
 	{
 		undo_read_index = 0; // set current read in a way that the next write will be to 0	
 		undo_write_index = 0;
-		undo_index_end = 1;
+		undo_start_index = undo_index_max - 1;
+		undo_something_stored = true;
 	}
 	else
 	{
-		// extend the buffer up to available space
-		if (undo_index_end != undo_index_max)
-			++undo_index_end;
-
 		// store data in the next position after the current read position
 		undo_write_index = undo_read_index;
 		++undo_write_index;
-		if (undo_write_index == undo_index_end)
+		if (undo_write_index == undo_index_max)
 			undo_write_index = 0;
+		// write_index is pushing the start_index, therefore we can revert state only to the next after the current write_index
+		if (undo_write_index == undo_start_index)
+		{
+			++undo_start_index;
+			if (undo_start_index == undo_index_max)
+				undo_start_index = 0;
+		}
 	}		
 	write_to_bank();
 	// we can now read from this one
@@ -67,9 +74,8 @@ void store_state()
 
 void restore_state()
 {
-	//printf("REST: End:%u, RD:%u, WT:%u\n", (unsigned int) undo_index_end, (unsigned int) undo_read_index, (unsigned int) undo_write_index);
 	// there is nothing to restore
-	if (undo_index_end==0)
+	if (!undo_something_stored)
 		return;
 	
 	read_from_bank();
@@ -78,18 +84,17 @@ void restore_state()
 bool undo()
 {
 	byte prev_index;
-	//puts("UNDO\n");
 	// there is nothing to restore
-	if (undo_index_end==0)
+	if (!undo_something_stored)
 		return false;	
 
 	prev_index = undo_read_index;
 	if (undo_read_index==0)
-		undo_read_index = undo_index_end-1;
+		undo_read_index = undo_index_max-1;
 	else
 		--undo_read_index;
 	
-	if (undo_read_index == undo_write_index)
+	if (undo_read_index == undo_start_index)
 	{
 		undo_read_index = prev_index;
 		return false;
@@ -100,18 +105,16 @@ bool undo()
 
 bool redo()
 {
-	//printf("REDO\n");
 	// there is nothing to restore
-	if (undo_index_end==0)
+	if (!undo_something_stored)
 		return false;
 	if (undo_read_index == undo_write_index)
 	{
-		//printf("NOTHING TO REDO\n");
 		return false;
 	}
 
 	++undo_read_index;
-	if (undo_read_index>=undo_index_end)
+	if (undo_read_index == undo_index_max)
 		undo_read_index = 0;
 	
 	restore_state();
@@ -122,6 +125,5 @@ void reset_undo()
 {
 	// this could be assigned only once
 	undo_index_max = memory_objects_in_all_banks(sizeof(objects));
-	undo_index_end = 0; // nothing is stored
-	undo_index_start = 0;
+	undo_something_stored = false; // nothing is stored
 }

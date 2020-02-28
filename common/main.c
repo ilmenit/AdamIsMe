@@ -169,7 +169,7 @@ void init_new_game()
 	game_progress.landed_y = 0xFF; // position on the galaxy map
 }
 
-void init_level()
+void init_level() 
 {
 	// initial setting of rules, before any move
 	game_phase = LEVEL_ONGOING;
