@@ -11,8 +11,6 @@ del riu.xex
 set all_files=
 
 for %%x in (
-	platforms/atari/undo_redo
-	platforms/atari/ram_handler
 	platforms/atari/atari_fn
 	platforms/atari/sounds
 	common/level

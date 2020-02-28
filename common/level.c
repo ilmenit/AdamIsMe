@@ -135,6 +135,13 @@ void decode_standard_level()
 					objects.y[local_index] = local_y;
 					objects.direction[local_index] = local_temp2;
 					++local_index;
+#if EDITOR_ENABLED	
+					if (local_index >= MAX_OBJECTS)
+					{
+						last_obj_index = local_index;
+						return;
+					}
+#endif
 				}
 			}
 		}

@@ -342,19 +342,25 @@ void draw_on_map(int x, int y)
 		else
 		{
 			// if last object in editor, then it's equal to cleaning
-			if (editor_selected_object == TYPE_TEXT)
+			if (editor_selected_object == TYPE_TEXT) // type_text has no obj representation, so we use it as cleaning
 			{
 				board_set(x, y, LEVEL_DECODE_EMPTY);
 			}
 			else
 			{
-				// encode on standard level
-				int encoded_obj = editor_selected_object;
-				int dir = DIR_DOWN;
-				if (editor_selected_direction != DIR_NONE)
-					dir = editor_selected_direction;
-				encoded_obj |= ENCODE_DIRECTION(dir);
-				board_set(x, y, encoded_obj);
+				if (
+					(MapGet(x, y) != LEVEL_DECODE_EMPTY) ||
+					(last_obj_index < MAX_OBJECTS-1)
+					)
+				{
+					// encode on standard level
+					int encoded_obj = editor_selected_object;
+					int dir = DIR_DOWN;
+					if (editor_selected_direction != DIR_NONE)
+						dir = editor_selected_direction;
+					encoded_obj |= ENCODE_DIRECTION(dir);
+					board_set(x, y, encoded_obj);
+				}
 			}
 		}
 	}
@@ -1125,6 +1131,13 @@ void draw_editor()
 		sprintf(text, "World %d Tiles", (level_number / LEVELS_PER_WORLD) + 1);
 		al_draw_text(font_small, al_map_rgb(255, 255, 255), 300, 600, 0, text);
 		al_draw_text(font_small, al_map_rgb(255, 255, 255), 512, 600, 0, "Direction");
+		sprintf(text, "Objects %d/%d", last_obj_index, MAX_OBJECTS);
+		if (last_obj_index == MAX_OBJECTS)
+			al_draw_text(font_small, al_map_rgb(255, 128, 0), 20, 166, 0, text);
+		else if (last_obj_index > MAX_OBJECTS - 20)
+			al_draw_text(font_small, al_map_rgb(255, 255, 0), 20, 166, 0, text);
+		else
+			al_draw_text(font_small, al_map_rgb(255, 255, 255), 20, 166, 0, text);
 	}
 	else
 	{

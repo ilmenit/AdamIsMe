@@ -5,7 +5,7 @@ FEATURES {
 }
 SYMBOLS {
     __RMT_SIZE__:        value = $2B00, type = weak;
-	__RAM_AVAIL__:       value = $BC20, type = weak; # consider changing to $BFFF
+	__RAM_AVAIL__:       value = $BFFF, type = weak; # consider changing to $BFFF or disable rom for $CFFF
     __FILEHDR__:          type = import;
     __AUTOSTART__:       type = import;  # force inclusion of autostart "trailer"
     __STACKSIZE__:       type = weak, value = $040; # small stack

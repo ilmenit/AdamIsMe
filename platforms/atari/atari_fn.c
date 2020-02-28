@@ -23,6 +23,8 @@ $B000-$BFFF - extended memory handlers and game data + BSS which must be at the 
 #include <unistd.h>
 // this one needed for SFX_VBI_COUNTER
 #include "sfx\sfx.h"
+#include "ram_handler.h"
+#include "undo_redo.h"
 
 #define EMPTY_TILE 126
 #define TIMER_VALUE 12
@@ -33,6 +35,7 @@ $B000-$BFFF - extended memory handlers and game data + BSS which must be at the 
 /*                               System Data                                 */
 /*****************************************************************************/
 int file_pointer;
+bool undo_available;
 
 byte joy_status;
 byte video_buffer_number = 0;
@@ -168,7 +171,6 @@ byte representation_galaxy[] = {
 
 bool undo_data_stored = false;
 bool undo_data_stored_this_turn = false;
-//struct objects_def undo_data;
 
 void wait_for_vblank(void)
 {
@@ -289,7 +291,6 @@ void read_font_tileset(byte *font_address, byte *inverse_data)
 
 void load_level_data()
 {
-	undo_data_stored = false;
 	if (level_number == LEVEL_GALAXY)
 	{
 		if (!galaxy_cached)
@@ -303,6 +304,9 @@ void load_level_data()
 	}
 	else
 	{
+		undo_data_stored = false;
+		reset_undo();
+
 		if (game_progress.landed_on_world_number != loaded_world_cache)
 		{
 			local_temp1 = game_progress.landed_on_world_number*LEVELS_PER_WORLD;
@@ -354,39 +358,6 @@ void save_game_progress()
 	close(file_pointer);
 
 	file_pointer = open(level_file_name, O_RDONLY);
-}
-
-void test_joystick()
-{
-	joy_status = joy_read(JOY_1);
-	if (joy_status == 0)
-		return;
-
-	if (JOY_UP(joy_status))
-	{
-		you_move_direction = DIR_UP;
-		return;
-	}
-	else if (JOY_RIGHT(joy_status))
-	{
-		you_move_direction = DIR_RIGHT;
-		return;
-	}
-	else if (JOY_DOWN(joy_status))
-	{
-		you_move_direction = DIR_DOWN;
-		return;
-	}
-	else if (JOY_LEFT(joy_status))
-	{
-		you_move_direction = DIR_LEFT;
-		return;
-	}
-	else if (JOY_BTN_1(joy_status))
-	{
-		you_move_direction = DIR_NONE;
-		return;
-	}
 }
 
 void set_timer(byte timer_value)
@@ -579,7 +550,27 @@ void galaxy_get_action()
 			galaxy_draw_screen();
 
 		action_taken = true;
-		test_joystick();
+		joy_status = joy_read(JOY_1);
+		if (JOY_UP(joy_status))
+		{
+			you_move_direction = DIR_UP;
+		}
+		else if (JOY_RIGHT(joy_status))
+		{
+			you_move_direction = DIR_RIGHT;
+		}
+		else if (JOY_DOWN(joy_status))
+		{
+			you_move_direction = DIR_DOWN;
+		}
+		else if (JOY_LEFT(joy_status))
+		{
+			you_move_direction = DIR_LEFT;
+		}
+		else if (JOY_BTN_1(joy_status))
+		{
+			you_move_direction = DIR_NONE;
+		}
 
 		switch (you_move_direction)
 		{
@@ -652,15 +643,16 @@ void galaxy_get_action()
 
 void restore_undo_data()
 {
-	load_level();
+	//load_level();
+	undo();
+	init_level();
 	set_palette();
-	//memcpy(&objects, &undo_data, sizeof(objects));	
-	init_level();	
 }
 
 void store_undo_data()
 {
-	//memcpy(&undo_data, &objects, sizeof(objects));
+	if (undo_available)
+		store_state();
 	undo_data_stored = true;
 	undo_data_stored_this_turn = true;
 }
@@ -676,12 +668,12 @@ void game_lost()
 	OS.color3 = 0x04;
 	game_draw_screen();
 
-	you_move_direction = DIR_CREATED;
-	while (you_move_direction != DIR_NONE)
+	do
 	{
-		test_joystick();
-	}
-	if (undo_data_stored)
+		joy_status = joy_read(JOY_1);
+	} while (JOY_BTN_1(joy_status) == 0);
+
+	if (undo_available && undo_data_stored)
 		restore_undo_data();
 }
 
@@ -707,8 +699,27 @@ void game_get_action()
 		if (OS.rtclok[2] % 16 == 0)
 			game_draw_screen();
 
-		test_joystick();
-
+		joy_status = joy_read(JOY_1);
+		if (JOY_UP(joy_status))
+		{
+			you_move_direction = DIR_UP;
+		}
+		else if (JOY_RIGHT(joy_status))
+		{
+			you_move_direction = DIR_RIGHT;
+		}
+		else if (JOY_DOWN(joy_status))
+		{
+			you_move_direction = DIR_DOWN;
+		}
+		else if (JOY_LEFT(joy_status))
+		{
+			you_move_direction = DIR_LEFT;
+		}
+		else if (JOY_BTN_1(joy_status))
+		{
+			you_move_direction = DIR_NONE;
+		}
 		// keys - escape=28, backspace=52, space=33 - by https://atariwiki.org/wiki/Wiki.jsp?page=Read%20keyboard
 		if (OS.ch == 28)
 		{
@@ -912,6 +923,8 @@ void init_platform()
 {
 	// open file pointer
 	open_and_test_file_io();
+
+	undo_available = memory_handler_init();
 
 	// Set keyboard repeat speed
 	OS.keyrep = 2;

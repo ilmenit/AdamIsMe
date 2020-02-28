@@ -27,9 +27,11 @@ byte last_text_index;
 #if defined(__CC65__) && defined(__ATARI__)
 // Objects data need to go to non-banked space, because ee store undo data there
 #pragma data-name("DATA")
+struct objects_def objects = {}; // this way {} we put it into DATA segment
+#else
+struct objects_def objects;
 #endif
 
-struct objects_def objects;
 
 #if defined(__CC65__) && defined(__ATARI__)
 #pragma data-name("BANKDATA")
