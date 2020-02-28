@@ -29,7 +29,7 @@ byte last_text_index;
 #pragma data-name("DATA")
 struct objects_def objects = {}; // this way {} we put it into DATA segment
 #else
-struct objects_def objects;
+struct objects_def objects; 
 #endif
 
 

@@ -168,9 +168,17 @@ byte representation_galaxy[] = {
 	10, 106
 };
 
-
-bool undo_data_stored = false;
 bool undo_data_stored_this_turn = false;
+
+void set_gray_palette()
+{
+	OS.color0 = 0x08;
+	OS.color1 = 0x08;
+	OS.color2 = 0x04;
+	OS.color3 = 0x04;
+	set_palette();
+	game_draw_screen();
+}
 
 void wait_for_vblank(void)
 {
@@ -214,23 +222,28 @@ void fade_screen_to_black()
 
 void fade_palette_to_level_colors()
 {
-	palette_can_be_modified = false;
-	
 	local_temp1 = level_number / LEVELS_PER_WORLD;
-	for (local_index = 0; local_index < COLORS_MAX; ++local_index)
+	while (palette_can_be_modified)
 	{
-		if ((*system_colors[local_index] & 0xF0) != (atari_tiles_info[local_temp1].world_colors[local_index] & 0xF0))
+		palette_can_be_modified = false;
+		for (local_index = 0; local_index < COLORS_MAX; ++local_index)
 		{
-			*system_colors[local_index] = atari_tiles_info[local_temp1].world_colors[local_index] & 0xF0;
+			if ((*system_colors[local_index] & 0xF0) != (atari_tiles_info[local_temp1].world_colors[local_index] & 0xF0))
+			{
+				*system_colors[local_index] = atari_tiles_info[local_temp1].world_colors[local_index] & 0xF0;
+			}
+			if ((*system_colors[local_index]) < atari_tiles_info[local_temp1].world_colors[local_index])
+			{
+				++(*system_colors[local_index]);
+				palette_can_be_modified = true;
+			}
 		}
-		if ((*system_colors[local_index]) < atari_tiles_info[local_temp1].world_colors[local_index])
-		{
-			++(*system_colors[local_index]);
-			palette_can_be_modified = true;
-		}
+		if (palette_can_be_modified)
+			wait_for_vblank();
 	}
+	for (local_index = 0; local_index < COLORS_MAX; ++local_index)
+		*system_colors[local_index] = atari_tiles_info[local_temp1].world_colors[local_index];
 	//wait_time(1); - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
-	wait_for_vblank();
 }
 
 
@@ -304,7 +317,6 @@ void load_level_data()
 	}
 	else
 	{
-		undo_data_stored = false;
 		reset_undo();
 
 		if (game_progress.landed_on_world_number != loaded_world_cache)
@@ -527,7 +539,7 @@ void galaxy_get_action()
 
 	you_move_direction = DIR_CREATED;
 
-	while (palette_can_be_modified)
+	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
 
 	///// TODO: Here implement UNDO if SFX_VBI_COUNTER > 0 or x) ???
@@ -617,11 +629,6 @@ void galaxy_get_action()
 			last_galaxy_move_direction = DIR_DOWN;
 		}
 
-		// keys - escape=28, backspace=52, space=33 - by https://atariwiki.org/wiki/Wiki.jsp?page=Read%20keyboard
-		if (OS.ch == 28)
-		{
-			// exit to main menu?
-		}
 		switch (GTIA_READ.consol)
 		{
 		case 0:
@@ -641,52 +648,87 @@ void galaxy_get_action()
 	set_timer(TIMER_VALUE);
 }
 
-void restore_undo_data()
+bool perform_undo()
 {
 	//load_level();
-	undo();
-	init_level();
-	set_palette();
+	if (undo())
+	{
+		init_level();
+		set_gray_palette();
+		audio_sfx(SFX_CLICK);
+		wait_time(5);
+		return true;
+	}
+	return false;
+}
+
+void perform_redo()
+{
+	//load_level();
+	if (redo())
+	{
+		init_level();
+		set_gray_palette();
+		audio_sfx(SFX_CLICK);
+		wait_time(5);
+	}
+	else
+	{
+		audio_sfx(SFX_CLICK);
+		you_move_direction = DIR_NONE;
+	}
 }
 
 void store_undo_data()
 {
-	if (undo_available)
+	if (undo_available && !undo_data_stored_this_turn)
 		store_state();
-	undo_data_stored = true;
 	undo_data_stored_this_turn = true;
 }
 
 
 void game_lost()
 {
+	bool reload = false;
 	audio_sfx(SFX_LEVEL_LOST);
 	//background_color = 0x00;
-	OS.color0 = 0x08;
-	OS.color1 = 0x0B;
-	OS.color2 = 0x04;
-	OS.color3 = 0x04;
-	game_draw_screen();
-
-	do
+	set_gray_palette();
+	for(;;)
 	{
 		joy_status = joy_read(JOY_1);
-	} while (JOY_BTN_1(joy_status) == 0);
-
-	if (undo_available && undo_data_stored)
-		restore_undo_data();
+		if (JOY_BTN_1(joy_status) && JOY_LEFT(joy_status))
+		{
+			if (perform_undo())
+				return;
+			else
+				reload = true;
+		}
+		if (OS.ch == 28)
+			reload = true;
+		if (reload)
+		{
+			load_level();
+			init_level();
+			return;
+		}
+	}
 }
 
 
+// we don't have two button gamepad on Atari, therefore as buttons we use FIRE + JOY_LEFT or JOY_RIGHT
 void game_get_action()
 {
 	you_move_direction = DIR_CREATED;
 
 	OS.ch = 0x0; // clear key
 
-	while (palette_can_be_modified)
+	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
 
+	if (PEEK(SFX_VBI_COUNTER) > 0)
+	{
+		store_undo_data();
+	}
 
 	wait_for_timer();
 
@@ -706,7 +748,10 @@ void game_get_action()
 		}
 		else if (JOY_RIGHT(joy_status))
 		{
-			you_move_direction = DIR_RIGHT;
+			if (JOY_BTN_1(joy_status))
+				perform_redo();
+			else
+				you_move_direction = DIR_RIGHT;
 		}
 		else if (JOY_DOWN(joy_status))
 		{
@@ -714,11 +759,10 @@ void game_get_action()
 		}
 		else if (JOY_LEFT(joy_status))
 		{
-			you_move_direction = DIR_LEFT;
-		}
-		else if (JOY_BTN_1(joy_status))
-		{
-			you_move_direction = DIR_NONE;
+			if (JOY_BTN_1(joy_status))
+				perform_undo();
+			else
+				you_move_direction = DIR_LEFT;
 		}
 		// keys - escape=28, backspace=52, space=33 - by https://atariwiki.org/wiki/Wiki.jsp?page=Read%20keyboard
 		if (OS.ch == 28)
@@ -734,8 +778,7 @@ void game_get_action()
 
 		if (you_move_direction == DIR_CREATED) // no directin selected
 		{
-			if (!undo_data_stored_this_turn)
-				store_undo_data();
+			store_undo_data();
 		}
 		else
 			undo_data_stored_this_turn = false; // store undo data on the next move
