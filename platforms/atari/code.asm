@@ -38,6 +38,7 @@ _local_flags: .byte 0
 _local_temp1: .byte 0
 _local_temp2: .byte 0
 _local_ptr: .word 0
+reg_a: .byte 0
 
 .segment "SFX"
 ; it has EXE header, so we skip first 2 bytes
@@ -137,18 +138,10 @@ _background_color:
 
 .segment	"CODE"
 
-.macro DLINEW handler
-	LDA	#<handler		
-	STA	VDSLST
-	LDA	#>handler
-	STA	VDSLST+1
-	lda regA
-	rti
-.endmacro 
-
 _dl_handler:
- pha
+ sta reg_a
  lda $D40B ;VCOUNT
+ sta WSYNC
  cmp #$6e ; if bottom of screen
  bcs bottom_handler
  cmp #$10 ; if bottom of screen
@@ -158,27 +151,27 @@ _dl_handler:
  beq set_second
  ;; Set first font
  lda _display_font_page1
- jmp handler_end
+ sta CHBASE
+ lda reg_a
+ rti
+
 set_second:
   ;; Set second font
  lda _display_font_page2
-handler_end:
- sta $D409
- pla
+ sta CHBASE
+ lda reg_a
  rti
 
 bottom_handler:
  ; set black color below playfield
- sta WSYNC
  lda #$00
  sta $D01A
- pla
+ lda reg_a
  rti 
 
 up_handler:
  ; set color of the playfield (the top part is covered by OS shadow register - black color)
- sta WSYNC
  lda _background_color
  sta $D01A
- pla
+ lda reg_a
  rti 

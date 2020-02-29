@@ -1,7 +1,5 @@
 // TODO: Move Atari platform specific things out of editor and Allegro
 // TODO: Make initial build for other CC65 platform using CONIO?
-// TODO: Undo - only when more memory is available?
-//       Not to interfere with game speed Undo could save state only if wait_for_timer has time to process (?) - SFX_VBI_COUNTER > 0
 // TODO: FIX rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
 //       How to do it? IDEA: mark on Map MULTIPLE and parse this one differently (reading from all objects) - how not to influence performance (skip reading)
 #include "extern.h"
