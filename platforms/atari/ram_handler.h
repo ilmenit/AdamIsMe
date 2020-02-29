@@ -1,6 +1,6 @@
 #define BANK_NONE 0xFF
 
-unsigned char memory_handler_init();
+void memory_handler_init();
 unsigned char memory_get_bank_count();
 
 // returns how many objects we can fit into bank

@@ -1,7 +1,9 @@
 #include <atari.h>
 #include <stdio.h>
 #include "ram_handler.h"
+#include "../../common/definitions.h"
 
+#define UNDO_NON_EXT_MOVES 4
 // ===============================================
 
 #pragma code-name(push,"BANKCODE")
@@ -38,6 +40,8 @@ unsigned char bank_selection[BANK_MAX] =
 unsigned char value_in_bank = 0;
 unsigned char prev_portb = 0;
 unsigned char memory_banks = 0;
+byte* bank_ptr = (byte *) 0xD800;
+unsigned int bank_size = (0xE400 - 0xD800);
 
 void memory_select_bank(unsigned char bank)
 {
@@ -47,11 +51,18 @@ void memory_select_bank(unsigned char bank)
 	}
 	else
 	{
-		PIA.portb = (prev_portb & 0b11000011) | bank_selection[bank];
+		if (memory_banks == 1)
+		{
+			// disable ROM
+			PIA.portb = (prev_portb & 0b11111110);
+		}
+		else
+			PIA.portb = (prev_portb & 0b11000011) | bank_selection[bank];
+
 	}
 }
 
-unsigned char memory_handler_init()
+void memory_handler_init()
 {
 	prev_portb = PIA.portb;
 	
@@ -64,16 +75,21 @@ unsigned char memory_handler_init()
 	++bank_test;
 	
 	// enable the bank and check the value
-	memory_select_bank(3);
-	
-	// if value in the bank is not changed, then we have extended memory!
+	memory_select_bank(3);	
+
+// if value in the bank is not changed, then we have extended memory!
 	if (bank_test == value_in_bank)
 	{
 		memory_banks = 4;
-		memory_select_bank(BANK_NONE); // restore the previous bank, because we succesfuly changed it
-		return 1;
+		bank_size = BANK_SIZE;
+		bank_ptr = BANK_ADDRESS;
 	}
-	return 0;
+	else
+	{
+		memory_banks = 1;
+		// bank_size and bank_ptr are predefined
+	}
+	memory_select_bank(BANK_NONE); // restore the previous bank, because we succesfuly changed it
 }
 
 unsigned char *get_banked_address(unsigned int object_index, unsigned int object_size)
@@ -87,16 +103,15 @@ unsigned char *get_banked_address(unsigned int object_index, unsigned int object
 		return NULL;
 	
 	memory_select_bank(bank_number);
-	//printf("ADDR: %X\n", (unsigned int) &BANK_ADDRESS[(object_index % objects_in_bank) * object_size]);
 
-	return &BANK_ADDRESS[(object_index % objects_in_bank) * object_size];
+	return &bank_ptr[(object_index % objects_in_bank) * object_size];
 }
 
 #pragma code-name("BANKCODE")
 
 unsigned int memory_objects_in_bank(unsigned int object_size)
 {
-	return BANK_SIZE / object_size;
+	return bank_size / object_size;
 }
 
 unsigned int memory_objects_in_all_banks(unsigned int object_size)

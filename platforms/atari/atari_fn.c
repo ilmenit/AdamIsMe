@@ -35,7 +35,6 @@ $B000-$BFFF - extended memory handlers and game data + BSS which must be at the 
 /*                               System Data                                 */
 /*****************************************************************************/
 int file_pointer;
-bool undo_available;
 
 byte joy_status;
 byte video_buffer_number = 0;
@@ -681,7 +680,7 @@ void perform_redo()
 
 void store_undo_data()
 {
-	if (undo_available && !undo_data_stored_this_turn)
+	if (!undo_data_stored_this_turn)
 		store_state();
 	undo_data_stored_this_turn = true;
 }
@@ -962,12 +961,14 @@ void open_and_test_file_io()
 	}
 }
 
+void rom_copy();
+
 void init_platform()
 {
+
 	// open file pointer
 	open_and_test_file_io();
-
-	undo_available = memory_handler_init();
+	memory_handler_init();
 
 	// Set keyboard repeat speed
 	OS.keyrep = 2;
@@ -989,6 +990,8 @@ void init_platform()
 	}
 	memset(video_ptr1, EMPTY_TILE, SCREEN_SIZE_X * SCREEN_SIZE_Y);
 	swap_video_buffer();
+
+	rom_copy();
 
 	ANTIC.nmien = NMIEN_VBI;
 

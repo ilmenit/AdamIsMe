@@ -32,6 +32,7 @@ for %%x in (
 for %%x in (
 	platforms/atari/code
 	platforms/atari/linker
+	platforms/atari/rom_off
 ) do (
 	ca65 -t atari %%x.asm || goto :error
 	set all_files=!all_files! %%x.o
