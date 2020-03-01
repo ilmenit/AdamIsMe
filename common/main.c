@@ -211,7 +211,7 @@ void level_loop()
 		if (game_phase == LEVEL_WON)
 		{
 			audio_sfx(SFX_LEVEL_WON);
-			complete_level();
+			complete_level(); 
 		}
 		else if (game_phase == LEVEL_LOST)
 		{

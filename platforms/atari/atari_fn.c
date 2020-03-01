@@ -201,24 +201,29 @@ byte *system_colors[COLORS_MAX] =
 	&OS.color3,
 };
 
+void fade_to_black_one_step()
+{
+	palette_can_be_modified = false;
+	for (local_index = 0; local_index < COLORS_MAX; ++local_index)
+	{
+		if ((*system_colors[local_index] & 0x0F) > 0)
+		{
+			--(*system_colors[local_index]);
+			palette_can_be_modified = true;
+		}
+		else
+			*system_colors[local_index] = 0;
+	}
+	//wait_time(1); - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
+	wait_for_vblank();
+}
+
 void fade_screen_to_black()
 {
 	palette_can_be_modified = true;
 	while (palette_can_be_modified)
 	{
-		palette_can_be_modified = false;
-		for (local_index = 0; local_index < COLORS_MAX; ++local_index)
-		{
-			if ((*system_colors[local_index] & 0x0F) > 0)
-			{
-				--(*system_colors[local_index]);
-				palette_can_be_modified = true;
-			}
-			else
-				*system_colors[local_index] = 0;
-		}
-		//wait_time(1); - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
-		wait_for_vblank();
+		fade_to_black_one_step();
 	}
 }
 
@@ -543,14 +548,14 @@ void galaxy_get_action()
 	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
 
-	///// TODO: Here implement UNDO if SFX_VBI_COUNTER > 0 or x) ???
-
-	//wait_for_timer();
-	while (PEEK(SFX_VBI_COUNTER))
-	{
+	// wait for joy fire release - because of e.g. test_quit() not to trigger it again
+	do {
+		joy_status = joy_read(JOY_1);
 		if (OS.rtclok[2] % 16 == 0)
 			galaxy_draw_screen();
-	}
+	} while (JOY_BTN_1(joy_status));
+
+	wait_for_timer();
 
 	while (!action_taken)
 	{
@@ -687,6 +692,36 @@ void store_undo_data()
 	undo_data_stored_this_turn = true;
 }
 
+bool test_quit()
+{
+	// keys - escape=28, backspace=52, space=33 - by https://atariwiki.org/wiki/Wiki.jsp?page=Read%20keyboard
+	byte quit_counter = 10;
+	for (;;)
+	{
+		if (quit_counter == 0 || OS.ch == 28)
+		{
+			return true;
+		}
+		joy_status = joy_read(JOY_1);
+		if (JOY_BTN_1(joy_status) && JOY_UP(joy_status))
+		{
+			--quit_counter;
+			fade_to_black_one_step();
+			wait_for_vblank();
+			you_move_direction = DIR_CREATED;
+		}
+		else
+		{
+			if (quit_counter < 10)
+			{
+				palette_can_be_modified = true;
+				fade_palette_to_level_colors();
+			}
+			return false;
+		}
+	}
+}
+
 
 void game_lost()
 {
@@ -697,12 +732,21 @@ void game_lost()
 	for(;;)
 	{
 		joy_status = joy_read(JOY_1);
-		if (JOY_BTN_1(joy_status) && JOY_LEFT(joy_status))
+		if (JOY_BTN_1(joy_status))
 		{
-			if (perform_undo())
+			if (test_quit())
+			{
+				game_phase = LEVEL_LOAD;
 				return;
-			else
-				reload = true;
+			}
+			if (JOY_LEFT(joy_status))
+			{
+				if (perform_undo())
+					return;
+				else
+					reload = true;
+			}
+
 		}
 		if (OS.ch == 28)
 			reload = true;
@@ -719,6 +763,7 @@ void game_lost()
 // we don't have two button gamepad on Atari, therefore as buttons we use FIRE + JOY_LEFT or JOY_RIGHT
 void game_get_action()
 {
+	bool exit_by_user;
 	you_move_direction = DIR_CREATED;
 
 	OS.ch = 0x0; // clear key
@@ -734,7 +779,6 @@ void game_get_action()
 
 	while (you_move_direction == DIR_CREATED && game_phase == LEVEL_ONGOING)
 	{
-
 		// disable attract mode
 		OS.atract = 0;
 
@@ -764,11 +808,13 @@ void game_get_action()
 			else
 				you_move_direction = DIR_LEFT;
 		}
-		// keys - escape=28, backspace=52, space=33 - by https://atariwiki.org/wiki/Wiki.jsp?page=Read%20keyboard
-		if (OS.ch == 28)
+		if (test_quit())
 		{
-			game_phase = LEVEL_LOST;
-			you_move_direction = DIR_NONE;
+			if (helpers.you_move_at_least_once)
+				game_phase = LEVEL_LOAD;
+			else
+				game_phase = LEVEL_QUIT;
+			//you_move_direction = DIR_NONE;
 			return;
 		}
 		if (GTIA_READ.consol == 3) // OPTION
