@@ -348,7 +348,6 @@ void save_game_progress()
 
 void game_lost()
 {
-
 }
 
 bool drawing_front_buffer;

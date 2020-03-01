@@ -53,5 +53,6 @@ cd build_atr
 build-disk.bat
 goto end
 :error
+	pause
 :end
 exit /b 0

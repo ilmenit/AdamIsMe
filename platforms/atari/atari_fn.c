@@ -8,8 +8,8 @@ Memory map for use of extended memory:
 $2000-$3FFF - GFX segment (screen + dli) - now GFX is $5000-$681D  len:00181E
 $4000-$7FFF - Banked CODE, DATA, RODATA in extended memory (no DLI, no screen mem, no music)
 $8000-$AFFF - RMT music (segment discarded from loading, loaded as separate sections)
-$B000-$BFFF - extended memory handlers and game data + BSS which must be at the end under MEMTOP
-->potentially to $D000 when RAM is turned off? (change of RAMTOP required to D0)
+$B000-$BC20 - extended memory handlers and game data + BSS which must be at the end under MEMTOP
+$D800-$E400 - undo data when game is running without extended memory
 */
 
 #define PLATFORM_ATARI 1
@@ -172,9 +172,12 @@ bool undo_data_stored_this_turn = false;
 void set_gray_palette()
 {
 	OS.color0 = 0x08;
-	OS.color1 = 0x08;
+	OS.color1 = 0x0A;
 	OS.color2 = 0x04;
-	OS.color3 = 0x04;
+	OS.color3 = 0x02;
+	// if the background color would make colors invisible
+	if ( (background_color & 0xF0) == 0)
+		background_color = 0x06;
 	set_palette();
 	game_draw_screen();
 }
@@ -420,7 +423,6 @@ void swap_video_buffer()
 	else
 	{
 		// Install new display list
-		//wait_for_vblank();
 		OS.sdlst = &display_list1;
 		wait_for_vblank();
 
@@ -546,7 +548,6 @@ void galaxy_get_action()
 	//wait_for_timer();
 	while (PEEK(SFX_VBI_COUNTER))
 	{
-		asm("nop");
 		if (OS.rtclok[2] % 16 == 0)
 			galaxy_draw_screen();
 	}
@@ -649,13 +650,13 @@ void galaxy_get_action()
 
 bool perform_undo()
 {
-	//load_level();
+	set_timer(8);
 	if (undo())
 	{
 		init_level();
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
-		wait_time(5);
+		wait_for_timer();
 		return true;
 	}
 	return false;
@@ -663,18 +664,19 @@ bool perform_undo()
 
 void perform_redo()
 {
-	//load_level();
+	set_timer(8);
 	if (redo())
 	{
 		init_level();
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
-		wait_time(5);
+		wait_for_timer();
 	}
 	else
 	{
 		audio_sfx(SFX_CLICK);
 		you_move_direction = DIR_NONE;
+		set_timer(TIMER_VALUE); // normal "waiting move", therefore set standard timer
 	}
 }
 
@@ -727,9 +729,8 @@ void game_get_action()
 	if (PEEK(SFX_VBI_COUNTER) > 0)
 	{
 		store_undo_data();
+		wait_for_timer();
 	}
-
-	wait_for_timer();
 
 	while (you_move_direction == DIR_CREATED && game_phase == LEVEL_ONGOING)
 	{
@@ -988,7 +989,7 @@ void init_platform()
 		video_lookup1[local_y] = video_ptr1 + ((uint)local_y) * SCREEN_SIZE_X;
 		video_lookup2[local_y] = video_ptr2 + ((uint)local_y) * SCREEN_SIZE_X;
 	}
-	memset(video_ptr1, EMPTY_TILE, SCREEN_SIZE_X * SCREEN_SIZE_Y);
+	//memset(video_ptr1, EMPTY_TILE, SCREEN_SIZE_X * SCREEN_SIZE_Y);
 	swap_video_buffer();
 
 	rom_copy();
@@ -1007,11 +1008,10 @@ void init_platform()
 	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
 
 	// set colors
-	OS.color0 = 28;
-	OS.color3 = 40; // inverse color0
-	OS.color1 = 130;
-	OS.color2 = 15;
-
+	OS.color0 = 0;
+	OS.color3 = 0; // inverse color0
+	OS.color1 = 0;
+	OS.color2 = 0;
 	OS.color4 = 0;
 
 	// init PMG to cover borders

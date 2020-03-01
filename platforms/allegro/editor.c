@@ -53,7 +53,6 @@ int window_height;
 
 byte copied_palette[COLORS_MAX] = { 0xB4, 0x1C, 0x0E, 0x82, 0x00 };
 
-
 long get_file_size(FILE *fp)
 {
 	long file_size;
@@ -1143,6 +1142,12 @@ void draw_editor()
 	{
 		al_draw_text(font_small, al_map_rgb(255, 255, 255), 00, 40, 0, "Game Map");
 		al_draw_text(font_small, al_map_rgb(255, 255, 255), 30, 600, 0, "Map Colors");
+	}
+	if (editor_palette_items[0].enabled)
+	{
+		byte color_value = editor_selected_palette_item * 2;
+		sprintf(text, "$%02X", color_value);
+		al_draw_text(font_small, al_map_rgb(255, 255, 255), 230, 630, 0, text);
 	}
 
 	// draw playfied
