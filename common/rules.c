@@ -48,8 +48,7 @@ void preprocess_game_rules()
 		// remove flag IS_ACTIVE_RULE
 		objects.direction[local_index] &= (~DIR_ACTIVE_RULE);
 		MapSet(local_x, local_y, local_temp1);
-		preproc_helper.preprocess_object_exists_x[local_x] = true;
-		preproc_helper.preprocess_object_exists_y[local_y] = true;
+		SetMinMaxHelper(local_x, local_y);
 	}
 }
 
@@ -224,9 +223,11 @@ void do_parsing()
 	parsing_horizontally = true;
 	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 	{
-		if (!preproc_helper.preprocess_object_exists_y[local_y])
+		// there is nothing in this line
+		local_x = preproc_helper.min_val.x[local_y];
+		if (local_x == 0xFF)
 			continue;
-		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
+		for (; local_x <= preproc_helper.max_val.x[local_y]; ++local_x)
 		{
 			parse_next();
 		}
@@ -236,9 +237,11 @@ void do_parsing()
 	parsing_horizontally = false;
 	for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 	{
-		if (!preproc_helper.preprocess_object_exists_x[local_x])
+		// there is nothing in this column
+		local_y = preproc_helper.min_val.y[local_x];
+		if (local_y == 0xFF)
 			continue;
-		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
+		for (; local_y <= preproc_helper.max_val.y[local_x]; ++local_y)
 		{
 			parse_next();
 		}

@@ -24,7 +24,8 @@ byte planet_data[PLANET_DATA_X * PLANET_DATA_Y] = {
 
 void clear_preprocess_helper()
 {
-	memset(&preproc_helper, 0, sizeof(preproc_helper));
+	memset(&preproc_helper.min_val, 0xFF, sizeof(preproc_helper.min_val));
+	memset(&preproc_helper.max_val, 0x0 , sizeof(preproc_helper.max_val));
 }
 
 void galaxy_display_planet()

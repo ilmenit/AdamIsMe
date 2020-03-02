@@ -137,20 +137,24 @@ void apply_force()
 	case DIR_LEFT:
 		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 		{
-			if (!preproc_helper.preprocess_object_exists_y[local_y])
+			// there is nothing in this line
+			if (preproc_helper.min_val.x[local_y] == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(MAP_SIZE_X - 1, local_y);
+			local_x = preproc_helper.max_val.x[local_y];
+			local_ptr = &MapGet(local_x, local_y);
 			local_temp1 = *local_ptr;
 
 			// first one is for sure not pushed, so we remove this flag from map
 			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
+			--local_x;
 
-			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
+			for (; local_x < MAP_SIZE_X; --local_x)
 			{
 				--local_ptr;
 				check_force();
 			}
+
 			local_ptr = &MapGet(0, local_y);
 			local_temp1 = *local_ptr;
 			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
@@ -165,14 +169,17 @@ void apply_force()
 	case DIR_RIGHT:
 		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 		{
-			if (!preproc_helper.preprocess_object_exists_y[local_y])
+			// there is nothing in this line
+			local_x = preproc_helper.min_val.x[local_y];
+			if (local_x == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(0, local_y);
+			local_ptr = &MapGet(local_x, local_y);
 			local_temp1 = *local_ptr;
 			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
-			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
+			++local_x;
+			for (; local_x < MAP_SIZE_X; ++local_x)
 			{
 				++local_ptr;
 				check_force();
@@ -191,14 +198,17 @@ void apply_force()
 	case DIR_DOWN:
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			if (!preproc_helper.preprocess_object_exists_x[local_x])
+			// there is nothing in this column
+			local_y = preproc_helper.min_val.y[local_x];
+			if (local_y == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(local_x, 0);
+			local_ptr = &MapGet(local_x, local_y);
 			local_temp1 = *local_ptr;
 			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
 
-			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
+			++local_y;
+			for (; local_y < MAP_SIZE_Y; ++local_y)
 			{
 				local_ptr += MAP_SIZE_X;
 				check_force();
@@ -217,14 +227,16 @@ void apply_force()
 	case DIR_UP:
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			if (!preproc_helper.preprocess_object_exists_x[local_x])
+			// there is nothing in this column
+			if (preproc_helper.min_val.y[local_x] == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(local_x, MAP_SIZE_Y - 1);
+			local_y = preproc_helper.max_val.y[local_x];
+			local_ptr = &MapGet(local_x, local_y);
 			local_temp1 = *local_ptr;
 			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
-
-			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
+			--local_y;
+			for (; local_y < MAP_SIZE_Y; --local_y)
 			{
 				local_ptr -= MAP_SIZE_X;
 				check_force();
@@ -276,9 +288,8 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 			)
 		{
 			local_flags |= PREPROCESS_MOVING;
-			helpers.something_moving = true;
-			preproc_helper.preprocess_object_exists_x[local_x] = true;
-			preproc_helper.preprocess_object_exists_y[local_y] = true;
+			helpers.something_moving = true;		
+			SetMinMaxHelper(local_x, local_y);
 		}
 		else if (ObjPropGet(local_type, PROP_PUSH))
 		{
@@ -293,37 +304,86 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 	}
 }
 
+// Additional data for magnet processing optimization
+byte magnets_end;
+byte magnet_index[MAX_OBJECTS];
+byte magnet_direction[MAX_OBJECTS];
+
 void preprocess_magnets()
 {
-	byte reverted_move_direction = reverted_direction_lookup[move_direction];
+	magnets_end = 0;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (!ObjPropGet(objects.type[local_index], PROP_MAGNET))
 			continue;
+		// otherwise, it's magnet
 
 		// usually we don't have that many KILLED up to last_obj_index so this one is moved to be second condition
 		if (IS_KILLED(local_index))
 			continue;
 
 		// local_flags is magnet direction
-		local_flags = objects.direction[local_index] & DIR_MASK;
+		magnet_index[magnets_end] = local_index;
+		magnet_direction[magnets_end] = objects.direction[local_index] & DIR_MASK;
+		++magnets_end;
+	}
+}
 
+void cast_magnet_rays()
+{
+	byte reverted_move_direction = reverted_direction_lookup[move_direction];
+	for (local_temp1 = 0; local_temp1 < magnets_end; ++local_temp1)
+	{
+		local_flags = magnet_direction[local_temp1];
 		if (local_flags != reverted_move_direction)
 			continue;
-
-		local_temp1 = move_direction_lookup_x[local_flags];
-		local_temp2 = move_direction_lookup_y[local_flags];
-
+		local_index = magnet_index[local_temp1];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-
-		while(1) 
+		local_ptr = &MapGet(local_x, local_y);
+		// for speed we have specialized processing of magnet ray casting into different directions
+		switch (local_flags)
 		{
-			local_x += local_temp1;
-			local_y += local_temp2;
-			if (local_x >= MAP_SIZE_X || local_y >= MAP_SIZE_Y)
-				break;
-			MapSet(local_x,local_y, PREPROCESS_MAGNET)
+		case DIR_DOWN:
+			for (;;)
+			{
+				++local_y;
+				if (local_y >= MAP_SIZE_Y)
+					break;
+				*local_ptr = PREPROCESS_MAGNET;
+				local_ptr += MAP_SIZE_X;
+			}
+			break;
+		case DIR_LEFT:
+			for (;;)
+			{
+				--local_x;
+				if (local_x >= MAP_SIZE_X)
+					break;
+				*local_ptr = PREPROCESS_MAGNET;
+				--local_ptr;
+			}
+			break;
+		case DIR_RIGHT:
+			for (;;)
+			{
+				++local_x;
+				if (local_x >= MAP_SIZE_X)
+					break;
+				*local_ptr = PREPROCESS_MAGNET;
+				++local_ptr;
+			}
+			break;
+		case DIR_UP:
+			for (;;)
+			{
+				--local_y;
+				if (local_y >= MAP_SIZE_Y)
+					break;
+				*local_ptr = PREPROCESS_MAGNET;
+				local_ptr -= MAP_SIZE_X;
+			}
+			break;
 		}
 	}
 }
@@ -388,8 +448,8 @@ void perform_move(byte preprocess_type)
 	memset(map, PREPROCESS_NONE, sizeof(map));
 	clear_preprocess_helper();
 
-	if (preprocess_type == PROP_MOVE && (rule_exists[PROP_MAGNET] && rule_exists[PROP_IRON]))
-		preprocess_magnets();
+	if (preprocess_type == PROP_MOVE && magnets_end > 0)
+		cast_magnet_rays();
 
 	preprocess_move_and_push(preprocess_type);
 	if (!helpers.something_moving) // this one for optimization
@@ -404,6 +464,9 @@ void perform_move(byte preprocess_type)
 
 void handle_move()
 {
+	if (rule_exists[PROP_MAGNET] && rule_exists[PROP_IRON])
+		preprocess_magnets();
+
 	// move of objects with PROP_MOVE
 	move_direction = DIR_RIGHT;
 	perform_move(PROP_MOVE);

@@ -204,7 +204,7 @@ struct objects_def
 	byte type[MAX_OBJECTS];
 	byte text_type[MAX_OBJECTS]; // if obj_type[x] is word then obj_word_type[x] tells what word it is
 
-	direction direction[MAX_OBJECTS]; // direction object + additional state flags
+	direction direction[MAX_OBJECTS]; // direction of object + additional state flags
 };
 
 struct game_progress_def {
@@ -218,10 +218,28 @@ struct game_progress_def {
 };
 
 // used for optimization, grouped as struct for cleaning by single memset
-struct preprocess_info_data {
-	bool preprocess_object_exists_x[MAP_SIZE_X];
-	bool preprocess_object_exists_y[MAP_SIZE_Y];
+
+struct min_max_val {
+	byte x[MAP_SIZE_Y];
+	byte y[MAP_SIZE_X];
 };
+
+struct preprocess_info_data {
+	struct min_max_val min_val;
+	struct min_max_val max_val;
+};
+
+#define SetMinMaxHelper(hx, hy) \
+			if (hx < preproc_helper.min_val.x[hy]) \
+				preproc_helper.min_val.x[hy] = hx; \
+			if (hx > preproc_helper.max_val.x[hy]) \
+				preproc_helper.max_val.x[hy] = hx; \
+			\
+			if (hy < preproc_helper.min_val.y[hx]) \
+				preproc_helper.min_val.y[hx] = hy; \
+			if (hy > preproc_helper.max_val.y[hx]) \
+				preproc_helper.max_val.y[hx] = hy; 
+
 
 #if EDITOR_ATARI || PLATFORM_ATARI
 struct atari_tiles_info_def

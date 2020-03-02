@@ -349,7 +349,7 @@ void draw_on_map(int x, int y)
 			{
 				if (
 					(MapGet(x, y) != LEVEL_DECODE_EMPTY) ||
-					(last_obj_index < MAX_OBJECTS-1)
+					(last_obj_index < MAX_OBJECTS)
 					)
 				{
 					// encode on standard level
