@@ -137,10 +137,11 @@ void apply_force()
 	case DIR_LEFT:
 		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 		{
-			// there is nothing in this line
+			// check if there is nothing in this line that moves
 			if (preproc_helper.min_val.x[local_y] == 0xFF)
 				continue;
 
+			// start from the right-most object
 			local_x = preproc_helper.max_val.x[local_y];
 			map_index = MapGetIndex(local_x, local_y);
 			local_temp1 = map[map_index];
@@ -169,7 +170,6 @@ void apply_force()
 	case DIR_RIGHT:
 		for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 		{
-			// there is nothing in this line
 			local_x = preproc_helper.min_val.x[local_y];
 			if (local_x == 0xFF)
 				continue;
@@ -198,7 +198,6 @@ void apply_force()
 	case DIR_DOWN:
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			// there is nothing in this column
 			local_y = preproc_helper.min_val.y[local_x];
 			if (local_y == 0xFF)
 				continue;
@@ -227,7 +226,6 @@ void apply_force()
 	case DIR_UP:
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			// there is nothing in this column
 			if (preproc_helper.min_val.y[local_x] == 0xFF)
 				continue;
 
@@ -348,40 +346,40 @@ void cast_magnet_rays()
 			for (;;)
 			{
 				++local_y;
+				map_index += MAP_SIZE_X;
 				if (local_y >= MAP_SIZE_Y)
 					break;
 				map[map_index] = PREPROCESS_MAGNET;
-				map_index += MAP_SIZE_X;
 			}
 			break;
 		case DIR_LEFT:
 			for (;;)
 			{
 				--local_x;
+				--map_index;
 				if (local_x >= MAP_SIZE_X)
 					break;
 				map[map_index] = PREPROCESS_MAGNET;
-				--map_index;
 			}
 			break;
 		case DIR_RIGHT:
 			for (;;)
 			{
 				++local_x;
+				++map_index;
 				if (local_x >= MAP_SIZE_X)
 					break;
 				map[map_index] = PREPROCESS_MAGNET;
-				++map_index;
 			}
 			break;
 		case DIR_UP:
 			for (;;)
 			{
 				--local_y;
+				map_index -= MAP_SIZE_X;
 				if (local_y >= MAP_SIZE_Y)
 					break;
 				map[map_index] = PREPROCESS_MAGNET;
-				map_index -= MAP_SIZE_X;
 			}
 			break;
 		}
