@@ -74,7 +74,7 @@ void check_force()
 {
 	// local_temp1 is the previous one 
 	// local_type is the current one
-	local_type = *local_ptr;
+	local_type = map[map_index];
 
 	// if previous (to the right in "right to left") is moving
 	if ( local_temp1 & PREPROCESS_MOVING)
@@ -95,13 +95,13 @@ void check_force()
 		local_type &= (~PREPROCESS_PUSH);
 	}
 
-	*local_ptr = local_type;
+	map[map_index] = local_type;
 	local_temp1 = local_type;
 }
 
 void pass_info_back()
 {
-	local_type = *local_ptr;
+	local_type = map[map_index];
 
 	// storing these flags temporary to pass to the next check_force as previous flags 
 	local_flags = local_type & (PREPROCESS_OPEN | PREPROCESS_SHUT);
@@ -126,7 +126,7 @@ void pass_info_back()
 			local_type |= PREPROCESS_MOVE_ACCEPTED;
 		}
 	}
-	*local_ptr = local_type;
+	map[map_index] = local_type;
 	local_temp1 = local_type | local_flags;
 }
 
@@ -142,26 +142,26 @@ void apply_force()
 				continue;
 
 			local_x = preproc_helper.max_val.x[local_y];
-			local_ptr = &MapGet(local_x, local_y);
-			local_temp1 = *local_ptr;
+			map_index = MapGetIndex(local_x, local_y);
+			local_temp1 = map[map_index];
 
 			// first one is for sure not pushed, so we remove this flag from map
-			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
+			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
 			--local_x;
 
 			for (; local_x < MAP_SIZE_X; --local_x)
 			{
-				--local_ptr;
+				--map_index;
 				check_force();
 			}
 
-			local_ptr = &MapGet(0, local_y);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map_index = MapGetIndex(0, local_y);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
 			{
-				++local_ptr;
+				++map_index;
 				pass_info_back();
 			}
 		}
@@ -174,23 +174,23 @@ void apply_force()
 			if (local_x == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(local_x, local_y);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
+			map_index = MapGetIndex(local_x, local_y);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
 
 			++local_x;
 			for (; local_x < MAP_SIZE_X; ++local_x)
 			{
-				++local_ptr;
+				++map_index;
 				check_force();
 			}
-			local_ptr = &MapGet(MAP_SIZE_X - 1, local_y);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map_index = MapGetIndex(MAP_SIZE_X - 1, local_y);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
 			{
-				--local_ptr;
+				--map_index;
 				pass_info_back();
 			}
 		}
@@ -203,23 +203,23 @@ void apply_force()
 			if (local_y == 0xFF)
 				continue;
 
-			local_ptr = &MapGet(local_x, local_y);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
+			map_index = MapGetIndex(local_x, local_y);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
 
 			++local_y;
 			for (; local_y < MAP_SIZE_Y; ++local_y)
 			{
-				local_ptr += MAP_SIZE_X;
+				map_index += MAP_SIZE_X;
 				check_force();
 			}
-			local_ptr = &MapGet(local_x, MAP_SIZE_Y - 1);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map_index = MapGetIndex(local_x, MAP_SIZE_Y - 1);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
 			{
-				local_ptr -= MAP_SIZE_X;
+				map_index -= MAP_SIZE_X;
 				pass_info_back();
 			}
 		}
@@ -232,23 +232,23 @@ void apply_force()
 				continue;
 
 			local_y = preproc_helper.max_val.y[local_x];
-			local_ptr = &MapGet(local_x, local_y);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & (~PREPROCESS_PUSH);
+			map_index = MapGetIndex(local_x, local_y);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
 			--local_y;
 			for (; local_y < MAP_SIZE_Y; --local_y)
 			{
-				local_ptr -= MAP_SIZE_X;
+				map_index -= MAP_SIZE_X;
 				check_force();
 			}
 
-			local_ptr = &MapGet(local_x, 0);
-			local_temp1 = *local_ptr;
-			*local_ptr = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map_index = MapGetIndex(local_x, 0);
+			local_temp1 = map[map_index];
+			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
 
 			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
 			{
-				local_ptr += MAP_SIZE_X;
+				map_index += MAP_SIZE_X;
 				pass_info_back();
 			}
 		}
@@ -273,8 +273,8 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_ptr = &MapGet(local_x, local_y);
-		local_flags = *local_ptr;
+		map_index = MapGetIndex(local_x, local_y);
+		local_flags = map[map_index];
 
 		// open/shut flags
 		if (ObjPropGet(local_type, PROP_OPEN))
@@ -300,7 +300,7 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 			local_flags |= PREPROCESS_STOP;
 		}
 
-		*local_ptr = local_flags;
+		map[map_index] = local_flags;
 	}
 }
 
@@ -340,7 +340,7 @@ void cast_magnet_rays()
 		local_index = magnet_index[local_temp1];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_ptr = &MapGet(local_x, local_y);
+		map_index = MapGetIndex(local_x, local_y);
 		// for speed we have specialized processing of magnet ray casting into different directions
 		switch (local_flags)
 		{
@@ -350,8 +350,8 @@ void cast_magnet_rays()
 				++local_y;
 				if (local_y >= MAP_SIZE_Y)
 					break;
-				*local_ptr = PREPROCESS_MAGNET;
-				local_ptr += MAP_SIZE_X;
+				map[map_index] = PREPROCESS_MAGNET;
+				map_index += MAP_SIZE_X;
 			}
 			break;
 		case DIR_LEFT:
@@ -360,8 +360,8 @@ void cast_magnet_rays()
 				--local_x;
 				if (local_x >= MAP_SIZE_X)
 					break;
-				*local_ptr = PREPROCESS_MAGNET;
-				--local_ptr;
+				map[map_index] = PREPROCESS_MAGNET;
+				--map_index;
 			}
 			break;
 		case DIR_RIGHT:
@@ -370,8 +370,8 @@ void cast_magnet_rays()
 				++local_x;
 				if (local_x >= MAP_SIZE_X)
 					break;
-				*local_ptr = PREPROCESS_MAGNET;
-				++local_ptr;
+				map[map_index] = PREPROCESS_MAGNET;
+				++map_index;
 			}
 			break;
 		case DIR_UP:
@@ -380,8 +380,8 @@ void cast_magnet_rays()
 				--local_y;
 				if (local_y >= MAP_SIZE_Y)
 					break;
-				*local_ptr = PREPROCESS_MAGNET;
-				local_ptr -= MAP_SIZE_X;
+				map[map_index] = PREPROCESS_MAGNET;
+				map_index -= MAP_SIZE_X;
 			}
 			break;
 		}

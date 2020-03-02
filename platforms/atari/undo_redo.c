@@ -3,6 +3,7 @@
 #include <string.h>
 #include "ram_handler.h"
 #include "../../common/definitions.h"
+#include "../../common/extern.h"
 
 #pragma code-name("CODE")
 #pragma data-name("DATA")

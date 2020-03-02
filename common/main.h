@@ -3,6 +3,7 @@
 
 #define MapSet(x,y,a) map[(x)+map_lookup[(y)]]=(a);
 #define MapGet(x,y) map[(x)+map_lookup[(y)]]
+#define MapGetIndex(x,y) ((x)+map_lookup[(y)])
 
 #define ObjPropSet(obj,prop,a) obj_prop[(prop)+obj_prop_lookup[(obj)]]=(a);
 #define ObjPropGet(obj,prop) obj_prop[(prop)+obj_prop_lookup[(obj)]]
