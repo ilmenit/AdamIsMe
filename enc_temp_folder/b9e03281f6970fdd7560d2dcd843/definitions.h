@@ -174,7 +174,6 @@
 #define GALAXY_ONGOING  6
 #define GALAXY_LANDED   7
 #define GALAXY_TRIGGER  8
-#define GAME_COMPLETED 10
 
 #define SHUTTLE_IN_SPACE 0xFF
 

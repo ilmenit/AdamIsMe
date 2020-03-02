@@ -247,7 +247,7 @@ void galaxy_loop()
 
 void game_loop()
 {
-	while (game_phase != GAME_COMPLETED)
+	for (;;)
 	{
 		galaxy_loop();		
 		level_loop();

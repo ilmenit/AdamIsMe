@@ -1,9 +1,4 @@
 /*
-Extended todo:
-1. Compile pure code without $4000-$7FFF
-2. Add testing read/write to extended ram
-3. 
-
 Memory map for use of extended memory:
 $2000-$3FFF - GFX segment (screen + dli) - now GFX is $5000-$681D  len:00181E
 $4000-$7FFF - Banked CODE, DATA, RODATA in extended memory (no DLI, no screen mem, no music)
@@ -25,6 +20,8 @@ $D800-$E400 - undo data when game is running without extended memory
 #include "sfx\sfx.h"
 #include "ram_handler.h"
 #include "undo_redo.h"
+
+#define TEST_IO 0
 
 #define EMPTY_TILE 126
 #define TIMER_VALUE 12
@@ -182,13 +179,28 @@ void set_gray_palette()
 	game_draw_screen();
 }
 
-void wait_for_vblank(void)
+/*
+void wait_for_vblank_OLD(void)
 {
 	asm("lda $14");
 wvb:
 	asm("cmp $14");
 	asm("beq %g", wvb);
 }
+*/
+
+// waiting for VBLANK when NMIEN = 0
+// https://atariage.com/forums/topic/141304-wait-for-vblank/?do=findComment&comment=1722440
+void wait_for_vblank(void)
+{
+w1:
+	asm("lda $d40b");
+	asm("bmi %g", w1);
+w2:
+	asm("lda $d40b");
+	asm("bpl %g", w2);
+}
+
 
 bool palette_can_be_modified;
 
@@ -200,6 +212,21 @@ byte *system_colors[COLORS_MAX] =
 	&OS.color2,
 	&OS.color3,
 };
+
+void pre_disk_io()
+{
+	ANTIC.dmactl = 0;
+	OS.sdmctl = 0;
+	audio_music(MUSIC_DISABLED);
+	wait_for_vblank();
+	ANTIC.nmien = 0;
+}
+
+void post_disk_io()
+{
+	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
+	ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
+}
 
 void fade_to_black_one_step()
 {
@@ -267,7 +294,6 @@ byte loaded_world_cache = (SHUTTLE_IN_SPACE - 1);
 void read_level_from_disk(byte level_id, byte *destination)
 {
 	off_t offset;
-	audio_music(MUSIC_DISABLED);
 	offset = sizeof(struct level_set_header_def);
 	offset += (off_t)level_id * ((off_t) sizeof(map));
 	lseek(file_pointer, offset, SEEK_SET);
@@ -279,7 +305,6 @@ byte loaded_tileset = 0xFF;
 void read_font_tileset(byte *font_address, byte *inverse_data)
 {
 	byte *address;
-	audio_music(MUSIC_DISABLED);
 	close(file_pointer);
 
 	local_temp1 = level_number / LEVELS_PER_WORLD;
@@ -311,10 +336,12 @@ void read_font_tileset(byte *font_address, byte *inverse_data)
 
 void load_level_data()
 {
+	fade_screen_to_black();
 	if (level_number == LEVEL_GALAXY)
 	{
 		if (!galaxy_cached)
 		{
+			pre_disk_io();
 			read_level_from_disk(LEVEL_GALAXY, galaxy_level_cache);
 			read_font_tileset(galaxy_font_address, galaxy_inverse_cache);
 			galaxy_cached = true;
@@ -329,6 +356,7 @@ void load_level_data()
 		if (game_progress.landed_on_world_number != loaded_world_cache)
 		{
 			local_temp1 = game_progress.landed_on_world_number*LEVELS_PER_WORLD;
+			pre_disk_io();
 			for (local_index = 0; local_index < LEVELS_PER_WORLD; ++local_index)
 			{
 				read_level_from_disk(local_temp1 + local_index, world_level_cache[local_index]);
@@ -341,17 +369,18 @@ void load_level_data()
 		local_flags = atari_tiles_info[local_temp1].tileset_number;
 		if (local_flags !=0 && loaded_tileset != local_flags)
 		{
+			pre_disk_io();
 			read_font_tileset(game_font_address, font_inverse_cache);
 			loaded_tileset = local_flags;
 		}
 		memcpy(tiles_inverse, font_inverse_cache, sizeof(tiles_inverse));
 	}
-	fade_screen_to_black();
+	post_disk_io();
 }
 
 bool load_game_progress()
 {
-	audio_music(MUSIC_DISABLED);
+	//pre_disk_io(); // it's already done at this moment
 	close(file_pointer);
 
 	file_pointer = open(progress_file_name, O_RDONLY);
@@ -369,7 +398,7 @@ bool load_game_progress()
 
 void save_game_progress()
 {
-	audio_music(MUSIC_DISABLED);
+	pre_disk_io();
 	close(file_pointer);
 
 	file_pointer = open(progress_file_name, O_RDWR | O_CREAT);
@@ -384,6 +413,7 @@ void set_timer(byte timer_value)
 	POKE(SFX_VBI_COUNTER, timer_value);
 }
 
+// music must be playing at this time
 void wait_for_timer()
 {
 	while (PEEK(SFX_VBI_COUNTER))
@@ -415,7 +445,6 @@ void swap_video_buffer()
 	if (video_buffer_number == 1)
 	{
 		// Install new display list
-		//wait_for_vblank();
 		OS.sdlst = &display_list2;
 		wait_for_vblank();
 
@@ -446,7 +475,6 @@ void set_tileset()
 	// disable ANTIC
 	ANTIC.dmactl = 0;
 	OS.sdmctl = 0;
-
 	swap_video_buffer();
 
 	if (atari_tiles_info[level_number / LEVELS_PER_WORLD].tileset_number == 0)
@@ -463,7 +491,6 @@ void set_tileset()
 	}
 	// enable antic
 	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
-	ANTIC.dmactl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;
 }
 
 
@@ -974,6 +1001,7 @@ void game_draw_screen()
 	swap_video_buffer();
 }
 
+#if TEST_IO
 void print_error(char *s)
 {
 	byte *video_ptr = OS.savmsc;
@@ -985,19 +1013,23 @@ void print_error(char *s)
 	while (OS.ch == 0);
 	exit(1);
 }
+#endif
 
-void open_and_test_file_io()
+bool open_and_test_file_io()
 {
 	// read "levels.atl" information about tiles and colors of worlds
 	file_pointer = open(tile_info_file_name, O_RDONLY);
+#if TEST_IO
 	if (file_pointer == -1)
 	{
 		print_error("cannot" "\x0" "open" "\x0" "levels" "\xe" "atl" "\xFF");
 	}
+#endif
 	read(file_pointer, atari_tiles_info, sizeof(atari_tiles_info));
 	close(file_pointer);
 
 	file_pointer = open(level_file_name, O_RDONLY);
+#if TEST_IO
 	if (file_pointer == -1)
 	{
 		print_error("cannot" "\x0" "open" "\x0" "levels" "\xe" "riu" "\xFF");
@@ -1006,14 +1038,16 @@ void open_and_test_file_io()
 	{
 		print_error("random" "\x0" "file" "\x0" "access" "\x0" "not" "\x0" "supported" "\x0" "on" "\x0" "this" "\x0" "dos" "\x0" "or\x0" "filesystem" "\xFF");
 	}
+#endif
 }
 
 void rom_copy();
 
 void init_platform()
 {
+	pre_disk_io(); // disable Antic and NMIEN
 
-	// open file pointer
+	// read open file pointer
 	open_and_test_file_io();
 	memory_handler_init();
 
@@ -1026,9 +1060,6 @@ void init_platform()
 	// set joy
 	joy_install(joy_static_stddrv);
 
-	OS.sdmctl = 0;  // disable ANTIC
-	wait_for_vblank();
-
 	// init lookups
 	for (local_y = 0; local_y < SCREEN_SIZE_Y; ++local_y)
 	{
@@ -1040,18 +1071,7 @@ void init_platform()
 
 	rom_copy();
 
-	ANTIC.nmien = NMIEN_VBI;
-
-	//Display list installed, set the interrupt
-	wait_for_vblank();
-
 	OS.vdslst = &dl_handler;
-
-	// Enable DLI
-	ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
-
-	// enable antic
-	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
 
 	// set colors
 	OS.color0 = 0;
