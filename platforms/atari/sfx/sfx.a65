@@ -33,6 +33,7 @@ start
 	jsr RASTERMUSICTRACKER		;Init
 
 ; SET VBI
+enable_vbi:
 	ldy vbi_address
 	ldx vbi_address+1
 	lda #$07
@@ -59,7 +60,7 @@ finish_init
 ;
 
 ; restore old VBI routine
-stop    
+stop 
 	ldy old_vbi
 	ldx old_vbi+1
 	lda #$07
@@ -80,7 +81,6 @@ vbi
 	#end
 
     lda music_plays
-    cmp #0
     beq end_vbi
 ;
 	lda sfx_effect

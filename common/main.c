@@ -47,7 +47,6 @@ void galaxy_display_planet()
 
 void galaxy_takeoff()
 {
-	save_game_progress();
 	load_level();
 	audio_music(MUSIC_GALAXY);
 	audio_sfx(SFX_TAKE_OFF);
@@ -233,12 +232,18 @@ void galaxy_loop()
 	level_number = LEVEL_GALAXY;
 	load_level();
 
-	if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
-		galaxy_display_planet();
-	else
+	// if we are in space or game has been loaded
+	if (game_progress.landed_on_world_number == SHUTTLE_IN_SPACE || game_phase == GALAXY_ONGOING)
+	{
 		audio_music(MUSIC_GALAXY);
+	}
+	// display planet if we are not in space
+	if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
+	{
+		galaxy_display_planet();
+		game_phase = GALAXY_ONGOING;
+	}
 
-	game_phase = GALAXY_ONGOING;
 	while (game_phase == GALAXY_ONGOING)
 	{
 		galaxy_pass();
@@ -259,13 +264,17 @@ int main(void)
 {
 	init_platform();
 
-	if (!load_game_progress())
+	game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
+	if (load_game_progress())
+	{
+		game_phase = GALAXY_ONGOING;
+	}
+	else
 	{
 		init_new_game();
+		game_phase = LEVEL_LOAD;
 	}
 
-	game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
-	game_phase = LEVEL_LOAD;
 
 #if EDITOR_ENABLED
 	init_editor();

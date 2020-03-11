@@ -31,7 +31,10 @@ $D800-$E400 - undo data when game is running without extended memory
 /*****************************************************************************/
 /*                               System Data                                 */
 /*****************************************************************************/
-int file_pointer;
+int file_read_pointer = -1;
+int file_progress_pointer = -1; // separate file pointer for saving/loading
+
+byte saved_completed_levels = 0;
 
 byte joy_status;
 byte video_buffer_number = 0;
@@ -213,19 +216,28 @@ byte *system_colors[COLORS_MAX] =
 	&OS.color3,
 };
 
+bool pre_disk_io_done = false;
+
 void pre_disk_io()
 {
 	ANTIC.dmactl = 0;
 	OS.sdmctl = 0;
-	audio_music(MUSIC_DISABLED);
+	pause_music();
 	wait_for_vblank();
+	//audio_music(MUSIC_DISABLED);
 	ANTIC.nmien = 0;
+	pre_disk_io_done = true;
 }
 
 void post_disk_io()
 {
+	if (!pre_disk_io_done)
+		return;
+
+	pre_disk_io_done = false;
 	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
 	ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
+	continue_music();
 }
 
 void fade_to_black_one_step()
@@ -296,8 +308,8 @@ void read_level_from_disk(byte level_id, byte *destination)
 	off_t offset;
 	offset = sizeof(struct level_set_header_def);
 	offset += (off_t)level_id * ((off_t) sizeof(map));
-	lseek(file_pointer, offset, SEEK_SET);
-	read(file_pointer, destination, sizeof(map));
+	lseek(file_read_pointer, offset, SEEK_SET);
+	read(file_read_pointer, destination, sizeof(map));
 }
 
 byte loaded_tileset = 0xFF;
@@ -305,32 +317,32 @@ byte loaded_tileset = 0xFF;
 void read_font_tileset(byte *font_address, byte *inverse_data)
 {
 	byte *address;
-	close(file_pointer);
+	close(file_read_pointer);
 
 	local_temp1 = level_number / LEVELS_PER_WORLD;
 	font_file_name[0] = atari_tiles_info[local_temp1].tileset_number + '0';
-	file_pointer = open(font_file_name, O_RDONLY);
-	if (file_pointer != -1)
+	file_read_pointer = open(font_file_name, O_RDONLY);
+	if (file_read_pointer != -1)
 	{
 		// read font data to proper addresses
 		for (local_index = 0; local_index < 4; ++local_index)
 		{
 			address = font_address + local_index * (32 * 8);
-			read(file_pointer, address, 32 * 8);
+			read(file_read_pointer, address, 32 * 8);
 			address += 1024;
-			read(file_pointer, address, 32 * 8);
+			read(file_read_pointer, address, 32 * 8);
 		}
-		close(file_pointer);
+		close(file_read_pointer);
 		// read information about inversed characters in tile (+128) 
 		inverse_file_name[0] = atari_tiles_info[local_temp1].tileset_number + '0';
-		file_pointer = open(inverse_file_name, O_RDONLY);
-		if (file_pointer != -1)
+		file_read_pointer = open(inverse_file_name, O_RDONLY);
+		if (file_read_pointer != -1)
 		{
-			read(file_pointer, inverse_data, TILES_MAX);
-			close(file_pointer);
+			read(file_read_pointer, inverse_data, TILES_MAX);
+			close(file_read_pointer);
 		}
 	}
-	file_pointer = open(level_file_name, O_RDONLY);
+	file_read_pointer = open(level_file_name, O_RDONLY);
 }
 
 
@@ -339,9 +351,14 @@ void load_level_data()
 	fade_screen_to_black();
 	if (level_number == LEVEL_GALAXY)
 	{
+		if (saved_completed_levels != game_progress.completed_levels)
+		{
+			save_game_progress();
+			saved_completed_levels = game_progress.completed_levels;
+		}
 		if (!galaxy_cached)
 		{
-			pre_disk_io();
+			pre_disk_io(); 
 			read_level_from_disk(LEVEL_GALAXY, galaxy_level_cache);
 			read_font_tileset(galaxy_font_address, galaxy_inverse_cache);
 			galaxy_cached = true;
@@ -380,32 +397,31 @@ void load_level_data()
 
 bool load_game_progress()
 {
-	//pre_disk_io(); // it's already done at this moment
-	close(file_pointer);
-
-	file_pointer = open(progress_file_name, O_RDONLY);
-	if (file_pointer != -1)
+	pre_disk_io();
+	file_progress_pointer = open(progress_file_name, O_RDWR | O_CREAT);
+	if (file_progress_pointer != -1)
 	{
-		read(file_pointer, &game_progress, sizeof(game_progress));
-		close(file_pointer);
-		file_pointer = open(level_file_name, O_RDONLY);
+		read(file_progress_pointer, &game_progress, sizeof(game_progress));
+		close(file_progress_pointer);
+		post_disk_io();
 		return true;
 	}
-
-	file_pointer = open(level_file_name, O_RDONLY);
+	post_disk_io();
 	return false;
 }
 
 void save_game_progress()
 {
 	pre_disk_io();
-	close(file_pointer);
+	file_progress_pointer = open(progress_file_name, O_RDWR);
+	write(file_progress_pointer, &game_progress, sizeof(game_progress));
 
-	file_pointer = open(progress_file_name, O_RDWR | O_CREAT);
-	write(file_pointer, &game_progress, sizeof(game_progress));
-	close(file_pointer);
+	// seems that for some reason write is buffered and there is no flush procedure to call
+	// therefore we need to close and reopen the write file - property of BeWe DOS or general one?
+	
+	// lseek(file_progress_pointer, 0, SEEK_SET); 
 
-	file_pointer = open(level_file_name, O_RDONLY);
+	close(file_progress_pointer);
 }
 
 void set_timer(byte timer_value)
@@ -1018,17 +1034,17 @@ void print_error(char *s)
 bool open_and_test_file_io()
 {
 	// read "levels.atl" information about tiles and colors of worlds
-	file_pointer = open(tile_info_file_name, O_RDONLY);
+	file_read_pointer = open(tile_info_file_name, O_RDONLY);
 #if TEST_IO
 	if (file_pointer == -1)
 	{
 		print_error("cannot" "\x0" "open" "\x0" "levels" "\xe" "atl" "\xFF");
 	}
 #endif
-	read(file_pointer, atari_tiles_info, sizeof(atari_tiles_info));
-	close(file_pointer);
+	read(file_read_pointer, atari_tiles_info, sizeof(atari_tiles_info));
+	close(file_read_pointer);
 
-	file_pointer = open(level_file_name, O_RDONLY);
+	file_read_pointer = open(level_file_name, O_RDONLY);
 #if TEST_IO
 	if (file_pointer == -1)
 	{
@@ -1045,6 +1061,8 @@ void rom_copy();
 
 void init_platform()
 {
+	// sound
+	init_sfx();
 	pre_disk_io(); // disable Antic and NMIEN
 
 	// read open file pointer
@@ -1096,7 +1114,4 @@ void init_platform()
 	OS.pcolr2 = 0x0;
 	OS.pcolr3 = 0x0;
 	OS.gprior = 0x0;
-
-	// sound
-	init_sfx();
 }
