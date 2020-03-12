@@ -1,7 +1,7 @@
 // TODO: Separate Atari platform specific things in Editor to prepare it to be multi-platform
 // TODO: Make initial build for other CC65 platform using CONIO?
 // TODO: In rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
-//  How to do it? 
+//  How to do it...?
 //  IDEA: Mark on helper map MULTIPLE_NOUN or MULTIPLE_PROP and parse this one differently (reading from all objects on this cell)
 //        then treat NOUNS or PROP on the same field as connected with "AND"
 //        Writing to Map during parsing will influence negatively parsing performance so impact should be checked 

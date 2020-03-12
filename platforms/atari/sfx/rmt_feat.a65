@@ -1,5 +1,5 @@
 ;* --------BEGIN--------
-;* D:\Projekty\ext-ram.split\sfx\sfx.rmt
+;* D:\Projekty\RobboIsYou\platforms\atari\sfx\sfx.rmt
 FEAT_SFX		equ 1
 FEAT_GLOBALVOLUMEFADE	equ 1		;RMTGLOBALVOLUMEFADE variable
 FEAT_NOSTARTINGSONGLINE	equ 0

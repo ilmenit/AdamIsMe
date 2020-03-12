@@ -43,14 +43,17 @@ void stop_music()
 		currently_playing_track = EMPTY_TRACK;
 		POKE(SFX_MUSIC_PLAYS,0);
 		__asm__ ("jsr %w",SFX_RMT_SILENCE);
-		__asm__ ("jsr %w",SFX_STOP);
+		__asm__ ("jsr %w",SFX_STOP); // disable VBI
 		wait_for_vblank();
-		initialized = false;
+		//initialized = false;
 	}
 }
 
 void pause_music()
 {
+	// if music is not playing, we don't need to pause it
+	if (PEEK(SFX_MUSIC_PLAYS) == 0)
+		return;
 	if (currently_playing_track != EMPTY_TRACK)
 	{
 		for (audio_volume = 0; audio_volume < (255 - FADE_STEP); audio_volume += FADE_STEP)
@@ -68,11 +71,18 @@ void pause_music()
 
 void continue_music()
 {
+	// if music is playing, we don't need to resume it
+	if (PEEK(SFX_MUSIC_PLAYS) == 1)
+		return;
+
+	wait_for_vblank();
 	__asm__("jsr %w", SFX_RMT_SILENCE);
-	POKE(SFX_MUSIC_PLAYS, 1);
+	__asm__("jsr %w", SFX_SETPOKEY);
+	wait_for_vblank();
 	POKE(SFX_RMTGLOBALVOLUMEFADE, 0xFF);
 	__asm__("jsr %w", SFX_ENABLE_VBI);
 	wait_for_vblank();
+	POKE(SFX_MUSIC_PLAYS, 1);
 	if (currently_playing_track != EMPTY_TRACK)
 	{
 		for (audio_volume = 0xFF; audio_volume > FADE_STEP; audio_volume -= FADE_STEP)
@@ -114,6 +124,5 @@ void init_sfx()
 		wait_for_vblank();
 	}
 }
-
 
 #pragma optimize (on)
