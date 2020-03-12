@@ -61,17 +61,18 @@ void pause_music()
 	}
 
 	POKE(SFX_MUSIC_PLAYS, 0);
-	__asm__("jsr %w", SFX_RMT_SILENCE);
-	__asm__("jsr %w", SFX_STOP); // disable DLI
+	__asm__("jsr %w", SFX_RMT_SILENCE); // not sure if this one is needed, because OS/DOS should set stuff before doing SIO
+	__asm__("jsr %w", SFX_STOP); // disable VBI
+	wait_for_vblank();
 }
 
 void continue_music()
 {
 	__asm__("jsr %w", SFX_RMT_SILENCE);
-	__asm__("jsr %w", SFX_SETPOKEY);
 	POKE(SFX_MUSIC_PLAYS, 1);
 	POKE(SFX_RMTGLOBALVOLUMEFADE, 0xFF);
 	__asm__("jsr %w", SFX_ENABLE_VBI);
+	wait_for_vblank();
 	if (currently_playing_track != EMPTY_TRACK)
 	{
 		for (audio_volume = 0xFF; audio_volume > FADE_STEP; audio_volume -= FADE_STEP)
@@ -80,10 +81,10 @@ void continue_music()
 			wait_for_vblank();
 		}
 	}
-	wait_for_vblank();
 }
 
 
+// start playing selected track from the beginning
 void play_music(unsigned char track_number)
 {
 	if (!initialized)
@@ -99,17 +100,7 @@ void play_music(unsigned char track_number)
 	currently_playing_track = track_number;
 	POKE(SFX_MUSIC_PLAYS, 1);
 	POKE(SFX_TRACK_TO_PLAY,track_number);
-	/* Initalize Pokey after disk I/O - this is done by RMT itself
-	__asm__("LDA #0");
-	__asm__("STA $D208");
-	__asm__("LDA #3");
-	__asm__("STA $D20F");
-	*/
-	__asm__("jsr %w", SFX_RMT_SILENCE);
-	//wait_for_vblank();
-	__asm__("jsr %w", SFX_SETPOKEY);
-	//wait_for_vblank();
-	__asm__ ("jsr %w",SFX_START);
+	__asm__ ("jsr %w",SFX_START); // calls rmt_init and enables VBI
 	wait_for_vblank();
 }
 
@@ -118,8 +109,8 @@ void init_sfx()
 	if (!initialized)
 	{
 		initialized = true;
-		__asm__ ("jsr %w",SFX_NEW_INIT);
-		POKE(SFX_MUSIC_PLAYS,0);
+		__asm__ ("jsr %w",SFX_NEW_INIT); // makes PAL/NTSC detection and stores the new VBI
+		POKE(SFX_MUSIC_PLAYS,0); // disables playing music until set
 		wait_for_vblank();
 	}
 }

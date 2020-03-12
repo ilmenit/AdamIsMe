@@ -1,7 +1,12 @@
-// TODO: Move Atari platform specific things out of editor and Allegro
+// TODO: Separate Atari platform specific things in Editor to prepare it to be multi-platform
 // TODO: Make initial build for other CC65 platform using CONIO?
-// TODO: FIX rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
-//       How to do it? IDEA: mark on Map MULTIPLE and parse this one differently (reading from all objects) - how not to influence performance (skip reading)
+// TODO: In rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
+//  How to do it? 
+//  IDEA: Mark on helper map MULTIPLE_NOUN or MULTIPLE_PROP and parse this one differently (reading from all objects on this cell)
+//        then treat NOUNS or PROP on the same field as connected with "AND"
+//        Writing to Map during parsing will influence negatively parsing performance so impact should be checked 
+//        This approach however will NOT solve cases of stacking different types of TEXTs (NOUN,PROPS,OPERATORS) on one cell 
+//        nor "parallel parsing" where one stacked expressions starts in the middle of other (I assume it's supported in BabaIsYou)
 #include "extern.h"
 #include "main.h"
 #include "platform.h"
