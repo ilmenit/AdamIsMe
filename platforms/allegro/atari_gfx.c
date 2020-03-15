@@ -26,7 +26,7 @@ bool load_atari_palette(const char *filename)
 	size_t i;
 	struct rgb col;
 	FILE *fp = fopen(filename, "rb");
-	if (!fp)
+	if (fp==NULL)
 		return false;
 	for (i = 0; i < 256; ++i)
 	{

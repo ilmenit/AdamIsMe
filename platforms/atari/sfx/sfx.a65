@@ -20,18 +20,24 @@ STEREOMODE	equ 0				;0 => compile RMTplayer for mono 4 tracks
 ;
 ;
 	org SFX_CODE 
-start
-	lda #$F0					;initial value
-	sta RMTSFXVOLUME			;sfx note volume * 16 (0,16,32,...,240)
-;
-	lda #$ff					;initial value
-	sta sfx_effect
-;
-	ldx #<MODUL					;low byte of RMT module to X reg
-	ldy #>MODUL					;hi byte of RMT module to Y reg
-	lda track_to_play
-	jsr RASTERMUSICTRACKER		;Init
-
+	
+new_init                        ; Set VBI address depending on the NTSC or PAL	
+	sei
+loop lda $D40B; vcount
+    cmp $D40B; vcount
+    beq *-3
+    bcc loop
+    cmp #131 ;; BCC #132
+	cli
+    BCS finish_init ; PAL
+	;ntsc
+	lda #<ntsc_vbi   ; low byte
+	sta vbi_address ; low
+	lda #>ntsc_vbi   ; hi byte
+	sta vbi_address+1 ; hi
+finish_init
+	mwa $224 old_vbi			; Store old VBI
+	
 ; SET VBI
 enable_vbi:
 	ldy vbi_address
@@ -39,28 +45,9 @@ enable_vbi:
 	lda #$07
 	jsr $e45c					;Start VBI routine
 	rts
-	
-new_init                        ; Set VBI address depending on the NTSC or PAL	
-	 sei
-loop lda $D40B; vcount
-     cmp $D40B; vcount
-     beq *-3
-     bcc loop
-     cmp #131 ;; BCC #132
-	 cli
-     BCS finish_init ; PAL
-	 ;ntsc
-	 lda #<ntsc_vbi   ; low byte
-	 sta vbi_address ; low
-	 lda #>ntsc_vbi   ; hi byte
-	 sta vbi_address+1 ; hi
-finish_init
-	 mwa $224 old_vbi			; Store old VBI
-	 rts
-;
 
 ; restore old VBI routine
-stop 
+disable_vbi 
 	ldy old_vbi
 	ldx old_vbi+1
 	lda #$07
@@ -76,37 +63,62 @@ ntsc_vbi
     jmp end_vbi
 
 vbi
-	#if .byte vbi_counter > #0 
-		dec vbi_counter
-	#end
+	lda vbi_counter
+	beq skip_counter	; skip decrease if zero
+	dec vbi_counter
+skip_counter:
 
-    lda music_plays
-    beq end_vbi
+	lda call_silence
+	beq skip_silence
+	jsr RASTERMUSICTRACKER+9
+	lda #$0
+	sta call_silence				;reinit value
+	
+skip_silence:
+
+	lda sound_active
+	beq end_vbi
+	
 ;
 	lda sfx_effect
-	bmi lab2
+	bmi music_part	; if #$FF
 	asl @						; * 2
 	tay							;Y = 2,4,..,16	instrument number * 2 (0,2,4,..,126)
 	ldx #3						;X = 3			channel (0..3 or 0..7 for stereo module)
 	lda #0						;A = 12			note (0..60)
 	jsr RASTERMUSICTRACKER+15	;RMT_SFX start tone (It works only if FEAT_SFX is enabled !!!)
-;
+
 	lda #$ff
 	sta sfx_effect				;reinit value
-;
-lab2
+
+music_part:
+    lda music_plays
+    beq end_vbi
+
+	lda track_to_play
+	bmi not_setting_track	    ; if $ff then we are not setting a track
+	
+	ldx #<MODUL					;low byte of RMT module to X reg
+	ldy #>MODUL					;hi byte of RMT module to Y reg
+	jsr RASTERMUSICTRACKER		;Init
+	
+	lda #$ff
+	sta track_to_play				;reinit value
+
+not_setting_track:
 	jsr RASTERMUSICTRACKER+3	;1 play
 
-end_vbi
-;
+end_vbi:
 	jmp $e462					;end vbi
 ;
 ;
 ;
 old_vbi dta 0,0
-sfx_effect dta 0				;sfx number variable
-track_to_play dta 0				;track to play
-music_plays dta 0				;1 if plays
+sfx_effect dta $ff				;sfx number variable
+track_to_play dta $ff			;track to play
+music_plays dta 1				;1 if plays - turnable with option key
+sound_active dta 1				;1 if active
+call_silence dta 0
 ntsc_counter dta 5
 vbi_address dta .LO(vbi), .HI(vbi)
 vbi_counter dta 0

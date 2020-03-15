@@ -38,7 +38,7 @@ for %%x in (
 	set all_files=!all_files! %%x.o
 )
 
-ld65 -Ln game.lbl --mapfile game.map -C atari-atr.cfg -o riu.xex %all_files% atari.lib
+ld65 -Ln game.lbl --mapfile game.map --dbgfile riu.dbg -C atari-atr.cfg -o riu.xex %all_files% atari.lib
 
 @IF NOT EXIST riu.xex (
 	@echo Compilation error

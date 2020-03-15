@@ -22,7 +22,7 @@ void create_object(byte type)
 	// find not set object (local_text_type is not used anywhere so we use it as index)
 	for (local_text_type = 0; local_text_type < MAX_OBJECTS; ++local_text_type)
 	{
-		if (!IS_KILLED(local_text_type))
+		if (IS_KILLED(local_text_type)==false)
 			continue;
 		objects.type[local_text_type] = type;
 
@@ -61,7 +61,7 @@ void teleport()
 	// find current TELE object
 	for (local_temp1 = 0; local_temp1 < last_obj_index; ++local_temp1)
 	{
-		if (!ObjPropGet(objects.type[local_temp1], PROP_TELE) || IS_KILLED(local_temp1))
+		if (ObjPropGet(objects.type[local_temp1], PROP_TELE)==false || IS_KILLED(local_temp1))
 			continue;
 
 		// local_text_type is index of current TELE object
@@ -76,7 +76,7 @@ void teleport()
 				if (local_temp1 == last_obj_index)
 					local_temp1 = 0;
 
-				if (!ObjPropGet(objects.type[local_temp1], PROP_TELE) || IS_KILLED(local_temp1))
+				if (ObjPropGet(objects.type[local_temp1], PROP_TELE)==false || IS_KILLED(local_temp1))
 					continue;
 
 				if (objects.x[local_temp1] == local_x && objects.y[local_temp1] == local_y)
@@ -300,7 +300,7 @@ void handle_interactions()
 		if ((local_flags & INTERACT_YOU))
 		{
 			// to win all there must be 0 'pick' objects
-			if ( (!helpers.pick_exists_as_object) && ObjPropGet(local_type, PROP_WIN))
+			if ( (helpers.pick_exists_as_object==false) && ObjPropGet(local_type, PROP_WIN))
 			{
 				game_phase = LEVEL_WON;
 				break;
@@ -321,7 +321,7 @@ void handle_interactions()
 			// if there is non_sink object and this one has sink, remove it
 			((local_flags & INTERACT_NON_SINK) && ObjPropGet(local_type, PROP_SINK)) ||
 			// if there is sink object and this one has no sink, remove it
-			((local_flags & INTERACT_SINK) && (!ObjPropGet(local_type, PROP_SINK))) ||
+			((local_flags & INTERACT_SINK) && (ObjPropGet(local_type, PROP_SINK)==false)) ||
 			// check ACID
 			((local_flags & INTERACT_ACID) && ObjPropGet(local_type, PROP_IRON))
 			)

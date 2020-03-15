@@ -267,7 +267,7 @@ void open_level_set_click_handler(ui_button *button)
 	}
 	
 	strncpy(level_set_name_buffer, new_level_set_name, sizeof(level_set_name_buffer));
-	if (!open_level_set())
+	if (open_level_set()==false)
 	{
 		al_destroy_native_file_dialog(file_chooser);
 		return;

@@ -1,3 +1,4 @@
+// TODO: TEST - include everything into one file to check if CC65 has issues with optimization of extern arrays<256 and always is using ptr1 for accessing them
 // TODO: Separate Atari platform specific things in Editor to prepare it to be multi-platform
 // TODO: Make initial build for other CC65 platform using CONIO?
 // TODO: In rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
@@ -68,7 +69,7 @@ void complete_level()
 {
 	local_temp1 = level_number / LEVELS_PER_WORLD;
 	local_temp2 = level_number % LEVELS_PER_WORLD;
-	if (!is_level_complete())
+	if (is_level_complete()==false)
 	{
 		game_progress.worlds_state[local_temp1] |= one_lshift_lookup[local_temp2];
 		++game_progress.completed_levels;

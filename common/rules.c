@@ -285,7 +285,7 @@ void finalize_parsing()
 
 void set_game_rules()
 {
-	if (!helpers.rules_may_have_changed)
+	if (helpers.rules_may_have_changed==false)
 		return;
 
 	helpers.rules_may_have_changed = false;

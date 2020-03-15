@@ -80,7 +80,7 @@ void check_force()
 	if ( local_temp1 & PREPROCESS_MOVING)
 	{
 		// if PUSH then it's moving, however if it's set as FINISH by OPEN/SHUT, then it's not moving
-		if ( local_type & PREPROCESS_PUSH && (!(local_type & PREPROCESS_FINISH)) )
+		if ( local_type & PREPROCESS_PUSH && ((local_type & PREPROCESS_FINISH)==0) )
 		{
 			local_type |= PREPROCESS_MOVING;
 		}
@@ -108,12 +108,12 @@ void pass_info_back()
 
 	if (local_type & PREPROCESS_OPEN)
 	{
-		if (!(local_temp1 & PREPROCESS_SHUT))
+		if ((local_temp1 & PREPROCESS_SHUT)==0)
 			local_type &= (~PREPROCESS_OPEN);
 	}
 	if (local_type & PREPROCESS_SHUT)
 	{
-		if (!(local_temp1 & PREPROCESS_OPEN))
+		if ((local_temp1 & PREPROCESS_OPEN)==0)
 			local_type &= (~PREPROCESS_SHUT);
 	}
 
@@ -312,7 +312,7 @@ void preprocess_magnets()
 	magnets_end = 0;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		if (!ObjPropGet(objects.type[local_index], PROP_MAGNET))
+		if (ObjPropGet(objects.type[local_index], PROP_MAGNET)==false)
 			continue;
 		// otherwise, it's magnet
 
@@ -450,7 +450,7 @@ void perform_move(byte preprocess_type)
 		cast_magnet_rays();
 
 	preprocess_move_and_push(preprocess_type);
-	if (!helpers.something_moving) // this one for optimization
+	if (helpers.something_moving==false) // this one for optimization
 		return;
 	apply_force();
 

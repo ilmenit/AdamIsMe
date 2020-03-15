@@ -13,7 +13,6 @@ $D800-$E400 - undo data when game is running without extended memory
 #include "../../common/extern.h"
 #include "../../common/platform.h"
 #include "sounds.h"
-#include <peekpoke.h>
 #include <fcntl.h>
 #include <unistd.h>
 // this one needed for SFX_VBI_COUNTER
@@ -231,7 +230,7 @@ void pre_disk_io()
 
 void post_disk_io()
 {
-	if (!pre_disk_io_done)
+	if (pre_disk_io_done==false)
 		return;
 
 	pre_disk_io_done = false;
@@ -356,7 +355,7 @@ void load_level_data()
 			save_game_progress();
 			saved_completed_levels = game_progress.completed_levels;
 		}
-		if (!galaxy_cached)
+		if (galaxy_cached==false)
 		{
 			pre_disk_io(); 
 			read_level_from_disk(LEVEL_GALAXY, galaxy_level_cache);
@@ -426,13 +425,13 @@ void save_game_progress()
 
 void set_timer(byte timer_value)
 {
-	POKE(SFX_VBI_COUNTER, timer_value);
+	MY_POKE(SFX_VBI_COUNTER, timer_value);
 }
 
 // music must be playing at this time
 void wait_for_timer()
 {
-	while (PEEK(SFX_VBI_COUNTER))
+	while (MY_PEEK(SFX_VBI_COUNTER))
 	{
 		asm("nop");
 	}
@@ -449,7 +448,7 @@ void wait_for_fire()
 	do
 	{
 		wait_time(1);
-	} while (!JOY_BTN_1(joy_status));
+	} while (JOY_BTN_1(joy_status)==false);
 	do
 	{
 		wait_time(1);
@@ -600,7 +599,7 @@ void galaxy_get_action()
 
 	wait_for_timer();
 
-	while (!action_taken)
+	while (action_taken==false)
 	{
 
 		// disable attract mode
@@ -730,7 +729,7 @@ void perform_redo()
 
 void store_undo_data()
 {
-	if (!undo_data_stored_this_turn)
+	if (undo_data_stored_this_turn==false)
 		store_state();
 	undo_data_stored_this_turn = true;
 }
@@ -806,7 +805,6 @@ void game_lost()
 // we don't have two button gamepad on Atari, therefore as buttons we use FIRE + JOY_LEFT or JOY_RIGHT
 void game_get_action()
 {
-	bool exit_by_user;
 	you_move_direction = DIR_CREATED;
 
 	OS.ch = 0x0; // clear key
@@ -814,7 +812,7 @@ void game_get_action()
 	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
 
-	if (PEEK(SFX_VBI_COUNTER) > 0)
+	if (MY_PEEK(SFX_VBI_COUNTER) > 0)
 	{
 		store_undo_data();
 		wait_for_timer();
@@ -1031,7 +1029,7 @@ void print_error(char *s)
 }
 #endif
 
-bool open_and_test_file_io()
+void open_and_test_file_io()
 {
 	// read "levels.atl" information about tiles and colors of worlds
 	file_read_pointer = open(tile_info_file_name, O_RDONLY);
