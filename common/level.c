@@ -59,7 +59,7 @@ void decode_galaxy()
 ///////////////////////////////////////////
 // level encoding - for levels except Galaxy Map
 ///////////////////////////////////////////
-// 0x00 - 0x0F - objects (Robbo etc.)
+// 0x00 - 0x0F - objects (wall etc.)
 // 0x10 - 0x1F - text - objects
 // 0x20 - 0x2F - text - properties
 // 0x30 - 0x3x - text - operators (IS, AND)

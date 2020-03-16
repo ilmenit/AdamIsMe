@@ -2,8 +2,8 @@
 del game.lst
 del game.map
 del game.lbl
-del riu.xex
-del riu.atr
+del aim.xex
+del aim.atr
 cd common
 del *.o
 del *.lst

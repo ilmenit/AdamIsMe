@@ -1,12 +1,12 @@
 rem @echo off
 setlocal EnableDelayedExpansion
-cd d:\Projekty\RobboIsYou
+cd d:\Projekty\AdamIsMe
 SET PATH=%PATH%;C:\CC65\BIN
 SET CC65_HOME=C:\CC65
 SET CC65_INC=C:\CC65\INCLUDE
 SET LD65_LIB=C:\CC65\LIB
 SET LD65_CFG=C:\CC65\CFG 
-del riu.xex
+del aim.xex
 
 set all_files=
 
@@ -38,16 +38,16 @@ for %%x in (
 	set all_files=!all_files! %%x.o
 )
 
-ld65 -Ln game.lbl --mapfile game.map --dbgfile riu.dbg -C atari-atr.cfg -o riu.xex %all_files% atari.lib
+ld65 -Ln game.lbl --mapfile game.map --dbgfile aim.dbg -C atari-atr.cfg -o aim.xex %all_files% atari.lib
 
-@IF NOT EXIST riu.xex (
+@IF NOT EXIST aim.xex (
 	@echo Compilation error
 	goto :error
 )
 
 @if not errorlevel 0 goto error
-copy /Y riu.xex build_atr
-copy /Y level_set\levels.riu build_atr
+copy /Y aim.xex build_atr
+copy /Y level_set\levels.aim build_atr
 copy /Y level_set\levels.atl build_atr
 cd build_atr
 build-disk.bat

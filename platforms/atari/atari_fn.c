@@ -95,7 +95,7 @@ struct atari_tiles_info_def atari_tiles_info[WORLDS_MAX + 1];
 byte tiles_inverse[TILES_MAX];
 
 byte representation_obj[] = {
-	72, // robbo
+	72, // adam
 	70, // ship
 	108, // wall
 	114, // box
@@ -944,7 +944,7 @@ void galaxy_draw_screen()
 	}
 	
 
-	// draw robbo or shuttle
+	// draw adam or shuttle
 	local_x = game_progress.galaxy_x;
 	local_y = game_progress.galaxy_y;
 

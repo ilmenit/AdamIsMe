@@ -123,7 +123,6 @@
 #define PROP_PICK  0x07 
 #define PROP_KILL  0x08 
 #define PROP_MOVE  0x09 
-// robbo game specific for BOMB - on destroy creates BANG around 
 #define PROP_BOOM  0x0a 
 //  gets destroyed next turn
 #define PROP_TELE  0x0b 

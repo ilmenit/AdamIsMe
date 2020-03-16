@@ -54,7 +54,7 @@ Source: rmtplayr.a65
     34 					icl "rmt_feat.a65"
 Source: rmt_feat.a65
      1 				;* --------BEGIN--------
-     2 				;* D:\Projekty\RobboIsYou\platforms\atari\sfx\sfx.rmt
+     2 				;* D:\Projekty\AdamIsMe\platforms\atari\sfx\sfx.rmt
      3 = 0001			FEAT_SFX		equ 1
      4 = 0001			FEAT_GLOBALVOLUMEFADE	equ 1		;RMTGLOBALVOLUMEFADE variable
      5 = 0000			FEAT_NOSTARTINGSONGLINE	equ 0

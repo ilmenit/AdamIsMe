@@ -37,7 +37,7 @@ bool editor_active = false;
 struct level_set_header_def level_set_header;
 
 byte representation_obj[TYPE_MAX] = {
-	36, // robbo
+	36, // adam
 	35, // ship
 	54, // wall
 	57, // box
@@ -121,7 +121,7 @@ ALLEGRO_BITMAP *tiles_atlas_indices[TILESET_MAX];
 ALLEGRO_BITMAP *current_tiles_atlas;
 
 ALLEGRO_BITMAP *tiles[TILES_COLUMNS * TILES_ROWS];
-const char *dialog_tile = "Robbo is You";
+const char *dialog_tile = "Adam Is Me";
 
 /// Required functions by game engine
 
@@ -240,7 +240,7 @@ void galaxy_draw_screen()
 		}
 	}
 
-	// draw robbo or shuttle
+	// draw Adam or shuttle
 	if (game_progress.landed_on_world_number == SHUTTLE_IN_SPACE)
 		draw_tile(game_progress.galaxy_x, game_progress.galaxy_y, representation_galaxy[DECODE_SHUTTLE]);
 	else
@@ -624,7 +624,7 @@ bool open_level_set()
 	{
 		al_show_native_message_box(
 			display,
-			"Robbo is You",
+			"Adam Is Me",
 			"Error:",
 			"Cannot open level set",
 			NULL,
@@ -677,7 +677,7 @@ void init_platform()
 	al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
 	display = al_create_display(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	al_set_window_title(display, "Robbo is You - Level Editor");
+	al_set_window_title(display, "Adam Is Me - Level Editor");
 
 	// load assets
 	font = al_load_ttf_font("font/MapMaker.ttf", 22, 0);
@@ -730,7 +730,7 @@ void init_platform()
 
 #if (!EDITOR_ENABLED)
 	// open file pointer
-	level_set_name = "level_set/levels.riu";
+	level_set_name = "level_set/levels.aim";
 	level_set_file_pointer = fopen(level_set_name, "rb+");
 #endif
 }

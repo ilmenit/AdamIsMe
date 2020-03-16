@@ -125,7 +125,7 @@ void create_level_set()
 
 void save_level_set_as_click_handler(ui_button *button)
 {
-	file_chooser = al_create_native_file_dialog(level_set_name, "Choose a level set name to save (*.riu)", "*.*;*.riu;", ALLEGRO_FILECHOOSER_SAVE);
+	file_chooser = al_create_native_file_dialog(level_set_name, "Choose a level set name to save (*.aim)", "*.*;*.aim;", ALLEGRO_FILECHOOSER_SAVE);
 	al_show_native_file_dialog(display, file_chooser);
 	int counter = al_get_native_file_dialog_count(file_chooser);
 	if (counter == 0)
@@ -248,7 +248,7 @@ void new_level_set_click_handler(ui_button *button)
 
 void open_level_set_click_handler(ui_button *button)
 {
-	file_chooser = al_create_native_file_dialog("*.riu", "Choose a level set to open (*.riu)", "*.*;*.riu;", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
+	file_chooser = al_create_native_file_dialog("*.aim", "Choose a level set to open (*.aim)", "*.*;*.aim;", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
 	al_show_native_file_dialog(display, file_chooser);
 
 	int counter = al_get_native_file_dialog_count(file_chooser);
@@ -560,7 +560,7 @@ void build_game_click_handler(ui_button *button)
 	_splitpath(level_set_name, drive, dir, fname, ext);
 	_getcwd(destination, sizeof(destination));
 	strncat(destination, "\\build_atr\\", _MAX_PATH);
-	strncat(destination, "levels.riu", _MAX_PATH);
+	strncat(destination, "levels.aim", _MAX_PATH);
 	file_copy(level_set_name, destination);
 
 	// copy level set to build_atr directory
@@ -728,7 +728,7 @@ void clear_level_set()
 	atari_tiles_info_file_pointer = fp;
 
 	// then open actual level set
-	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.riu", MAP_SIZE_X, MAP_SIZE_Y);
+	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.aim", MAP_SIZE_X, MAP_SIZE_Y);
 
 	fp = fopen(level_set_name_buffer, "wb+");
 	if (fp == NULL)
@@ -1022,7 +1022,7 @@ void init_editor()
 	window_height = WINDOW_HEIGHT;
 
 
-	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.riu", MAP_SIZE_X, MAP_SIZE_Y);
+	sprintf(level_set_name_buffer, "new-level-pack-%dx%d.aim", MAP_SIZE_X, MAP_SIZE_Y);
 	level_set_name = level_set_name_buffer;
 
 	// if default set does not exists, create it
