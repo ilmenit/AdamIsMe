@@ -328,7 +328,8 @@ void preprocess_magnets()
 	magnets_end = 0;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		ObjPropGet(objects.type[local_index], PROP_MAGNET, array_value);
+		local_temp1 = objects.type[local_index];
+		ObjPropGet(local_temp1, PROP_MAGNET, array_value);
 		if (array_value==false)
 			continue;
 		// otherwise, it's magnet
@@ -448,8 +449,12 @@ void move_ok_ones()
 				// check if text
 				if (local_type == TYPE_TEXT || obj_is_word[local_type])
 					helpers.rules_may_have_changed = true;
-				objects.x[local_index] += move_direction_lookup_x[move_direction];
-				objects.y[local_index] += move_direction_lookup_y[move_direction];
+
+				array_value = move_direction_lookup_x[move_direction];
+				objects.x[local_index] += array_value;
+				array_value = move_direction_lookup_y[move_direction];
+				objects.y[local_index] += array_value;
+
 				objects.direction[local_index] = move_direction;
 				helpers.something_moving = true;
 

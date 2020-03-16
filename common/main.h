@@ -16,10 +16,12 @@
 //#define ObjPropSet(obj,prop,a) obj_prop[(prop)+obj_prop_lookup[(obj)]]=(a);
 //#define ObjPropGet(obj,prop) obj_prop[(prop)+obj_prop_lookup[(obj)]]
 
-#define ObjPropSet(obj,prop,a) array_index = (prop)+obj_prop_lookup[(obj)];\
+#define ObjPropSet(obj,prop,a) array_index = obj_prop_lookup[(obj)];\
+                       array_index += (prop);\
                        array_value = (a);\
                        obj_prop[array_index]=array_value;
-#define ObjPropGet(obj,prop,r) array_index = (prop)+obj_prop_lookup[(obj)];\
+#define ObjPropGet(obj,prop,r) array_index = obj_prop_lookup[(obj)];\
+                       array_index += (prop);\
                        r=obj_prop[array_index];
 
 void init_new_game();

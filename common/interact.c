@@ -64,7 +64,8 @@ void teleport()
 	// find current TELE object
 	for (local_temp1 = 0; local_temp1 < last_obj_index; ++local_temp1)
 	{
-		ObjPropGet(objects.type[local_temp1], PROP_TELE, array_value);
+		map_index = objects.type[local_temp1]; // temporary move to map_index to optimize ObjPropGet
+		ObjPropGet(local_text_type, PROP_TELE, array_value);
 		if (array_value==false || IS_KILLED(local_temp1))
 			continue;
 
@@ -80,7 +81,9 @@ void teleport()
 				if (local_temp1 == last_obj_index)
 					local_temp1 = 0;
 
-				ObjPropGet(objects.type[local_temp1], PROP_TELE, array_value);
+				map_index = objects.type[local_temp1]; // temporary move to map_index to optimize ObjPropGet
+				ObjPropGet(map_index, PROP_TELE, array_value);
+
 				if (array_value == false || IS_KILLED(local_temp1))
 					continue;
 

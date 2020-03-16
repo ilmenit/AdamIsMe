@@ -101,7 +101,8 @@ void new_parsing()
 					else
 					{
 						ObjPropSet(dst_type,(src_type & VALUE_MASK), true);
-						rule_exists[src_type & VALUE_MASK] = true;
+						array_index = src_type & VALUE_MASK;
+						rule_exists[array_index] = true;
 					}
 				}
 				else // operator_has
