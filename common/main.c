@@ -45,7 +45,10 @@ void galaxy_display_planet()
 			// set specific wall to the planet
 			if (local_type >= DECODE_WALLS_MIN && local_type < DECODE_WALLS_MAX)
 				local_type += game_progress.landed_on_world_number;
-			MapSet(game_progress.landed_x + local_x - 1, game_progress.landed_y + local_y - 2, local_type);
+
+			local_temp1 = game_progress.landed_x + local_x - 1;
+			local_temp2 = game_progress.landed_y + local_y - 2;
+			MapSet(local_temp1, local_temp2, local_type);
 		}
 	}
 
