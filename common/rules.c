@@ -82,7 +82,10 @@ void new_parsing()
 									// if we are changing object to text, make the object type according to original text
 									// if we are changing text to text, we keep previous text value
 									if (objects.type[local_index] != TYPE_TEXT)
-										objects.text_type[local_index] = objects.type[local_index];
+									{
+										array_value = objects.type[local_index];
+										objects.text_type[local_index] = array_value;
+									}
 									if (src_type == TYPE_TEXT)
 									{
 										if (local_index >= last_text_index)
@@ -112,13 +115,15 @@ void new_parsing()
 		if (parsing_horizontally)
 		{
 			do {
-				MapSet(expression_start_position, local_y, MapGet(expression_start_position, local_y) | DIR_ACTIVE_RULE);
+				MapGet(expression_start_position, local_y, array_value);
+				MapSet(expression_start_position, local_y, array_value | DIR_ACTIVE_RULE);
 			} while (expression_start_position++ < local_x-1);			
 		}
 		else
 		{
 			do {
-				MapSet(local_x, expression_start_position, MapGet(local_x, expression_start_position) | DIR_ACTIVE_RULE);
+				MapGet(local_x, expression_start_position, array_value);
+				MapSet(local_x, expression_start_position, array_value | DIR_ACTIVE_RULE);
 			} while (expression_start_position++ < local_y-1);
 		}
 	}
@@ -134,7 +139,9 @@ void new_parsing()
 void parse_next()
 {
 	bool unexpected_text;
-	byte current_text = MapGet(local_x, local_y) & (~DIR_ACTIVE_RULE);
+	byte current_text;
+	MapGet(local_x, local_y, current_text);
+	current_text &= (~DIR_ACTIVE_RULE);
 again:
 	unexpected_text = false;
 	switch (parsing_state)
@@ -256,7 +263,8 @@ void finalize_parsing()
 	{
 		if (IS_KILLED(local_index))
 			continue;
-		if (MapGet(objects.x[local_index], objects.y[local_index]) & DIR_ACTIVE_RULE)
+		MapGet(objects.x[local_index], objects.y[local_index], array_value);
+		if (array_value & DIR_ACTIVE_RULE)
 			objects.direction[local_index] |= DIR_ACTIVE_RULE;
 		else
 			objects.direction[local_index] &= (~DIR_ACTIVE_RULE);
@@ -266,7 +274,8 @@ void finalize_parsing()
 	memset(obj_is_word, false, sizeof(obj_is_word));
 	for (local_type = 0; local_type < TYPE_MAX; ++local_type)
 	{
-		if (ObjPropGet(local_type, PROP_WORD))
+		ObjPropGet(local_type, PROP_WORD, array_value);
+		if (array_value)
 		{
 			obj_is_word[local_type] = true;
 			helpers.rules_may_have_changed = true;

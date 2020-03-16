@@ -25,6 +25,7 @@
 #define PREPROCESS_MAGNET   0x80
 
 byte move_direction;
+byte preprocess_type;
 
 // MOVE
 /*
@@ -147,7 +148,8 @@ void apply_force()
 			local_temp1 = map[map_index];
 
 			// first one is for sure not pushed, so we remove this flag from map
-			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
+			array_value = local_temp1 & (~PREPROCESS_PUSH);
+			map[map_index] = array_value;
 			--local_x;
 
 			for (; local_x < MAP_SIZE_X; --local_x)
@@ -158,7 +160,8 @@ void apply_force()
 
 			map_index = MapGetIndex(0, local_y);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			array_value = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map[map_index] = array_value;
 
 			for (local_x = 1; local_x < MAP_SIZE_X; ++local_x)
 			{
@@ -176,7 +179,8 @@ void apply_force()
 
 			map_index = MapGetIndex(local_x, local_y);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
+			array_value = local_temp1 & (~PREPROCESS_PUSH);
+			map[map_index] = array_value;
 
 			++local_x;
 			for (; local_x < MAP_SIZE_X; ++local_x)
@@ -186,7 +190,8 @@ void apply_force()
 			}
 			map_index = MapGetIndex(MAP_SIZE_X - 1, local_y);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			array_value = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map[map_index] = array_value;
 
 			for (local_x = MAP_SIZE_X - 2; local_x < MAP_SIZE_X; --local_x)
 			{
@@ -204,7 +209,8 @@ void apply_force()
 
 			map_index = MapGetIndex(local_x, local_y);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
+			array_value = local_temp1 & (~PREPROCESS_PUSH);
+			map[map_index] = array_value;
 
 			++local_y;
 			for (; local_y < MAP_SIZE_Y; ++local_y)
@@ -214,7 +220,8 @@ void apply_force()
 			}
 			map_index = MapGetIndex(local_x, MAP_SIZE_Y - 1);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			array_value = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map[map_index] = array_value;
 
 			for (local_y = MAP_SIZE_Y - 2; local_y < MAP_SIZE_Y; --local_y)
 			{
@@ -232,7 +239,8 @@ void apply_force()
 			local_y = preproc_helper.max_val.y[local_x];
 			map_index = MapGetIndex(local_x, local_y);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & (~PREPROCESS_PUSH);
+			array_value = local_temp1 & (~PREPROCESS_PUSH);
+			map[map_index] = array_value;
 			--local_y;
 			for (; local_y < MAP_SIZE_Y; --local_y)
 			{
@@ -242,7 +250,8 @@ void apply_force()
 
 			map_index = MapGetIndex(local_x, 0);
 			local_temp1 = map[map_index];
-			map[map_index] = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			array_value = local_temp1 & ((~PREPROCESS_SHUT) & (~PREPROCESS_OPEN));
+			map[map_index] = array_value;
 
 			for (local_y = 1; local_y < MAP_SIZE_Y; ++local_y)
 			{
@@ -257,7 +266,7 @@ void apply_force()
 }
 
 // this function goes through objects and according to their properties prepares temp map for quick interactions
-void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YOU or MOVE,  depending if the player is moving or other objects
+void preprocess_move_and_push() // preprocess type can be YOU or MOVE,  depending if the player is moving or other objects
 {
 	helpers.something_moving = false;
 	helpers.something_pushed = false;
@@ -275,25 +284,32 @@ void preprocess_move_and_push(byte preprocess_type) // preprocess type can be YO
 		local_flags = map[map_index];
 
 		// open/shut flags
-		if (ObjPropGet(local_type, PROP_OPEN))
+		ObjPropGet(local_type, PROP_OPEN, array_value);
+		if (array_value)
 			local_flags |= PREPROCESS_OPEN;
-		if (ObjPropGet(local_type, PROP_SHUT))
+		ObjPropGet(local_type, PROP_SHUT, array_value);
+		if (array_value)
 			local_flags |= PREPROCESS_SHUT;
 
-		// move object if going into current direction and has no DIR_CHANGED flag set (ignore other flags)
-		if ( (ObjPropGet(local_type, preprocess_type) && (objects.direction[local_index] & (DIR_MASK | DIR_CHANGED) ) == move_direction ) ||
-			 ( (local_flags & PREPROCESS_MAGNET) && ObjPropGet(local_type, PROP_IRON))
+		// move object if going into current direction and has no DIR_CHANGED flag set (ignore other flags)		
+		ObjPropGet(local_type, preprocess_type, local_temp1);
+		ObjPropGet(local_type, PROP_IRON, local_temp2);
+		if ( (local_temp1 && (objects.direction[local_index] & (DIR_MASK | DIR_CHANGED) ) == move_direction ) ||
+			 ( (local_flags & PREPROCESS_MAGNET) && local_temp2)
 			)
 		{
 			local_flags |= PREPROCESS_MOVING;
 			helpers.something_moving = true;		
 			SetMinMaxHelper(local_x, local_y);
 		}
-		else if (ObjPropGet(local_type, PROP_PUSH))
+		else 
 		{
-			local_flags |= PREPROCESS_PUSH;
+			ObjPropGet(local_type, PROP_PUSH, array_value);
+			if (array_value)
+				local_flags |= PREPROCESS_PUSH;
 		}
-		if (ObjPropGet(local_type, PROP_STOP))
+		ObjPropGet(local_type, PROP_STOP, array_value);
+		if (array_value)
 		{
 			local_flags |= PREPROCESS_STOP;
 		}
@@ -312,7 +328,8 @@ void preprocess_magnets()
 	magnets_end = 0;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		if (ObjPropGet(objects.type[local_index], PROP_MAGNET)==false)
+		ObjPropGet(objects.type[local_index], PROP_MAGNET, array_value);
+		if (array_value==false)
 			continue;
 		// otherwise, it's magnet
 
@@ -322,7 +339,9 @@ void preprocess_magnets()
 
 		// local_flags is magnet direction
 		magnet_index[magnets_end] = local_index;
-		magnet_direction[magnets_end] = objects.direction[local_index] & DIR_MASK;
+
+		array_value = objects.direction[local_index] & DIR_MASK;
+		magnet_direction[magnets_end] = array_value;
 		++magnets_end;
 	}
 }
@@ -386,8 +405,10 @@ void cast_magnet_rays()
 	}
 }
 
-void move_ok_ones(byte preprocess_type)
+void move_ok_ones()
 {
+	byte prop1, prop2;
+
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
@@ -396,13 +417,19 @@ void move_ok_ones(byte preprocess_type)
 		local_type = objects.type[local_index];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_temp1 = MapGet(local_x, local_y);
+		MapGet(local_x, local_y, local_temp1);
+
+		ObjPropGet(local_type, PROP_IRON, array_value);
+		ObjPropGet(local_type, PROP_PUSH, prop1);
+		ObjPropGet(local_type, preprocess_type, prop2);
 		if (
-			((local_temp1 & PREPROCESS_MAGNET) && ObjPropGet(local_type, PROP_IRON)) ||
-			 (local_temp1 & PREPROCESS_PUSH) && (ObjPropGet(local_type, PROP_PUSH) ) ||
-			 ( ObjPropGet(local_type, preprocess_type) && ( (objects.direction[local_index] & DIR_MASK) == move_direction) )
-			)
+			 (local_temp1 & PREPROCESS_MAGNET) && array_value ||
+			 (local_temp1 & PREPROCESS_PUSH) && prop1 ||
+			 ( prop2 && ( (objects.direction[local_index] & DIR_MASK) == move_direction) )
+		   )
 		{
+			ObjPropGet(local_type, PROP_OPEN, array_value);
+			ObjPropGet(local_type, PROP_SHUT, prop1);
 
 			if (
 					/* if FINISH, then always can move*/
@@ -411,8 +438,8 @@ void move_ok_ones(byte preprocess_type)
 					(
 						(local_temp1 & PREPROCESS_MOVING &&
 							(
-								((local_temp1 & PREPROCESS_OPEN) && ObjPropGet(local_type, PROP_OPEN)) ||
-								((local_temp1 & PREPROCESS_SHUT) && ObjPropGet(local_type, PROP_SHUT))
+								((local_temp1 & PREPROCESS_OPEN) && array_value) ||
+								((local_temp1 & PREPROCESS_SHUT) && prop1)
 							)
 						)
 					)					
@@ -425,22 +452,27 @@ void move_ok_ones(byte preprocess_type)
 				objects.y[local_index] += move_direction_lookup_y[move_direction];
 				objects.direction[local_index] = move_direction;
 				helpers.something_moving = true;
-				if ((local_temp1 & PREPROCESS_PUSH) && ObjPropGet(local_type, PROP_PUSH))
+
+				ObjPropGet(local_type, PROP_PUSH, array_value);
+				if ((local_temp1 & PREPROCESS_PUSH) && array_value)
 					helpers.something_pushed = true;
 			}
 			else
 			{
 				// we change direction of moving when hitting STOP, except YOU, because it looks strange
-				if (ObjPropGet(local_type, preprocess_type) && move_direction == objects.direction[local_index] && !ObjPropGet(local_type, PROP_YOU))
+				ObjPropGet(local_type, preprocess_type, array_value);
+				ObjPropGet(local_type, PROP_YOU, prop1);
+				if (array_value && move_direction == objects.direction[local_index] && prop1 == false)
 				{
-					objects.direction[local_index] = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;
+					array_value = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;
+					objects.direction[local_index] = array_value;
 				}
 			}
 		}
 	}
 }
 
-void perform_move(byte preprocess_type)
+void perform_move()
 {
 	// clear preprocessed data
 	memset(map, PREPROCESS_NONE, sizeof(map));
@@ -449,13 +481,13 @@ void perform_move(byte preprocess_type)
 	if (preprocess_type == PROP_MOVE && magnets_end > 0)
 		cast_magnet_rays();
 
-	preprocess_move_and_push(preprocess_type);
+	preprocess_move_and_push();
 	if (helpers.something_moving==false) // this one for optimization
 		return;
 	apply_force();
 
 	helpers.something_moving = false; // this one for sounds
-	move_ok_ones(preprocess_type);
+	move_ok_ones();
 	if (helpers.something_pushed)
 		audio_sfx(SFX_PUSH);
 }
@@ -467,11 +499,12 @@ void handle_move()
 
 	// move of objects with PROP_MOVE
 	move_direction = DIR_RIGHT;
-	perform_move(PROP_MOVE);
+	preprocess_type = PROP_MOVE;
+	perform_move();
 	move_direction = DIR_UP;
-	perform_move(PROP_MOVE);
+	perform_move();
 	move_direction = DIR_LEFT;
-	perform_move(PROP_MOVE);
+	perform_move();
 	move_direction = DIR_DOWN;
-	perform_move(PROP_MOVE);
+	perform_move();
 }

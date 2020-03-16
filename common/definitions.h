@@ -11,6 +11,8 @@
 #define EDITOR_ATARI 1
 #endif
 
+#define STORE_UNDO_OPTIMIZATION 1
+
 // SOUNDS
 
 #define MUSIC_DISABLED 0

@@ -347,8 +347,9 @@ void draw_on_map(int x, int y)
 			}
 			else
 			{
+				MapGet(x, y, array_value);
 				if (
-					(MapGet(x, y) != LEVEL_DECODE_EMPTY) ||
+					(array_value != LEVEL_DECODE_EMPTY) ||
 					(last_obj_index < MAX_OBJECTS)
 					)
 				{

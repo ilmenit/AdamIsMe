@@ -636,7 +636,7 @@ void galaxy_get_action()
 		case DIR_UP:
 			if (game_progress.galaxy_y > 0)
 			{
-				local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1);
+				MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1, local_type);
 				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 					--game_progress.galaxy_y;
 			}
@@ -644,7 +644,7 @@ void galaxy_get_action()
 		case DIR_DOWN:
 			if (game_progress.galaxy_y < MAP_SIZE_Y - 1)
 			{
-				local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1);
+				MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1, local_type);
 				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 					++game_progress.galaxy_y;
 			}
@@ -652,7 +652,7 @@ void galaxy_get_action()
 		case DIR_LEFT:
 			if (game_progress.galaxy_x > 0)
 			{
-				local_type = MapGet(game_progress.galaxy_x - 1, game_progress.galaxy_y);
+				MapGet(game_progress.galaxy_x - 1, game_progress.galaxy_y, local_type);
 				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 					--game_progress.galaxy_x;
 			}
@@ -660,7 +660,7 @@ void galaxy_get_action()
 		case DIR_RIGHT:
 			if (game_progress.galaxy_x < MAP_SIZE_X - 1)
 			{
-				local_type = MapGet(game_progress.galaxy_x + 1, game_progress.galaxy_y);
+				MapGet(game_progress.galaxy_x + 1, game_progress.galaxy_y, local_type);
 				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 					++game_progress.galaxy_x;
 			}
@@ -812,11 +812,16 @@ void game_get_action()
 	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
 
+#if STORE_UNDO_OPTIMIZATION
 	if (MY_PEEK(SFX_VBI_COUNTER) > 0)
 	{
-		store_undo_data();
+		store_undo_data(); // store only when not slowing down
 		wait_for_timer();
 	}
+#else
+	store_undo_data(); // store always
+	wait_for_timer();
+#endif
 
 	while (you_move_direction == DIR_CREATED && game_phase == LEVEL_ONGOING)
 	{
@@ -882,7 +887,7 @@ void draw_tile(byte tile_to_set)
 {
 	byte tile_inverse = tiles_inverse[(tile_to_set % 128)/2];
 	local_temp1 = local_x * 2;
-	local_temp2 = local_y * 2;	
+	local_temp2 = local_y * 2;
 	SetChar(local_temp1, local_temp2, tile_to_set + ((tile_inverse & 0x1) ? 128 : 0) );
 	SetChar(local_temp1 + 1, local_temp2, tile_to_set + ((tile_inverse & 0x2) ? 129 : 1));
 	++local_temp2;
@@ -897,7 +902,7 @@ void galaxy_draw_screen()
 	{
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			local_type = MapGet(local_x, local_y);
+			MapGet(local_x, local_y, local_type);
 
 			// local_temp1 is tile to draw
 			if (local_type == LEVEL_DECODE_EMPTY)
@@ -991,7 +996,8 @@ void game_draw_screen()
 					else
 						local_temp1 += 2;
 				}
-				if (helpers.pick_exists_as_object == false && ObjPropGet(local_type, PROP_WIN))
+				ObjPropGet(local_type, PROP_WIN, array_value);
+				if (helpers.pick_exists_as_object == false && array_value)
 					local_temp1 += 128;
 
 			}

@@ -26,7 +26,7 @@ void decode_galaxy()
 	{
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			local_type = MapGet(local_x, local_y);
+			MapGet(local_x, local_y, local_type);
 			if (local_type == DECODE_SHUTTLE)
 			{
 				if (game_progress.landed_x == 0xFF) // initial loading when game is starting
@@ -85,7 +85,7 @@ void decode_standard_level()
 		{
 			for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 			{
-				local_type = MapGet(local_x, local_y);
+				MapGet(local_x, local_y, local_type);
 				local_temp2 = DECODE_DIRECTION(local_type);
 				local_type &= ENCODING_MASK;
 

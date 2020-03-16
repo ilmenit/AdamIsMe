@@ -36,14 +36,17 @@ void create_object(byte type)
 			if (last_text_index > last_obj_index)
 				last_obj_index = last_text_index;
 		}
-		if (ObjPropGet(type, PROP_PICK))
+		ObjPropGet(type, PROP_PICK, array_value);
+		if (array_value)
 			++helpers.pick_exists_as_object;
 
 		objects.text_type[local_text_type] = local_type;
 
 		objects.x[local_text_type] = local_temp1;
 		objects.y[local_text_type] = local_temp2;
-		objects.direction[local_text_type] = create_direction | DIR_CREATED;
+
+		array_value = create_direction | DIR_CREATED;
+		objects.direction[local_text_type] = array_value;
 
 		// move last_obj_index
 		if (local_text_type >= last_obj_index)
@@ -61,7 +64,8 @@ void teleport()
 	// find current TELE object
 	for (local_temp1 = 0; local_temp1 < last_obj_index; ++local_temp1)
 	{
-		if (ObjPropGet(objects.type[local_temp1], PROP_TELE)==false || IS_KILLED(local_temp1))
+		ObjPropGet(objects.type[local_temp1], PROP_TELE, array_value);
+		if (array_value==false || IS_KILLED(local_temp1))
 			continue;
 
 		// local_text_type is index of current TELE object
@@ -76,15 +80,20 @@ void teleport()
 				if (local_temp1 == last_obj_index)
 					local_temp1 = 0;
 
-				if (ObjPropGet(objects.type[local_temp1], PROP_TELE)==false || IS_KILLED(local_temp1))
+				ObjPropGet(objects.type[local_temp1], PROP_TELE, array_value);
+				if (array_value == false || IS_KILLED(local_temp1))
 					continue;
 
 				if (objects.x[local_temp1] == local_x && objects.y[local_temp1] == local_y)
 					continue;
 
 				// done!
-				objects.x[local_index] = objects.x[local_temp1];
-				objects.y[local_index] = objects.y[local_temp1];
+				array_value = objects.x[local_temp1];
+				objects.x[local_index] = array_value;
+
+				array_value = objects.y[local_temp1];
+				objects.y[local_index] = array_value;
+
 				if (local_type == TYPE_TEXT || obj_is_word[local_type])
 				{
 					helpers.rules_may_have_changed = true;
@@ -101,7 +110,8 @@ void teleport()
 // creates new bang object on localtion (local_temp1, local_temp2)
 void create_bang()
 {
-	if (MapGet(local_temp1, local_temp2) & INTERACT_STOP)
+	MapGet(local_temp1, local_temp2, array_value);
+	if (array_value & INTERACT_STOP)
 		return;
 
 	create_object(TYPE_BANG);
@@ -120,7 +130,9 @@ void kill()
 	{
 		helpers.rules_may_have_changed = true;
 	}
-	if (ObjPropGet(local_type, PROP_PICK))
+
+	ObjPropGet(local_type, PROP_PICK, array_value);
+	if (array_value)
 		--helpers.pick_exists_as_object;
 
 	// process HAS
@@ -136,7 +148,8 @@ void kill()
 	}
 
 	// check BOOM
-	if (ObjPropGet(local_type, PROP_BOOM))
+	ObjPropGet(local_type, PROP_BOOM, array_value);
+	if (array_value)
 	{
 		helpers.something_exploded = true;
 		// up and down
@@ -199,7 +212,8 @@ void process_teleports()
 		local_type = objects.type[local_index];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		if (ObjPropGet(local_type, PROP_TELE))
+		ObjPropGet(local_type, PROP_TELE, array_value);
+		if (array_value)
 			MapSet(local_x, local_y, PREPROCESS_TELE);
 	}
 	// teleport objects
@@ -216,8 +230,9 @@ void process_teleports()
 		local_type = objects.type[local_index];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_flags = MapGet(local_x, local_y);
-		if ((local_flags & PREPROCESS_TELE) && !ObjPropGet(local_type, PROP_TELE))
+		MapGet(local_x, local_y, local_flags);
+		ObjPropGet(local_type, PROP_TELE, array_value);
+		if ((local_flags & PREPROCESS_TELE) && !array_value)
 		{
 			teleport();
 			continue;
@@ -247,30 +262,40 @@ void preprocess_interactions()
 		local_temp1 = INTERACT_NONE; // interaction flags
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		local_flags = MapGet(local_x, local_y);
+		MapGet(local_x, local_y, local_flags);
 
-
-		if (ObjPropGet(local_type, PROP_YOU))
+		ObjPropGet(local_type, PROP_YOU, array_value);
+		if (array_value)
 			local_flags |= INTERACT_YOU;
-		if (ObjPropGet(local_type, PROP_KILL))
+
+		ObjPropGet(local_type, PROP_KILL, array_value);
+		if (array_value)
 			local_flags |= INTERACT_KILL;
-		if (ObjPropGet(local_type, PROP_SHUT))
+
+		ObjPropGet(local_type, PROP_SHUT, array_value);
+		if (array_value)
 			local_flags |= INTERACT_SHUT;
-		if (ObjPropGet(local_type, PROP_OPEN))
+
+		ObjPropGet(local_type, PROP_OPEN, array_value);
+		if (array_value)
 			local_flags |= INTERACT_OPEN;
 
-		if (ObjPropGet(local_type, PROP_SINK))
+		ObjPropGet(local_type, PROP_SINK, array_value);
+		if (array_value)
 			local_flags |= INTERACT_SINK;
 		else
 			local_flags |= INTERACT_NON_SINK;
 
-		if (ObjPropGet(local_type, PROP_STOP))
+		ObjPropGet(local_type, PROP_STOP, array_value);
+		if (array_value)
 			local_flags |= INTERACT_STOP;
 
-		if (ObjPropGet(local_type, PROP_ACID))
+		ObjPropGet(local_type, PROP_ACID, array_value);
+		if (array_value)
 			local_flags |= INTERACT_ACID;
 
-		if (ObjPropGet(local_type, PROP_PICK))
+		ObjPropGet(local_type, PROP_PICK, array_value);
+		if (array_value)
 			++helpers.pick_exists_as_object;
 
 		MapSet(local_x, local_y, local_flags);
@@ -292,7 +317,9 @@ void handle_interactions()
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
 
-		local_flags = MapGet(local_x, local_y); // interaction flags
+		// interaction flags
+		MapGet(local_x, local_y, local_flags);
+
 		if (local_flags == INTERACT_NONE)
 			continue;
 
@@ -300,12 +327,14 @@ void handle_interactions()
 		if ((local_flags & INTERACT_YOU))
 		{
 			// to win all there must be 0 'pick' objects
-			if ( (helpers.pick_exists_as_object==false) && ObjPropGet(local_type, PROP_WIN))
+			ObjPropGet(local_type, PROP_WIN, array_value);
+			if ( (helpers.pick_exists_as_object==false) && array_value)
 			{
 				game_phase = LEVEL_WON;
 				break;
 			}
-			else if (ObjPropGet(local_type, PROP_PICK))
+			ObjPropGet(local_type, PROP_PICK, array_value);
+			if (array_value)
 			{
 				kill();
 				audio_sfx(SFX_PICK);
@@ -315,27 +344,50 @@ void handle_interactions()
 
 		// check what will destroy the object
 
+		// check SINK
+		// if there is non_sink object and this one has sink, remove it
 
-		if (
-			// check SINK
-			// if there is non_sink object and this one has sink, remove it
-			((local_flags & INTERACT_NON_SINK) && ObjPropGet(local_type, PROP_SINK)) ||
+		local_temp1 = false; // to check if object is destroyed
+ 		ObjPropGet(local_type, PROP_SINK, array_value);
+		if ((local_flags & INTERACT_NON_SINK) && array_value)
+			local_temp1 = true;
+		else
+		{
 			// if there is sink object and this one has no sink, remove it
-			((local_flags & INTERACT_SINK) && (ObjPropGet(local_type, PROP_SINK)==false)) ||
-			// check ACID
-			((local_flags & INTERACT_ACID) && ObjPropGet(local_type, PROP_IRON))
-			)
+			ObjPropGet(local_type, PROP_SINK, array_value);
+			if ((local_flags & INTERACT_SINK) && array_value == false)
+				local_temp1 = true;
+			else
+			{
+				// check ACID
+				ObjPropGet(local_type, PROP_IRON, array_value);
+				if ((local_flags & INTERACT_ACID) && array_value)
+					local_temp1 = true;
+			}
+		}
+
+		if (local_temp1 != false)
 		{
 			kill();
 			audio_sfx(SFX_SINK);
 			continue;
 		}
-		if (
-			// check OPEN
-			((local_flags & INTERACT_OPEN) && ObjPropGet(local_type, PROP_SHUT)) ||
+
+
+		// check OPEN
+		local_temp1 = false;
+		ObjPropGet(local_type, PROP_SHUT, array_value);
+		if ((local_flags & INTERACT_OPEN) && array_value)
+			local_temp1 = true;
+		else
+		{
 			// check SHUT
-			((local_flags & INTERACT_SHUT) && ObjPropGet(local_type, PROP_OPEN)) 
-			)
+			ObjPropGet(local_type, PROP_OPEN, array_value);
+			if ((local_flags & INTERACT_SHUT) && array_value)
+				local_temp1 = true;
+		}
+
+		if (local_temp1 != false)
 		{
 			kill();
 			audio_sfx(SFX_OPEN);
@@ -343,7 +395,8 @@ void handle_interactions()
 		}
 
 		// check KILL (no sound)
-		if ( (local_flags & INTERACT_KILL) && (ObjPropGet(local_type, PROP_YOU) ) )
+		ObjPropGet(local_type, PROP_YOU, array_value);
+		if ( (local_flags & INTERACT_KILL) && array_value )
 		{
 			kill();
 			continue;

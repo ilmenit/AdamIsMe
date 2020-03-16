@@ -29,6 +29,12 @@ extern byte local_temp2;
 // local pointer
 extern byte map_index;
 
+// These are used to calculate array indexes and values
+// For some reasons if there is calculation in assignment or calculation of index of array in the line where it happens,
+// CC65 is generating poor code (assignment through ptr1) even if array fits into one page
+extern byte array_index;
+extern byte array_value;
+
 // these are used by CC65
 #ifdef __CC65__
 #define refresh()
@@ -41,6 +47,8 @@ extern byte map_index;
 #pragma zpsym ("local_temp1")
 #pragma zpsym ("local_temp2")
 #pragma zpsym ("map_index")
+#pragma zpsym ("array_index")
+#pragma zpsym ("array_value")
 #endif
 
 /*****************************************************************************/

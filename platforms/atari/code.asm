@@ -11,6 +11,8 @@
 .export 	_local_flags
 .export 	_local_temp1
 .export 	_local_temp2
+.export 	_array_index
+.export 	_array_value
 .export 	_map_index
 .export 	_video_ptr1
 .export 	_video_ptr2
@@ -38,6 +40,8 @@ _local_flags: .byte 0
 _local_temp1: .byte 0
 _local_temp2: .byte 0
 _map_index: .byte 0
+_array_index: .byte 0
+_array_value: .byte 0
 reg_a: .byte 0
 
 .segment "SFX"

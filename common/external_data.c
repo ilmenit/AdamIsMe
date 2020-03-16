@@ -12,5 +12,7 @@ byte local_flags;
 byte local_temp1;
 byte local_temp2;
 byte map_index;
+byte array_index;
+byte array_value;
 
 #endif

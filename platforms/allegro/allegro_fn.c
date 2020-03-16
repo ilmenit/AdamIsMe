@@ -216,7 +216,7 @@ void galaxy_draw_screen()
 	{
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
 		{
-			local_type = MapGet(local_x, local_y);
+			MapGet(local_x, local_y, local_type);
 			if (local_type == LEVEL_DECODE_EMPTY)
 				draw_tile(local_x, local_y, local_type);
 			else if (local_type >= DECODE_LEVEL_NUMBERS_MIN && local_type < DECODE_BACKGROUND_MAX)
@@ -311,7 +311,8 @@ void show_rules()
 	{
 		for (j = 0; j < PROPERTY_MAX; ++j)
 		{
-			if (ObjPropGet(i,j))
+			ObjPropGet(i, j, array_value);
+			if (array_value)
 			{
 				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 10, line * 30 + 10, 0, obj_names[i]);
 				al_draw_text(font, al_map_rgb(200, 200, 200), pos_x + 100, line * 30 + 10, 0, "is");
@@ -518,7 +519,7 @@ void galaxy_get_action()
 			case ALLEGRO_KEY_UP:
 				if (game_progress.galaxy_y > 0)
 				{
-					local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1);
+					MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1, local_type);
 					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 						--game_progress.galaxy_y;
 				}
@@ -529,7 +530,7 @@ void galaxy_get_action()
 			case ALLEGRO_KEY_DOWN:
 				if (game_progress.galaxy_y < MAP_SIZE_Y - 1)
 				{
-					local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1);
+					MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1, local_type);
 					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 						++game_progress.galaxy_y;
 				}
@@ -540,7 +541,7 @@ void galaxy_get_action()
 			case ALLEGRO_KEY_LEFT:
 				if (game_progress.galaxy_x > 0)
 				{
-					local_type = MapGet(game_progress.galaxy_x-1, game_progress.galaxy_y);
+					MapGet(game_progress.galaxy_x-1, game_progress.galaxy_y, local_type);
 					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 						--game_progress.galaxy_x;
 				}
@@ -551,7 +552,7 @@ void galaxy_get_action()
 			case ALLEGRO_KEY_RIGHT:
 				if (game_progress.galaxy_x < MAP_SIZE_X - 1)
 				{
-					local_type = MapGet(game_progress.galaxy_x+1, game_progress.galaxy_y);
+					MapGet(game_progress.galaxy_x+1, game_progress.galaxy_y, local_type);
 					if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
 						++game_progress.galaxy_x;
 				}

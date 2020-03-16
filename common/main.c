@@ -79,7 +79,7 @@ void complete_level()
 
 void galaxy_check_trigger()
 {
-	local_type = MapGet(game_progress.galaxy_x, game_progress.galaxy_y);
+	MapGet(game_progress.galaxy_x, game_progress.galaxy_y, local_type);
 	if (game_phase == GALAXY_TRIGGER)
 	{
 		if (local_type == DECODE_SHUTTLE_LANDED)
@@ -133,7 +133,9 @@ void level_pass()
 	{
 		if (IS_KILLED(local_index))
 			continue;
-		if (ObjPropGet(objects.type[local_index], PROP_YOU))
+
+		ObjPropGet(objects.type[local_index], PROP_YOU, array_value);
+		if (array_value)
 			break;
 	}
 	if (local_index == last_obj_index)
@@ -191,7 +193,8 @@ void init_level()
 	helpers.pick_exists_as_object = false;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		if (ObjPropGet(objects.type[local_index], PROP_PICK))
+		ObjPropGet(objects.type[local_index], PROP_PICK, array_value);
+		if (array_value)
 		{
 			helpers.pick_exists_as_object = true;
 			break;
