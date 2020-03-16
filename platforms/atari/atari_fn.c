@@ -1116,16 +1116,17 @@ void init_platform()
 	GTIA_WRITE.sizem = 0xFF;
 	GTIA_WRITE.grafm = 0xFF; // shape of Missiles
 	GTIA_WRITE.hposm0 = 0x20;
-	GTIA_WRITE.hposm1 = 0x28;
-	GTIA_WRITE.hposm2 = 0xd0;
+	GTIA_WRITE.hposm1 = 0x27;
+	GTIA_WRITE.hposm2 = 0xd1;
 	GTIA_WRITE.hposm3 = 0xd8;
 	GTIA_WRITE.colpm0 = 0x0;
 	GTIA_WRITE.colpm1 = 0x0;
 	GTIA_WRITE.colpm2 = 0x0;
 	GTIA_WRITE.colpm3 = 0x0;
 	
-	GTIA_WRITE.hposp0 = 0x30;
-	GTIA_WRITE.hposp1 = 0xc8;
+	GTIA_WRITE.hposp0 = 0x2F;
+	GTIA_WRITE.hposp1 = 0xc9;
+
 	GTIA_WRITE.hposp2 = 0x50;
 	GTIA_WRITE.hposp3 = 0x60;
 

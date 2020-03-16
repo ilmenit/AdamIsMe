@@ -206,15 +206,24 @@ void init_level()
 
 }
 
+byte current_music = 0xFF;
 void level_loop()
 {
+	byte music_to_play;
 	while (game_phase == LEVEL_LOAD || game_phase == LEVEL_ONGOING)
 	{
 		if (game_phase == LEVEL_LOAD)
 		{
+			music_to_play = MUSIC_LEVEL_1 + game_progress.landed_on_world_number % MUSIC_LEVEL_MAX;
+
+			// this is to prevent playing old level music during level initialization
+			if (music_to_play != current_music)
+				audio_music(MUSIC_DISABLED);
+
 			load_level();
 			init_level();
-			audio_music(MUSIC_LEVEL_1 + game_progress.landed_on_world_number % MUSIC_LEVEL_MAX);
+			audio_music(music_to_play);
+			current_music = music_to_play;
 		}
 		while (game_phase == LEVEL_ONGOING)
 		{
@@ -267,7 +276,7 @@ void game_loop()
 {
 	while (game_phase != GAME_COMPLETED)
 	{
-		galaxy_loop();		
+		galaxy_loop();
 		level_loop();
 	}
 }
