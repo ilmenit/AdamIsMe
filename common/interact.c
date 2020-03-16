@@ -65,7 +65,7 @@ void teleport()
 	for (local_temp1 = 0; local_temp1 < last_obj_index; ++local_temp1)
 	{
 		map_index = objects.type[local_temp1]; // temporary move to map_index to optimize ObjPropGet
-		ObjPropGet(local_text_type, PROP_TELE, array_value);
+		ObjPropGet(map_index, PROP_TELE, array_value);
 		if (array_value==false || IS_KILLED(local_temp1))
 			continue;
 

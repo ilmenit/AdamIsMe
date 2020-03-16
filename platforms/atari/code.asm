@@ -1,7 +1,10 @@
 .case		on
 
 .include        "atari.inc"
+.include 		"opcodes.inc"
 .macpack        atari 
+
+PLAYER1_DATA = $3C20
 
 .export 	_local_x
 .export 	_local_y
@@ -92,7 +95,8 @@ _display_list2:
     .endrepeat
     .byte   DL_BLK1 | DL_DLI 
     .byte   DL_JVB 
-    .word   _display_list2 
+    .word   _display_list2 	
+	
 
 _screen_memory1:   
     .repeat 24*40
@@ -104,15 +108,56 @@ _screen_memory2:
     .byte 0
     .endrepeat
 
-    
+gfx_end:
+
+current_size = gfx_end-game_font1
+end_address = $2000 + current_size
+filler_size = PLAYER1_DATA - end_address
+
+;.out .sprintf( "SIZE: %04x", current_size ) 
+;.out .sprintf( "end_address: %04x", end_address ) 
+;.out .sprintf( "filler_size: %04x", filler_size ) 
+
+.res filler_size, 0
+
+p1_start:
+
+; first player data
+
+.byte %11100000
+.byte %11000000
+.byte %10000000
+.byte %10000000
+
+.res 184, 0
+
+.byte %10000000
+.byte %10000000
+.byte %11000000
+.byte %11100000
+
+p1_end:
+
+.res $100 - (p1_end-p1_start), 0
+
+p2_start:
+
+; second player data
+
+.byte %00000111
+.byte %00000011
+.byte %00000001
+.byte %00000001
+
+.res 184, 0
+
+.byte %00000001
+.byte %00000001
+.byte %00000011
+.byte %00000111
+
+
 .segment "DATA"
-
-;;;;;;;;;;;;;;; These are used to display fonts and can be changed
-_display_font_page1:
-	.byte   .hibyte(game_font1)
-
-_display_font_page2:
-	.byte   .hibyte(game_font2)
 
 ;;;;;;;;;;;;;;; These point to specific pages 
 
@@ -154,18 +199,24 @@ _dl_handler:
  and #%00000100
  beq set_second
  ;; Set first font
- lda _display_font_page1
+ ;lda _display_font_page1 ; replaced by self modifying code for speed
+  .byte OPC_LDA_imm
+_display_font_page1:
+	.byte   .hibyte(game_font1) 
  sta CHBASE
  lda reg_a
  rti
 
 set_second:
   ;; Set second font
- lda _display_font_page2
+ ; lda _display_font_page2 ; replaced by self modifying code for speed
+ .byte OPC_LDA_imm
+_display_font_page2:
+	.byte   .hibyte(game_font2)
  sta CHBASE
  lda reg_a
- rti
-
+ rti 
+ 
 bottom_handler:
  ; set black color below playfield
  lda #$00

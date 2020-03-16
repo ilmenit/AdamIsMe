@@ -1,6 +1,7 @@
 /*
 Memory map for use of extended memory:
 $2000-$3FFF - GFX segment (screen + dli) - now GFX is $5000-$681D  len:00181E
+-> $3800-$3FF - PMG
 $4000-$7FFF - Banked CODE, DATA, RODATA in extended memory (no DLI, no screen mem, no music)
 $8000-$AFFF - RMT music (segment discarded from loading, loaded as separate sections)
 $B000-$BC20 - extended memory handlers and game data + BSS which must be at the end under MEMTOP
@@ -19,6 +20,15 @@ $D800-$E400 - undo data when game is running without extended memory
 #include "sfx\sfx.h"
 #include "ram_handler.h"
 #include "undo_redo.h"
+
+// PMG is in the GFX segment $3800-$3FFF
+#define PM_BASE_PAGE 0x38
+#define PM_BASE_ADDR (PM_BASE_PAGE * 0x100)
+#define PM_BASE ((unsigned char*) PM_BASE_ADDR)
+#define PL_1    ((unsigned char*) (PM_BASE_ADDR+0x400))
+#define PL_2    ((unsigned char*) (PM_BASE_ADDR+0x500))
+#define PL_3    ((unsigned char*) (PM_BASE_ADDR+0x600))
+#define PL_4    ((unsigned char*) (PM_BASE_ADDR+0x700))
 
 #define TEST_IO 0
 
@@ -82,7 +92,7 @@ extern byte background_color;
 // animated frame is next tile
 #define REPRESENTATION_ANIMATED   0x2
 
-unsigned char *level_file_name = "LEVELS.RIU";
+unsigned char *level_file_name = "LEVELS.AIM";
 unsigned char *tile_info_file_name = "LEVELS.ATL"; // which tiles and colors are assigned to planets
 unsigned char *progress_file_name = "PROGRESS.DAT";
 unsigned char *font_file_name = "0.FNT";
@@ -234,7 +244,7 @@ void post_disk_io()
 		return;
 
 	pre_disk_io_done = false;
-	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
+	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH | DMACTL_DMA_PLAYERS | DMACTL_PMG_SINGLELINE;  // enable ANTIC
 	ANTIC.nmien = NMIEN_VBI | NMIEN_DLI;
 	continue_music();
 }
@@ -505,7 +515,7 @@ void set_tileset()
 		display_font_page2 = game_font_page2;
 	}
 	// enable antic
-	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH;  // enable ANTIC
+	OS.sdmctl = DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_FETCH | DMACTL_DMA_PLAYERS | DMACTL_PMG_SINGLELINE;  // enable ANTIC
 }
 
 
@@ -1052,7 +1062,7 @@ void open_and_test_file_io()
 #if TEST_IO
 	if (file_pointer == -1)
 	{
-		print_error("cannot" "\x0" "open" "\x0" "levels" "\xe" "riu" "\xFF");
+		print_error("cannot" "\x0" "open" "\x0" "levels" "\xe" "aim" "\xFF");
 	}
 	if (lseek(file_pointer, 1, SEEK_SET) != 1)
 	{
@@ -1104,7 +1114,7 @@ void init_platform()
 
 	// init PMG to cover borders
 	GTIA_WRITE.sizem = 0xFF;
-	GTIA_WRITE.grafm = 0xFF;
+	GTIA_WRITE.grafm = 0xFF; // shape of Missiles
 	GTIA_WRITE.hposm0 = 0x20;
 	GTIA_WRITE.hposm1 = 0x28;
 	GTIA_WRITE.hposm2 = 0xd0;
@@ -1113,9 +1123,23 @@ void init_platform()
 	GTIA_WRITE.colpm1 = 0x0;
 	GTIA_WRITE.colpm2 = 0x0;
 	GTIA_WRITE.colpm3 = 0x0;
+	
+	GTIA_WRITE.hposp0 = 0x30;
+	GTIA_WRITE.hposp1 = 0xc8;
+	GTIA_WRITE.hposp2 = 0x50;
+	GTIA_WRITE.hposp3 = 0x60;
+
+	GTIA_WRITE.gractl = GRACTL_PLAYERS; // we use memory as Players shape, not grafp
+		
+	ANTIC.pmbase = PM_BASE_PAGE; // 0x38
+	// set PMG corners
+
+	// top left
+
 	OS.pcolr0 = 0x0;
 	OS.pcolr1 = 0x0;
 	OS.pcolr2 = 0x0;
 	OS.pcolr3 = 0x0;
-	OS.gprior = 0x0;
+
+	OS.gprior = 0x4;
 }

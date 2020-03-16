@@ -1,4 +1,5 @@
 @echo off
+del aim.dbg
 del game.lst
 del game.map
 del game.lbl
