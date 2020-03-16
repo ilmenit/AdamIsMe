@@ -1221,6 +1221,7 @@ void draw_if_on_map()
 
 void editor_loop()
 {
+	int result;
 	bool action_taken = false;
 
 	redraw_editor = true;
@@ -1284,7 +1285,7 @@ void editor_loop()
 
 
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			int result = al_show_native_message_box(
+			result = al_show_native_message_box(
 				display,
 				dialog_tile,
 				"Exiting editor?",
