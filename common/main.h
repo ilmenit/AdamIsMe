@@ -24,6 +24,10 @@
                        array_index += (prop);\
                        r=obj_prop[array_index];
 
+#define ObjPropGetByIndex(index,prop,r) array_index = (index) + (prop);\
+                       r=obj_prop[array_index];
+
+
 void init_new_game();
 void init_level();
 void level_pass();

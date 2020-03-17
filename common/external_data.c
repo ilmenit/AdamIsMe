@@ -14,5 +14,7 @@ byte local_temp2;
 byte map_index;
 byte array_index;
 byte array_value;
+byte lookup_index;
+byte* local_ptr;
 
 #endif

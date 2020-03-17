@@ -895,16 +895,33 @@ void game_get_action()
 // sets tile at map position (local_x, local_y), uses local_temp1 and local_temp2
 void draw_tile(byte tile_to_set)
 {
-	byte tile_inverse = tiles_inverse[(tile_to_set % 128)/2];
-	local_temp1 = local_x * 2;
-	local_temp2 = local_y * 2;
-	SetChar(local_temp1, local_temp2, tile_to_set + ((tile_inverse & 0x1) ? 128 : 0) );
-	SetChar(local_temp1 + 1, local_temp2, tile_to_set + ((tile_inverse & 0x2) ? 129 : 1));
-	++local_temp2;
-	SetChar(local_temp1, local_temp2, tile_to_set + ((tile_inverse & 0x4) ? 128 : 0));
-	SetChar(local_temp1 + 1, local_temp2, tile_to_set + ((tile_inverse & 0x8) ? 129 : 1));
+	local_temp1 = local_y * 2;
+	array_ptr = video_lookup[local_temp1];
+
+	local_temp1 = tile_to_set;
+	lookup_index = tiles_inverse[(local_temp1 % 128)/2];
+	array_ptr += local_x * 2;
+
+	*array_ptr = local_temp1 + ((lookup_index & 0x1) ? 128 : 0);
+	array_ptr[1] = local_temp1 + ((lookup_index & 0x2) ? 129 : 1);
+	array_ptr[SCREEN_SIZE_X] = local_temp1 + ((lookup_index & 0x4) ? 128 : 0);
+	array_ptr[SCREEN_SIZE_X+1] = local_temp1 + ((lookup_index & 0x8) ? 129 : 1);
 }
 
+void draw_tile2(byte tile_to_set)
+{
+	lookup_index = tiles_inverse[(tile_to_set % 128) / 2];
+	local_temp2 = local_y * 2;
+	array_ptr = video_lookup[local_temp2];
+	local_temp1 = local_x * 2;
+	array_ptr += local_temp1;
+
+	*array_ptr = tile_to_set + ((lookup_index & 0x1) ? 128 : 0);
+	array_ptr[1] = tile_to_set + ((lookup_index & 0x2) ? 129 : 1);
+	array_ptr += SCREEN_SIZE_X;
+	*array_ptr = tile_to_set + ((lookup_index & 0x4) ? 128 : 0);
+	array_ptr[1] = tile_to_set + ((lookup_index & 0x8) ? 129 : 1);
+}
 void galaxy_draw_screen()
 {
 	// draw galaxy

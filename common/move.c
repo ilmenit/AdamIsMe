@@ -283,17 +283,19 @@ void preprocess_move_and_push() // preprocess type can be YOU or MOVE,  dependin
 		map_index = MapGetIndex(local_x, local_y);
 		local_flags = map[map_index];
 
+		lookup_index = obj_prop_lookup[local_type];
+
 		// open/shut flags
-		ObjPropGet(local_type, PROP_OPEN, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_OPEN, array_value);
 		if (array_value)
 			local_flags |= PREPROCESS_OPEN;
-		ObjPropGet(local_type, PROP_SHUT, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_SHUT, array_value);
 		if (array_value)
 			local_flags |= PREPROCESS_SHUT;
 
 		// move object if going into current direction and has no DIR_CHANGED flag set (ignore other flags)		
-		ObjPropGet(local_type, preprocess_type, local_temp1);
-		ObjPropGet(local_type, PROP_IRON, local_temp2);
+		ObjPropGetByIndex(lookup_index, preprocess_type, local_temp1);
+		ObjPropGetByIndex(lookup_index, PROP_IRON, local_temp2);
 		if ( (local_temp1 && (objects.direction[local_index] & (DIR_MASK | DIR_CHANGED) ) == move_direction ) ||
 			 ( (local_flags & PREPROCESS_MAGNET) && local_temp2)
 			)
@@ -304,11 +306,11 @@ void preprocess_move_and_push() // preprocess type can be YOU or MOVE,  dependin
 		}
 		else 
 		{
-			ObjPropGet(local_type, PROP_PUSH, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_PUSH, array_value);
 			if (array_value)
 				local_flags |= PREPROCESS_PUSH;
 		}
-		ObjPropGet(local_type, PROP_STOP, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_STOP, array_value);
 		if (array_value)
 		{
 			local_flags |= PREPROCESS_STOP;
@@ -420,17 +422,19 @@ void move_ok_ones()
 		local_y = objects.y[local_index];
 		MapGet(local_x, local_y, local_temp1);
 
-		ObjPropGet(local_type, PROP_IRON, array_value);
-		ObjPropGet(local_type, PROP_PUSH, prop1);
-		ObjPropGet(local_type, preprocess_type, prop2);
+		lookup_index = obj_prop_lookup[local_type];
+
+		ObjPropGetByIndex(lookup_index, PROP_IRON, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_PUSH, prop1);
+		ObjPropGetByIndex(lookup_index, preprocess_type, prop2);
 		if (
 			 (local_temp1 & PREPROCESS_MAGNET) && array_value ||
 			 (local_temp1 & PREPROCESS_PUSH) && prop1 ||
 			 ( prop2 && ( (objects.direction[local_index] & DIR_MASK) == move_direction) )
 		   )
 		{
-			ObjPropGet(local_type, PROP_OPEN, array_value);
-			ObjPropGet(local_type, PROP_SHUT, prop1);
+			ObjPropGetByIndex(lookup_index, PROP_OPEN, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_SHUT, prop1);
 
 			if (
 					/* if FINISH, then always can move*/
@@ -458,15 +462,15 @@ void move_ok_ones()
 				objects.direction[local_index] = move_direction;
 				helpers.something_moving = true;
 
-				ObjPropGet(local_type, PROP_PUSH, array_value);
+				ObjPropGetByIndex(lookup_index, PROP_PUSH, array_value);
 				if ((local_temp1 & PREPROCESS_PUSH) && array_value)
 					helpers.something_pushed = true;
 			}
 			else
 			{
 				// we change direction of moving when hitting STOP, except YOU, because it looks strange
-				ObjPropGet(local_type, preprocess_type, array_value);
-				ObjPropGet(local_type, PROP_YOU, prop1);
+				ObjPropGetByIndex(lookup_index, preprocess_type, array_value);
+				ObjPropGetByIndex(lookup_index, PROP_YOU, prop1);
 				if (array_value && move_direction == objects.direction[local_index] && prop1 == false)
 				{
 					array_value = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;

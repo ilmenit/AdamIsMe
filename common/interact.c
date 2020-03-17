@@ -134,7 +134,7 @@ void kill()
 		helpers.rules_may_have_changed = true;
 	}
 
-	ObjPropGet(local_type, PROP_PICK, array_value);
+	ObjPropGetByIndex(lookup_index, PROP_PICK, array_value);
 	if (array_value)
 		--helpers.pick_exists_as_object;
 
@@ -151,7 +151,7 @@ void kill()
 	}
 
 	// check BOOM
-	ObjPropGet(local_type, PROP_BOOM, array_value);
+	ObjPropGetByIndex(lookup_index, PROP_BOOM, array_value);
 	if (array_value)
 	{
 		helpers.something_exploded = true;
@@ -265,43 +265,46 @@ void preprocess_interactions()
 		local_temp1 = INTERACT_NONE; // interaction flags
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		MapGet(local_x, local_y, local_flags);
+		map_index = MapGetIndex(local_x, local_y);
+		local_flags = map[map_index];
 
-		ObjPropGet(local_type, PROP_YOU, array_value);
+		lookup_index = obj_prop_lookup[local_type];
+
+		ObjPropGetByIndex(lookup_index, PROP_YOU, array_value);
 		if (array_value)
 			local_flags |= INTERACT_YOU;
 
-		ObjPropGet(local_type, PROP_KILL, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_KILL, array_value);
 		if (array_value)
 			local_flags |= INTERACT_KILL;
 
-		ObjPropGet(local_type, PROP_SHUT, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_SHUT, array_value);
 		if (array_value)
 			local_flags |= INTERACT_SHUT;
 
-		ObjPropGet(local_type, PROP_OPEN, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_OPEN, array_value);
 		if (array_value)
 			local_flags |= INTERACT_OPEN;
 
-		ObjPropGet(local_type, PROP_SINK, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_SINK, array_value);
 		if (array_value)
 			local_flags |= INTERACT_SINK;
 		else
 			local_flags |= INTERACT_NON_SINK;
 
-		ObjPropGet(local_type, PROP_STOP, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_STOP, array_value);
 		if (array_value)
 			local_flags |= INTERACT_STOP;
 
-		ObjPropGet(local_type, PROP_ACID, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_ACID, array_value);
 		if (array_value)
 			local_flags |= INTERACT_ACID;
 
-		ObjPropGet(local_type, PROP_PICK, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_PICK, array_value);
 		if (array_value)
 			++helpers.pick_exists_as_object;
 
-		MapSet(local_x, local_y, local_flags);
+		map[map_index] = local_flags;
 	}
 }
 
@@ -326,17 +329,19 @@ void handle_interactions()
 		if (local_flags == INTERACT_NONE)
 			continue;
 
+		lookup_index = obj_prop_lookup[local_type];
+
 		// check WIN and PICK that interact with YOU
 		if ((local_flags & INTERACT_YOU))
 		{
 			// to win all there must be 0 'pick' objects
-			ObjPropGet(local_type, PROP_WIN, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_WIN, array_value);
 			if ( (helpers.pick_exists_as_object==false) && array_value)
 			{
 				game_phase = LEVEL_WON;
 				break;
 			}
-			ObjPropGet(local_type, PROP_PICK, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_PICK, array_value);
 			if (array_value)
 			{
 				kill();
@@ -351,19 +356,19 @@ void handle_interactions()
 		// if there is non_sink object and this one has sink, remove it
 
 		local_temp1 = false; // to check if object is destroyed
- 		ObjPropGet(local_type, PROP_SINK, array_value);
+ 		ObjPropGetByIndex(lookup_index, PROP_SINK, array_value);
 		if ((local_flags & INTERACT_NON_SINK) && array_value)
 			local_temp1 = true;
 		else
 		{
 			// if there is sink object and this one has no sink, remove it
-			ObjPropGet(local_type, PROP_SINK, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_SINK, array_value);
 			if ((local_flags & INTERACT_SINK) && array_value == false)
 				local_temp1 = true;
 			else
 			{
 				// check ACID
-				ObjPropGet(local_type, PROP_IRON, array_value);
+				ObjPropGetByIndex(lookup_index, PROP_IRON, array_value);
 				if ((local_flags & INTERACT_ACID) && array_value)
 					local_temp1 = true;
 			}
@@ -379,13 +384,13 @@ void handle_interactions()
 
 		// check OPEN
 		local_temp1 = false;
-		ObjPropGet(local_type, PROP_SHUT, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_SHUT, array_value);
 		if ((local_flags & INTERACT_OPEN) && array_value)
 			local_temp1 = true;
 		else
 		{
 			// check SHUT
-			ObjPropGet(local_type, PROP_OPEN, array_value);
+			ObjPropGetByIndex(lookup_index, PROP_OPEN, array_value);
 			if ((local_flags & INTERACT_SHUT) && array_value)
 				local_temp1 = true;
 		}
@@ -398,7 +403,7 @@ void handle_interactions()
 		}
 
 		// check KILL (no sound)
-		ObjPropGet(local_type, PROP_YOU, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_YOU, array_value);
 		if ( (local_flags & INTERACT_KILL) && array_value )
 		{
 			kill();

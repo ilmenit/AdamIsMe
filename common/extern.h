@@ -32,8 +32,11 @@ extern byte map_index;
 // These are used to calculate array indexes and values
 // For some reasons if there is calculation in assignment or calculation of index of array in the line where it happens,
 // CC65 is generating poor code (assignment through ptr1) even if array fits into one page
+extern byte lookup_index;
+
 extern byte array_index;
 extern byte array_value;
+extern byte *array_ptr; // sharing the same zero page location as array_index + array_value
 
 // these are used by CC65
 #ifdef __CC65__
@@ -47,8 +50,10 @@ extern byte array_value;
 #pragma zpsym ("local_temp1")
 #pragma zpsym ("local_temp2")
 #pragma zpsym ("map_index")
+#pragma zpsym ("lookup_index")
 #pragma zpsym ("array_index")
 #pragma zpsym ("array_value")
+#pragma zpsym ("array_ptr")
 #endif
 
 /*****************************************************************************/
