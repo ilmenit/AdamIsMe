@@ -77,6 +77,8 @@ extern struct level_set_header_def level_set_header;
 
 extern byte map[MAP_SIZE_Y*MAP_SIZE_X];
 
+extern byte world_name[WORLD_NAME_MAX];
+
 extern struct preprocess_info_data preproc_helper;
 extern struct helpers_def helpers;
 

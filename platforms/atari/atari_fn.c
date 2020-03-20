@@ -23,12 +23,19 @@ $D800-$E400 - undo data when game is running without extended memory
 
 // PMG is in the GFX segment $3800-$3FFF
 #define PM_BASE_PAGE 0x38
+/*
 #define PM_BASE_ADDR (PM_BASE_PAGE * 0x100)
 #define PM_BASE ((unsigned char*) PM_BASE_ADDR)
 #define PL_1    ((unsigned char*) (PM_BASE_ADDR+0x400))
 #define PL_2    ((unsigned char*) (PM_BASE_ADDR+0x500))
 #define PL_3    ((unsigned char*) (PM_BASE_ADDR+0x600))
 #define PL_4    ((unsigned char*) (PM_BASE_ADDR+0x700))
+*/
+
+#define SHOW_UNDO_ICON() GTIA_WRITE.hposp0 = 0xC5;
+#define HIDE_UNDO_ICON() GTIA_WRITE.hposp0 = 0xF0;
+#define SHOW_REDO_ICON() GTIA_WRITE.hposp1 = 0xC5;
+#define HIDE_REDO_ICON() GTIA_WRITE.hposp1 = 0xF0;
 
 #define TEST_IO 0
 
@@ -44,6 +51,7 @@ int file_read_pointer = -1;
 int file_progress_pointer = -1; // separate file pointer for saving/loading
 
 byte saved_completed_levels = 0;
+bool undo_redo_counter=0;
 
 byte joy_status;
 byte video_buffer_number = 0;
@@ -64,6 +72,7 @@ extern byte *video_ptr2;
 
 extern byte *display_list1;
 extern byte *display_list2;
+extern byte *text_ptr;
 
 //////// TILESETS
 
@@ -273,10 +282,12 @@ void fade_screen_to_black()
 	{
 		fade_to_black_one_step();
 	}
+	memset(text_ptr, 0, WORLD_NAME_MAX);
 }
 
 void fade_palette_to_level_colors()
 {
+	memcpy(text_ptr+15, world_name, WORLD_NAME_MAX);
 	local_temp1 = level_number / LEVELS_PER_WORLD;
 	while (palette_can_be_modified)
 	{
@@ -708,22 +719,48 @@ void galaxy_get_action()
 bool perform_undo()
 {
 	set_timer(8);
+	HIDE_REDO_ICON();
 	if (undo())
 	{
+		if (undo_redo_counter == 0)
+		{
+			undo_redo_counter = 1;
+			SHOW_UNDO_ICON();
+		}
+		else
+		{
+			undo_redo_counter = 0;
+			HIDE_UNDO_ICON();
+		}
+
 		init_level();
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
 		wait_for_timer();
 		return true;
 	}
+	else
+		HIDE_UNDO_ICON();
 	return false;
 }
 
 void perform_redo()
 {
 	set_timer(8);
+	HIDE_UNDO_ICON();
 	if (redo())
 	{
+		if (undo_redo_counter == 0)
+		{
+			undo_redo_counter = 1;
+			SHOW_REDO_ICON();
+		}
+		else
+		{
+			undo_redo_counter = 0;
+			HIDE_REDO_ICON();
+		}
+
 		init_level();
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
@@ -731,6 +768,7 @@ void perform_redo()
 	}
 	else
 	{
+		HIDE_REDO_ICON();
 		audio_sfx(SFX_CLICK);
 		you_move_direction = DIR_NONE;
 		set_timer(TIMER_VALUE); // normal "waiting move", therefore set standard timer
@@ -818,6 +856,9 @@ void game_get_action()
 	you_move_direction = DIR_CREATED;
 
 	OS.ch = 0x0; // clear key
+
+	GTIA_WRITE.hposp0 = 0xF0; // hide undo icon
+	GTIA_WRITE.hposp1 = 0xF0; // hide redo icon
 
 	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
@@ -1132,32 +1173,30 @@ void init_platform()
 	// init PMG to cover borders
 	GTIA_WRITE.sizem = 0xFF;
 	GTIA_WRITE.grafm = 0xFF; // shape of Missiles
-	GTIA_WRITE.hposm0 = 0x20;
-	GTIA_WRITE.hposm1 = 0x27;
-	GTIA_WRITE.hposm2 = 0xd1;
-	GTIA_WRITE.hposm3 = 0xd8;
-	GTIA_WRITE.colpm0 = 0x0;
-	GTIA_WRITE.colpm1 = 0x0;
-	GTIA_WRITE.colpm2 = 0x0;
-	GTIA_WRITE.colpm3 = 0x0;
-	
-	GTIA_WRITE.hposp0 = 0x2F;
-	GTIA_WRITE.hposp1 = 0xc9;
 
-	GTIA_WRITE.hposp2 = 0x50;
-	GTIA_WRITE.hposp3 = 0x60;
+	// cover position
+	GTIA_WRITE.hposm2 = 0x22; // left cover
+	GTIA_WRITE.hposp2 = 0x2A; // left corners
+	GTIA_WRITE.hposp3 = 0xCE; // right corners
+	GTIA_WRITE.hposm3 = 0xD6; // right cover
+
+	// black corners and black cover of colbak on the sides
+	OS.pcolr2 = 0x00;
+	OS.pcolr3 = 0x00;
+
+	// other sprites - rewind and forward icons, place out of screen for now
+	OS.pcolr0 = 0x0A;
+	OS.pcolr1 = 0x0A;
+	GTIA_WRITE.hposp0 = 0xf0; // d2
+	GTIA_WRITE.hposp1 = 0xf0; // d2
+
+	// missiles are out of screen
+	GTIA_WRITE.hposm0 = 0xF0;
+	GTIA_WRITE.hposm1 = 0xF0;
 
 	GTIA_WRITE.gractl = GRACTL_PLAYERS; // we use memory as Players shape, not grafp
 		
 	ANTIC.pmbase = PM_BASE_PAGE; // 0x38
-	// set PMG corners
 
-	// top left
-
-	OS.pcolr0 = 0x0;
-	OS.pcolr1 = 0x0;
-	OS.pcolr2 = 0x0;
-	OS.pcolr3 = 0x0;
-
-	OS.gprior = 0x4;
+	OS.gprior = 0x1; // 4
 }

@@ -64,12 +64,13 @@
 #define MAP_SIZE_X 20
 #define MAP_SIZE_Y 12
 
-
 #if (MAP_SIZE_Y * MAP_SIZE_X)  >= 255
 #error Error, too many things depend on small map size (that can be indexed by 1 byte)
 #endif
 // we are limiting number of objects to make it storable in ext. ram for UNDO and for performance reasons
 #define MAX_OBJECTS 140
+
+#define WORLD_NAME_MAX 16
 
 // Direction
 #define DIR_DOWN  0

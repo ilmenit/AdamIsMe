@@ -4,7 +4,8 @@
 .include 		"opcodes.inc"
 .macpack        atari 
 
-PLAYER1_DATA = $3C20
+PLAYER1_DATA = $3C1F
+BOTTOM_LINE = $6d ; $6e
 
 .export 	_local_x
 .export 	_local_y
@@ -21,6 +22,7 @@ PLAYER1_DATA = $3C20
 .export 	_map_index
 .export 	_video_ptr1
 .export 	_video_ptr2
+.export 	_text_ptr
 .export 	_display_list1
 .export 	_display_list2
 .export     _display_font_page1
@@ -33,6 +35,11 @@ PLAYER1_DATA = $3C20
 .export		_galaxy_font_address
 .export		_dl_handler
 .export		_background_color
+
+;; these are exported for debugging
+.export first_font_handler
+.export second_font_handler
+.export text_line_handler
 
 .segment "ZEROPAGE"
 regA: .byte 0
@@ -77,38 +84,66 @@ _galaxy_font2:
 	.incbin "gfx_atari/0.fnt",i*2*32*8+32*8,32*8
 .endrepeat
 
+ingame_font:
+	.incbin "gfx_atari/ingame.fnt", 0 , 8 * 64
+
 _display_list1:
     .byte   DL_BLK8
     .byte   DL_BLK8 
-    .byte   DL_BLK8 | DL_DLI
+    .byte   DL_BLK7 | DL_DLI ; _dl_handler
+    .byte   DL_BLK1
+    .byte   DL_BLK1 | DL_DLI
+		
     .repeat 24, index
-		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
-		.word   (_screen_memory1 + (40*index))
+		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI    ; first_font_handler and second_font_handler
+		.word   (screen_memory1 + (40*index))
     .endrepeat
-    .byte   DL_BLK1 | DL_DLI 
+    .byte   DL_BLK1 
+    .byte   DL_BLK1 | DL_DLI
+    .byte   DL_BLK1
+	
+		.byte   DL_CHR40x8x1 | DL_LMS 
+		.word   (text_line_memory)	
+	
+    .byte   DL_BLK1
     .byte   DL_JVB 
     .word   _display_list1 
 
 _display_list2:
     .byte   DL_BLK8
     .byte   DL_BLK8 
-    .byte   DL_BLK8 | DL_DLI
+    .byte   DL_BLK7 | DL_DLI
+    .byte   DL_BLK1
+    .byte   DL_BLK1 | DL_DLI
+		
     .repeat 24, index
 		.byte   DL_CHR40x8x4 | DL_LMS | DL_DLI
-		.word   (_screen_memory2 + (40*index))
+		.word   (screen_memory2 + (40*index))
     .endrepeat
-    .byte   DL_BLK1 | DL_DLI 
+    .byte   DL_BLK1
+    .byte   DL_BLK1 | DL_DLI
+    .byte   DL_BLK1
+	
+		.byte   DL_CHR40x8x1 | DL_LMS 
+		.word   (text_line_memory)
+	
+    .byte   DL_BLK1
     .byte   DL_JVB 
     .word   _display_list2 	
 	
 
-_screen_memory1:   
+screen_memory1:   
     .repeat 24*40
     .byte 0
     .endrepeat
 
-_screen_memory2:   
+screen_memory2:   
     .repeat 24*40
+    .byte 0
+    .endrepeat
+	
+text_line_memory:	
+    .repeat 40
     .byte 0
     .endrepeat
 
@@ -118,48 +153,93 @@ current_size = gfx_end-game_font1
 end_address = $2000 + current_size
 filler_size = PLAYER1_DATA - end_address
 
-;.out .sprintf( "SIZE: %04x", current_size ) 
-;.out .sprintf( "end_address: %04x", end_address ) 
-;.out .sprintf( "filler_size: %04x", filler_size ) 
+.out .sprintf( "SIZE: %04x", current_size ) 
+.out .sprintf( "end_address: %04x", end_address ) 
+.out .sprintf( "filler_size: %04x", filler_size ) 
 
 .res filler_size, 0
 
-p1_start:
-
 ; first player data
+p0_start:
 
-.byte %11100000
-.byte %11000000
-.byte %10000000
-.byte %10000000
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte %00110011
+.byte %00110011
+.byte %01100110
+.byte %01100110
+.byte %11001100
+.byte %11001100
+.byte %01100110
+.byte %01100110
+.byte %00110011
+.byte %00110011
 
-.res 184, 0
 
-.byte %10000000
-.byte %10000000
-.byte %11000000
-.byte %11100000
-
-p1_end:
-
-.res $100 - (p1_end-p1_start), 0
-
-p2_start:
+p0_end:
+.res $100 - (p0_end-p0_start), 0
 
 ; second player data
 
-.byte %00000111
-.byte %00000011
-.byte %00000001
-.byte %00000001
+p1_start:
 
-.res 184, 0
+.byte 0
+.byte 0
+.byte 0
+.byte 0
+.byte %11001100
+.byte %11001100
+.byte %01100110
+.byte %01100110
+.byte %00110011
+.byte %00110011
+.byte %01100110
+.byte %01100110
+.byte %11001100
+.byte %11001100
 
-.byte %00000001
-.byte %00000001
-.byte %00000011
-.byte %00000111
+p1_end:
+.res $100 - (p1_end-p1_start), 0
 
+; third player data
+
+p2_start:
+
+.byte %11111111
+.byte %11111110
+.byte %11111100
+.byte %11111100
+
+.res 188, %11111000
+
+.byte %11111100
+.byte %11111100
+.byte %11111110
+.byte %11111111
+
+p2_end:
+.res $100 - (p2_end-p2_start), 0
+
+; fourth player data
+
+p3_start:
+
+.byte %11111111
+.byte %01111111
+.byte %00111111
+.byte %00111111
+
+.res 188, %00011111
+
+.byte %00111111
+.byte %00111111
+.byte %01111111
+.byte %11111111
+
+p3_end:
+.res $E0 - (p3_end-p3_start), 0
 
 .segment "DATA"
 
@@ -182,55 +262,93 @@ _galaxy_font_page2:
 	.byte   .hibyte(_galaxy_font2)
 
 _video_ptr1:    
-    .word   _screen_memory1
+    .word   screen_memory1
 _video_ptr2:    
-    .word   _screen_memory2
+    .word   screen_memory2
+_text_ptr:    
+    .word   text_line_memory
 
 _background_color:
    .byte 0
-
+   
 .segment	"CODE"
 
+.macro  set_dli  new_dli
+	 lda #.lobyte(new_dli)
+	 sta VDSLST
+	 lda #.hibyte(new_dli)
+	 sta VDSLST+1
+.endmacro
+
 _dl_handler:
- sta reg_a
- lda $D40B ;VCOUNT
+ sta reg_a 
+ ; set color of the playfield (the top part is covered by OS shadow register - black color)
+ lda _background_color
  sta WSYNC
- cmp #$6e ; if bottom of screen
- bcs bottom_handler
- cmp #$10 ; if bottom of screen
- bcc up_handler
- ; every 8th line change the font set
- and #%00000100
- beq set_second
- ;; Set first font
- ;lda _display_font_page1 ; replaced by self modifying code for speed
+ sta COLBK
+ set_dli first_font_handler  
+ lda reg_a
+ rti 
+  
+first_font_handler:
+ sta reg_a
+ ; lda _display_font_page1 ; replaced by self modifying code for speed
   .byte OPC_LDA_imm
 _display_font_page1:
 	.byte   .hibyte(game_font1) 
+ sta WSYNC
  sta CHBASE
+
+ lda VCOUNT ;VCOUNT
+ cmp #BOTTOM_LINE ; if bottom of screen
+ bcs set_text_handler   
+ 
+ set_dli second_font_handler 
  lda reg_a
  rti
 
-set_second:
+set_text_handler:
+ set_dli text_line_handler 
+ lda reg_a
+ rti
+ 
+second_font_handler:
+ sta reg_a	
   ;; Set second font
  ; lda _display_font_page2 ; replaced by self modifying code for speed
  .byte OPC_LDA_imm
 _display_font_page2:
 	.byte   .hibyte(game_font2)
+ sta WSYNC
  sta CHBASE
+
+ lda VCOUNT ;VCOUNT
+ cmp #BOTTOM_LINE ; if bottom of screen
+ bcs set_text_handler   
+  
+ set_dli first_font_handler 
  lda reg_a
  rti 
  
-bottom_handler:
+
+text_line_handler:
+ sta reg_a
  ; set black color below playfield
  lda #$00
- sta $D01A
+ sta WSYNC
+  
+ sta COLBK
+ sta COLPF2
+ 
+ lda #.hibyte(ingame_font)
+ sta CHBASE
+  
+ lda #$FF
+ sta COLPF1
+
+; set the first handler for the new frame
+ set_dli _dl_handler   
  lda reg_a
  rti 
 
-up_handler:
- ; set color of the playfield (the top part is covered by OS shadow register - black color)
- lda _background_color
- sta $D01A
- lda reg_a
- rti 
+.out .sprintf( "DL HANDLERS SIZE: %04x", * - _dl_handler) 
