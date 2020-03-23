@@ -1,4 +1,6 @@
-// TODO: TEST - include everything into one file to check if CC65 has issues with optimization of extern arrays<256 and always is using ptr1 for accessing them
+// TODO: Test UNDO as differential (we have free flag 0x80 in DIR_ that we could use as DIR_UNDO which would mean this object got modified and needs to be stored for undo)
+//       this way we could lower memory needed for undo but may increase CPU requirement to store DIR_UNDO whenever object data is modified.
+//       Often only 1 characteristic (x,y,type...) of object is modified per turn.
 // TODO: Separate Atari platform specific things in Editor to prepare it to be multi-platform
 // TODO: Make initial build for other CC65 platform using CONIO?
 // TODO: In rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)

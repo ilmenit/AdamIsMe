@@ -70,8 +70,6 @@
 // we are limiting number of objects to make it storable in ext. ram for UNDO and for performance reasons
 #define MAX_OBJECTS 140
 
-#define WORLD_NAME_MAX 16
-
 // Direction
 #define DIR_DOWN  0
 #define DIR_LEFT  1

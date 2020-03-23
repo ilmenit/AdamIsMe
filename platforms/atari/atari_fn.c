@@ -282,12 +282,23 @@ void fade_screen_to_black()
 	{
 		fade_to_black_one_step();
 	}
-	memset(text_ptr, 0, WORLD_NAME_MAX);
 }
 
+#define TEXT_OFFSET 19
 void fade_palette_to_level_colors()
 {
-	memcpy(text_ptr+15, world_name, WORLD_NAME_MAX);
+	if (game_phase == LEVEL_ONGOING)
+	{
+		text_ptr[TEXT_OFFSET] = game_progress.landed_on_world_number + 53;
+		text_ptr[TEXT_OFFSET + 1] = 62;
+		text_ptr[TEXT_OFFSET + 2] = (level_number % LEVELS_PER_WORLD) + 53;
+	}
+	else
+	{
+		text_ptr[TEXT_OFFSET] = 0;
+		text_ptr[TEXT_OFFSET + 1] = 0;
+		text_ptr[TEXT_OFFSET + 2] = 0;
+	}
 	local_temp1 = level_number / LEVELS_PER_WORLD;
 	while (palette_can_be_modified)
 	{

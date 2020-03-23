@@ -13,7 +13,6 @@ struct game_progress_def game_progress;
 // later it is used to speed up processing of different action handlers or object interactions
 byte map[MAP_SIZE_Y*MAP_SIZE_X];
 
-byte world_name[WORLD_NAME_MAX];
 byte you_move_direction = DIR_NONE; // temporary, does not have to be stored
 
 struct preprocess_info_data preproc_helper;

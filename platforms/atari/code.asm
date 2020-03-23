@@ -343,7 +343,7 @@ text_line_handler:
  lda #.hibyte(ingame_font)
  sta CHBASE
   
- lda #$FF
+ lda _background_color
  sta COLPF1
 
 ; set the first handler for the new frame

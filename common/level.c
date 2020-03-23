@@ -149,18 +149,6 @@ void decode_standard_level()
 			last_text_index = local_index;
 	}
 	last_obj_index = local_index;
-	// decode level name
-	world_name[0] = 'W' - 64;
-	world_name[1] = 'o' - 70;
-	world_name[2] = 'r' - 70;
-	world_name[3] = 'l' - 70;
-	world_name[4] = 'd' - 70;
-	world_name[5] = 'N' - 64;
-	world_name[6] = 'a' - 70;
-	world_name[7] = 'm' - 70;
-	world_name[8] = 'e' - 70;
-	world_name[9] = 62;
-	world_name[10] = '1' + 4;
 }
 
 void decode_level()
