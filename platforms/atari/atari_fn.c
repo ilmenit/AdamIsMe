@@ -260,6 +260,9 @@ void post_disk_io()
 
 void fade_to_black_one_step()
 {
+	HIDE_UNDO_ICON();
+	HIDE_REDO_ICON();
+
 	palette_can_be_modified = false;
 	for (local_index = 0; local_index < COLORS_MAX; ++local_index)
 	{
@@ -713,7 +716,7 @@ void galaxy_get_action()
 		case 0:
 			// if SELECT, START and OPTION pressed, then increase completed levels
 			if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
-				game_progress.completed_levels = 77;
+				game_progress.completed_levels = 77; // 77
 			break;
 		case 0x3: // only option
 			switch_music();
@@ -875,7 +878,7 @@ void game_get_action()
 		fade_palette_to_level_colors();
 
 #if STORE_UNDO_OPTIMIZATION
-	if (MY_PEEK(SFX_VBI_COUNTER) > 0)
+	if (MY_PEEK(SFX_VBI_COUNTER) > 0 || helpers.you_move_at_least_once == false)
 	{
 		store_undo_data(); // store only when not slowing down
 		wait_for_timer();
@@ -1196,8 +1199,8 @@ void init_platform()
 	OS.pcolr3 = 0x00;
 
 	// other sprites - rewind and forward icons, place out of screen for now
-	OS.pcolr0 = 0x0A;
-	OS.pcolr1 = 0x0A;
+	OS.pcolr0 = 0xB8;
+	OS.pcolr1 = 0xB8;
 	GTIA_WRITE.hposp0 = 0xf0; // d2
 	GTIA_WRITE.hposp1 = 0xf0; // d2
 

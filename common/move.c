@@ -302,7 +302,7 @@ void preprocess_move_and_push() // preprocess type can be YOU or MOVE,  dependin
 		{
 			local_flags |= PREPROCESS_MOVING;
 			helpers.something_moving = true;		
-			SetMinMaxHelper(local_x, local_y);
+			SetMinMaxHelper(local_x, local_y); // uses array_index
 		}
 		else 
 		{
@@ -414,19 +414,24 @@ void move_ok_ones()
 
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
+		local_type = objects.type[local_index];
+		lookup_index = obj_prop_lookup[local_type];
+		// object can move ONLY if it's MOVE, PUSH on PREPROCESS_PUSH or IRON on PREPROCESS_MAGNET
+		ObjPropGetByIndex(lookup_index, PROP_IRON, array_value);
+		ObjPropGetByIndex(lookup_index, PROP_PUSH, prop1);
+		ObjPropGetByIndex(lookup_index, preprocess_type, prop2);
+		if (array_value == 0 && prop1 == 0 && prop2 == 0)
+			continue;
+
+		// skip if killed
 		if (IS_KILLED(local_index))
 			continue;
 
-		local_type = objects.type[local_index];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
 		MapGet(local_x, local_y, local_temp1);
 
-		lookup_index = obj_prop_lookup[local_type];
 
-		ObjPropGetByIndex(lookup_index, PROP_IRON, array_value);
-		ObjPropGetByIndex(lookup_index, PROP_PUSH, prop1);
-		ObjPropGetByIndex(lookup_index, preprocess_type, prop2);
 		if (
 			 (local_temp1 & PREPROCESS_MAGNET) && array_value ||
 			 (local_temp1 & PREPROCESS_PUSH) && prop1 ||
@@ -471,7 +476,7 @@ void move_ok_ones()
 				// we change direction of moving when hitting STOP, except YOU, because it looks strange
 				ObjPropGetByIndex(lookup_index, preprocess_type, array_value);
 				ObjPropGetByIndex(lookup_index, PROP_YOU, prop1);
-				if (array_value && move_direction == objects.direction[local_index] && prop1 == false)
+				if (array_value && move_direction == (objects.direction[local_index] & DIR_MASK) && prop1 == false)
 				{
 					array_value = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;
 					objects.direction[local_index] = array_value;

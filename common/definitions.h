@@ -226,6 +226,7 @@ struct preprocess_info_data {
 	struct min_max_val max_val;
 };
 
+/*
 #define SetMinMaxHelper(hx, hy) \
 			if (hx < preproc_helper.min_val.x[hy]) \
 				preproc_helper.min_val.x[hy] = hx; \
@@ -235,7 +236,23 @@ struct preprocess_info_data {
 			if (hy < preproc_helper.min_val.y[hx]) \
 				preproc_helper.min_val.y[hx] = hy; \
 			if (hy > preproc_helper.max_val.y[hx]) \
-				preproc_helper.max_val.y[hx] = hy; 
+				preproc_helper.max_val.y[hx] = hy;
+*/
+
+#define SetMinMaxHelper(hx, hy) \
+			array_index = preproc_helper.min_val.x[hy]; \
+			if (hx < array_index) \
+				preproc_helper.min_val.x[hy] = hx; \
+			array_index = preproc_helper.max_val.x[hy]; \
+			if (array_index < hx) \
+				preproc_helper.max_val.x[hy] = hx; \
+			\
+			array_index = preproc_helper.min_val.y[hx]; \
+			if (hy < array_index) \
+				preproc_helper.min_val.y[hx] = hy; \
+			array_index = preproc_helper.max_val.y[hx]; \
+			if (array_index < hy) \
+				preproc_helper.max_val.y[hx] = hy;
 
 
 #if EDITOR_ATARI || PLATFORM_ATARI

@@ -1,3 +1,4 @@
+// TODO: reconsider if we should end game when there is no object with YOU state
 // TODO: Test UNDO as differential (we have free flag 0x80 in DIR_ that we could use as DIR_UNDO which would mean this object got modified and needs to be stored for undo)
 //       this way we could lower memory needed for undo but may increase CPU requirement to store DIR_UNDO whenever object data is modified.
 //       Often only 1 characteristic (x,y,type...) of object is modified per turn.
@@ -133,6 +134,7 @@ void level_pass()
 
 	set_game_rules(); // on the beginning of level and after move of other objects
 
+	
 	// there must be at least one object with YOU state
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
@@ -148,6 +150,7 @@ void level_pass()
 		game_phase = LEVEL_LOST;
 		return;
 	}
+	
 
 	handle_you();
 

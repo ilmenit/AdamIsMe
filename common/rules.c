@@ -48,7 +48,7 @@ void preprocess_game_rules()
 		// remove flag IS_ACTIVE_RULE
 		objects.direction[local_index] &= (~DIR_ACTIVE_RULE);
 		MapSet(local_x, local_y, local_temp1);
-		SetMinMaxHelper(local_x, local_y);
+		SetMinMaxHelper(local_x, local_y); // uses array_index
 	}
 }
 
