@@ -203,21 +203,23 @@ void process_teleports()
 	// preprocess tele 
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
-		if (IS_KILLED(local_index))
+		// chack if teleport
+		local_type = objects.type[local_index];
+		ObjPropGet(local_type, PROP_TELE, array_value);
+		if (array_value == false)
 			continue;
 
-		// disable CREATED flag in direction and skip interaction for this one in this turn
+		// skip if just created by interaction
 		if (IS_CREATED(local_index))
 			continue;
 
-		// set on map properties
+		if (IS_KILLED(local_index))
+			continue;
 
-		local_type = objects.type[local_index];
+		// set on map properties
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
-		ObjPropGet(local_type, PROP_TELE, array_value);
-		if (array_value)
-			MapSet(local_x, local_y, PREPROCESS_TELE);
+		MapSet(local_x, local_y, PREPROCESS_TELE);
 	}
 	// teleport objects
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
@@ -229,17 +231,13 @@ void process_teleports()
 		if (IS_CREATED(local_index))
 			continue;
 
-
 		local_type = objects.type[local_index];
 		local_x = objects.x[local_index];
 		local_y = objects.y[local_index];
 		MapGet(local_x, local_y, local_flags);
 		ObjPropGet(local_type, PROP_TELE, array_value);
-		if ((local_flags & PREPROCESS_TELE) && !array_value)
-		{
+		if ((local_flags & PREPROCESS_TELE) && array_value == false)
 			teleport();
-			continue;
-		}
 	}
 
 }

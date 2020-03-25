@@ -3,6 +3,7 @@
 #include "level.h"
 
 // On Atari these are defined in ASM file, on zero page
+// Usually variable name reflects use, however sometimes they are used as temp variables for other purpose and special care is needed
 byte local_x;
 byte local_y;
 byte local_index;
