@@ -37,7 +37,7 @@
     <None Include="atari-atr.cfg">
       <Filter>BuildAtari</Filter>
     </None>
-    <None Include="build.bat">
+    <None Include="build-atari.bat">
       <Filter>BuildAtari</Filter>
     </None>
   </ItemGroup>

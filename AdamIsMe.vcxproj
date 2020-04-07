@@ -184,7 +184,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="atari-atr.cfg" />
-    <None Include="build.bat" />
+    <None Include="build-atari.bat" />
     <None Include="level_set\levels.atl" />
     <None Include="level_set\levels.riu" />
     <None Include="packages.config" />
