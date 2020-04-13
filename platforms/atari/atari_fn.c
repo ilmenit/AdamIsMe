@@ -963,20 +963,6 @@ void draw_tile(byte tile_to_set)
 	array_ptr[SCREEN_SIZE_X+1] = local_temp1 + ((lookup_index & 0x8) ? 129 : 1);
 }
 
-void draw_tile2(byte tile_to_set)
-{
-	lookup_index = tiles_inverse[(tile_to_set % 128) / 2];
-	local_temp2 = local_y * 2;
-	array_ptr = video_lookup[local_temp2];
-	local_temp1 = local_x * 2;
-	array_ptr += local_temp1;
-
-	*array_ptr = tile_to_set + ((lookup_index & 0x1) ? 128 : 0);
-	array_ptr[1] = tile_to_set + ((lookup_index & 0x2) ? 129 : 1);
-	array_ptr += SCREEN_SIZE_X;
-	*array_ptr = tile_to_set + ((lookup_index & 0x4) ? 128 : 0);
-	array_ptr[1] = tile_to_set + ((lookup_index & 0x8) ? 129 : 1);
-}
 void galaxy_draw_screen()
 {
 	// draw galaxy

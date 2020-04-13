@@ -25,6 +25,9 @@
     <Filter Include="BuildAtari">
       <UniqueIdentifier>{92c8c17f-2be3-4fe7-ad63-9b6e9f3e84b3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BuildAtari\build-atr">
+      <UniqueIdentifier>{8cf552ba-d26a-4b00-a763-0c8f0d2aa0e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -39,6 +42,33 @@
     </None>
     <None Include="build-atari.bat">
       <Filter>BuildAtari</Filter>
+    </None>
+    <None Include="build_atr\build-disk.bat">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\build-disk-no-intro.bat">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\ELSE.COM">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\ENDIF.COM">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\intro.xex">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\selector.com">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\STARTUP-no-intro.BAT">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\STARTUP-with-intro.BAT">
+      <Filter>BuildAtari\build-atr</Filter>
+    </None>
+    <None Include="build_atr\XBW130.DOS">
+      <Filter>BuildAtari\build-atr</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

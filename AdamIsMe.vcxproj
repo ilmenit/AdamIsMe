@@ -185,6 +185,15 @@
   <ItemGroup>
     <None Include="atari-atr.cfg" />
     <None Include="build-atari.bat" />
+    <None Include="build_atr\build-disk-no-intro.bat" />
+    <None Include="build_atr\build-disk.bat" />
+    <None Include="build_atr\ELSE.COM" />
+    <None Include="build_atr\ENDIF.COM" />
+    <None Include="build_atr\intro.xex" />
+    <None Include="build_atr\selector.com" />
+    <None Include="build_atr\STARTUP-no-intro.BAT" />
+    <None Include="build_atr\STARTUP-with-intro.BAT" />
+    <None Include="build_atr\XBW130.DOS" />
     <None Include="level_set\levels.atl" />
     <None Include="level_set\levels.riu" />
     <None Include="packages.config" />
