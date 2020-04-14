@@ -1,1 +1,1 @@
-BASIC OFF›SELECTOR›1. Start the game with intro›INTRO.XEX›AIM.XEX›ELSE›AIM.XEX›ENDIF
+BASIC OFF›SELECTOR›1. Start the game with intro›INTRO.XEX›ENDIF›AIM.XEX›

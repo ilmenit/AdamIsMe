@@ -577,7 +577,7 @@ void build_game_click_handler(ui_button *button)
 
 	// build game
 	_chdir("build_atr");
-	system("build-disk.bat");
+	system("build-disk-no-intro.bat");
 	_chdir("..");
 #else
 #error Add additional build platform!
