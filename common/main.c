@@ -176,11 +176,12 @@ void init_new_game()
 {
 	level_number = 0;
 	memset(&game_progress, 0, sizeof(game_progress));
-	//game_progress.completed_levels = 0;
+	//game_progress.completed_levels = 0; // here put more for testing purposes
 	game_progress.galaxy_x = 0xFF; // position on the galaxy map
 	game_progress.galaxy_y = 0xFF; // position on the galaxy map
 	game_progress.landed_x = 0xFF; // position on the galaxy map
 	game_progress.landed_y = 0xFF; // position on the galaxy map
+	game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
 }
 
 void init_level() 
@@ -290,22 +291,16 @@ int main(void)
 {
 	init_platform();
 
-	game_progress.landed_on_world_number = SHUTTLE_IN_SPACE;
-	if (load_game_progress())
-	{
-		game_phase = GALAXY_ONGOING;
-	}
-	else
-	{
-		init_new_game();
-		game_phase = LEVEL_LOAD;
-	}
-
-
 #if EDITOR_ENABLED
+	game_phase = LEVEL_LOAD;
 	init_editor();
 	editor_loop();
 #else
+	if (load_game_progress() == false)
+	{
+		init_new_game();
+	}
+	game_phase = GALAXY_ONGOING;
 	game_loop();
 #endif
 	audio_music(MUSIC_DISABLED);

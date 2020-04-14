@@ -41,8 +41,10 @@ $D800-$E400 - undo data when game is running without extended memory
 
 #define EMPTY_TILE 126
 #define TIMER_VALUE 12
-//#define TIMER_VALUE 12
-//#define TIMER_VALUE 15
+
+#define INTRO_OPTION       ((unsigned char*)0x00FF)
+#define INTRO_OPTION_CONTINUE 0
+#define INTRO_OPTION_NEW_GAME 1
 
 /*****************************************************************************/
 /*                               System Data                                 */
@@ -429,17 +431,25 @@ void load_level_data()
 	post_disk_io();
 }
 
+int read_bytes;
 bool load_game_progress()
 {
+	if ((*INTRO_OPTION) == INTRO_OPTION_NEW_GAME) // INTRO_OPTION_NEW_GAME, INTRO_OPTION_CONTINUE
+	  return false;
+
 	pre_disk_io();
-	file_progress_pointer = open(progress_file_name, O_RDWR | O_CREAT);
+	file_progress_pointer = open(progress_file_name, O_RDONLY);
 	if (file_progress_pointer != -1)
 	{
-		read(file_progress_pointer, &game_progress, sizeof(game_progress));
+		read_bytes = read(file_progress_pointer, &game_progress, sizeof(game_progress));
 		close(file_progress_pointer);
 		post_disk_io();
-		return true;
+		if (read_bytes == sizeof(game_progress))
+			return true;
+		else
+			return false;
 	}
+	// there is no progress file to load
 	post_disk_io();
 	return false;
 }
@@ -447,7 +457,7 @@ bool load_game_progress()
 void save_game_progress()
 {
 	pre_disk_io();
-	file_progress_pointer = open(progress_file_name, O_RDWR);
+	file_progress_pointer = open(progress_file_name, O_WRONLY | O_TRUNC);
 	write(file_progress_pointer, &game_progress, sizeof(game_progress));
 
 	// seems that for some reason write is buffered and there is no flush procedure to call
