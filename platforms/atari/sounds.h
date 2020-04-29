@@ -6,6 +6,7 @@
 #define MY_POKE(n,val) (*((unsigned char*)n)=val)
 
 void init_sfx();
+void deinit_sfx();
 void play_sfx(unsigned char effect);
 void play_music(unsigned char track_number);
 void stop_music();

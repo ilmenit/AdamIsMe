@@ -102,4 +102,10 @@ void init_sfx()
 	wait_for_vblank();
 }
 
+void deinit_sfx()
+{
+	__asm__("jsr %w", SFX_DISABLE_VBI);
+	wait_for_vblank();
+}
+
 #pragma optimize (on)

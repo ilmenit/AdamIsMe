@@ -100,11 +100,16 @@ byte representation_galaxy[] = {
 	// locks (8)
 	38, 39, 40, 41, 42, 43, 44, 45,
 
-	// backgrounds (6)
+	// backgrounds (12)
 	32, 33, 34, 35, 36, 37, 
+	48, 49, 50, 51, 52, 53,
 
-	// shuttle + shuttle landed (1) 
-	5, 53
+	// shuttle  + shuttle landed 
+	5, 38,
+	// exit unlocked
+	4,
+	// exit lock
+	46
 };
 
 //////////////////////////////////////////////////////
@@ -659,6 +664,11 @@ bool open_level_set()
 
 	open_atari_tiles_info();
 	return true;
+}
+
+void deinit_platform()
+{
+	audio_music(MUSIC_DISABLED);
 }
 
 void init_platform()

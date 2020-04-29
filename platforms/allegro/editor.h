@@ -45,8 +45,8 @@ typedef struct ui_button ui_button;
 #define BUTTON_MENU_SWAP_LEVEL    1007
 #define BUTTON_MENU_BUILD_GAME	  1008
 
-// 1 shuttle + 6 backgrounds + 8 planets + 8 walls 
-#define GALAXY_OBJECTS_MAX (1+6+8+8)
+// 12 backgrounds + 8 planets + 8 walls + 1 shuttle + 1 exit
+#define GALAXY_OBJECTS_MAX (12+8+8+2)
 
 #define BUTTON_LEVEL_FIRST 1500
 

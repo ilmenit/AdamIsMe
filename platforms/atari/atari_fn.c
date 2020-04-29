@@ -182,9 +182,14 @@ byte representation_galaxy[] = {
 
 	// backgrounds
 	64, 66, 68, 70, 72, 74,
+	96, 98, 100, 102, 104, 106,
 
-	// shuttle
-	10, 106
+	// shuttle, shuttle landed
+	10, 76,
+	// exit unlocked
+	8,
+	// exit lock
+	92
 };
 
 bool undo_data_stored_this_turn = false;
@@ -624,7 +629,7 @@ void switch_music()
 }
 
 byte last_galaxy_move_direction; // this one is displayed
-
+byte new_x, new_y;
 void galaxy_get_action()
 {
 	bool action_taken = false;
@@ -676,38 +681,28 @@ void galaxy_get_action()
 			you_move_direction = DIR_NONE;
 		}
 
+		new_x = game_progress.galaxy_x;
+		new_y = game_progress.galaxy_y;
 		switch (you_move_direction)
 		{
 		case DIR_UP:
 			if (game_progress.galaxy_y > 0)
-			{
-				MapGet(game_progress.galaxy_x, game_progress.galaxy_y - 1, local_type);
-				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
-					--game_progress.galaxy_y;
-			}
+				--new_y; 
 			break;
 		case DIR_DOWN:
 			if (game_progress.galaxy_y < MAP_SIZE_Y - 1)
-			{
-				MapGet(game_progress.galaxy_x, game_progress.galaxy_y + 1, local_type);
-				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
-					++game_progress.galaxy_y;
-			}
+				++new_y;
 			break;
 		case DIR_LEFT:
 			if (game_progress.galaxy_x > 0)
 			{
-				MapGet(game_progress.galaxy_x - 1, game_progress.galaxy_y, local_type);
-				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
-					--game_progress.galaxy_x;
+				--new_x;
 			}
 			break;
 		case DIR_RIGHT:
 			if (game_progress.galaxy_x < MAP_SIZE_X - 1)
 			{
-				MapGet(game_progress.galaxy_x + 1, game_progress.galaxy_y, local_type);
-				if (local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX)
-					++game_progress.galaxy_x;
+				++new_x;
 			}
 			break;
 		case DIR_NONE:
@@ -720,13 +715,24 @@ void galaxy_get_action()
 			action_taken = false;
 			last_galaxy_move_direction = DIR_DOWN;
 		}
+		if (action_taken)
+		{
+			MapGet(new_x, new_y, local_type);
+			if ((local_type < DECODE_WALLS_MIN || local_type >= DECODE_WALLS_MAX) && local_type != DECODE_EXIT_LOCK)
+			{
+				game_progress.galaxy_x = new_x;
+				game_progress.galaxy_y = new_y;
+			}
+			else
+				action_taken = false;
+		}
 
 		switch (GTIA_READ.consol)
 		{
 		case 0:
 			// if SELECT, START and OPTION pressed, then increase completed levels
 			if (game_progress.landed_on_world_number != SHUTTLE_IN_SPACE)
-				game_progress.completed_levels = 77; // 77
+				game_progress.completed_levels = (WORLDS_MAX* LEVELS_PER_WORLD);
 			break;
 		case 0x3: // only option
 			switch_music();
@@ -987,6 +993,12 @@ void galaxy_draw_screen()
 			{
 				local_temp1 = EMPTY_TILE;
 			}
+			else if (local_type == DECODE_EXIT_UNLOCKED)
+			{
+				local_temp1 = representation_galaxy[local_type];
+				if (video_buffer_number == 0)
+					local_temp1 += 32;
+			}
 			else if (local_type >= DECODE_LEVEL_NUMBERS_MIN && local_type < DECODE_LEVEL_NUMBERS_MAX)
 			{
 				local_temp1 = game_progress.landed_on_world_number;
@@ -1001,7 +1013,7 @@ void galaxy_draw_screen()
 				local_temp1 = representation_galaxy[local_type];
 				// blink stars
 				if (POKEY_READ.random < 16)
-					if (local_type >= DECODE_BACKGROUND_MIN + 2 && local_type < DECODE_BACKGROUND_MAX)
+					if (local_type >= DECODE_BACKGROUND_MIN + 2 && local_type < DECODE_BACKGROUND_MIN+4)
 						local_temp1 = EMPTY_TILE;
 			}
 
@@ -1140,6 +1152,18 @@ void open_and_test_file_io()
 }
 
 void rom_copy();
+
+void deinit_platform()
+{
+	audio_music(MUSIC_SFX_ONLY);
+	audio_sfx(SFX_LEVEL_WON);
+	wait_time(50);
+	fade_screen_to_black();
+	wait_time(50);
+	audio_music(MUSIC_DISABLED);
+	pre_disk_io();
+	deinit_sfx();
+}
 
 void init_platform()
 {

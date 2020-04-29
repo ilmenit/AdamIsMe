@@ -53,6 +53,11 @@ int window_height;
 
 byte copied_palette[COLORS_MAX] = { 0xB4, 0x1C, 0x0E, 0x82, 0x00 };
 
+
+const size_t no_backgrounds = 12;
+const size_t no_planets = 8;
+const size_t no_walls = 8;
+
 long get_file_size(FILE *fp)
 {
 	long file_size;
@@ -309,22 +314,26 @@ void draw_on_map(int x, int y)
 		{
 			// encode
 			int encoded_obj;
-
-			if (editor_selected_object == 0) // shuttle
+			if (editor_selected_object == no_backgrounds+no_planets+no_walls) // shuttle
 			{
 				encoded_obj = DECODE_SHUTTLE;
 				board_remove_all(encoded_obj);
 			}
-			else if (editor_selected_object < 7) // background
+			else if (editor_selected_object == no_backgrounds + no_planets + no_walls+1) // exit
 			{
-				encoded_obj = DECODE_BACKGROUND_MIN + editor_selected_object - 1;
+				encoded_obj = DECODE_EXIT_UNLOCKED;
+				board_remove_all(encoded_obj);
 			}
-			else if (editor_selected_object < 7+8) // planet
+			else if (editor_selected_object < no_backgrounds) // background
+			{
+				encoded_obj = DECODE_BACKGROUND_MIN + editor_selected_object;
+			}
+			else if (editor_selected_object < no_backgrounds+no_planets) // planet
 			{
 				// place planets only in area where borders can be drawn
 				if (x > 1 && x < (MAP_SIZE_X - 3) && y > 1 && y < (MAP_SIZE_Y - 2) )
 				{
-					encoded_obj = DECODE_WORLDS_MIN + editor_selected_object - 7;
+					encoded_obj = DECODE_WORLDS_MIN + editor_selected_object - no_backgrounds;
 					board_remove_all(encoded_obj);
 				}
 				else
@@ -334,7 +343,7 @@ void draw_on_map(int x, int y)
 			}
 			else  // wall
 			{
-				encoded_obj = DECODE_WALLS_MIN + editor_selected_object - (7 + 8);
+				encoded_obj = DECODE_WALLS_MIN + editor_selected_object - (no_backgrounds+no_planets);
 			}
 			board_set(x, y, encoded_obj);
 		}
@@ -932,23 +941,29 @@ void init_editor()
 	// set galaxy objects
 	for (i = 0; i < _countof(editor_galaxy_object_buttons); ++i)
 	{
-		if (i < 7)
+		// backgrounds
+		if (i < no_backgrounds)
 		{
 			x = 0;
 			y = i;
 		}
+		// planets
+		else if (i < no_backgrounds+no_planets)
+		{
+			x = 1;
+			y = i - no_backgrounds;
+		}
+		// walls
+		else if (i < no_backgrounds+no_planets+no_walls)
+		{
+			x = 2;
+			y = i - (no_backgrounds+no_planets);
+		}
 		else
 		{
-			if (i < 8 + 7)
-			{
-				x = 1;
-				y = i - 7;
-			}
-			else
-			{
-				x = 2;
-				y = i - (8 + 7);
-			}
+			// walls
+			x = 3;
+			y = i - (no_backgrounds+no_planets+no_walls);
 		}
 
 		button = &editor_galaxy_object_buttons[i];
@@ -960,16 +975,18 @@ void init_editor()
 		button->enabled = false;
 
 		if (x == 0)
-		{
-			if (i == 0)
-				button->tile_id = representation_galaxy[DECODE_SHUTTLE];
-			else
-				button->tile_id = representation_galaxy[y + DECODE_BACKGROUND_MIN - 1];
-		}
+			button->tile_id = representation_galaxy[y + DECODE_BACKGROUND_MIN];
 		else if (x == 1)
 			button->tile_id = representation_galaxy[y + DECODE_WORLDS_MIN];
 		else if (x == 2)
 			button->tile_id = representation_galaxy[y + DECODE_WALLS_MIN];
+		else
+		{
+			if (y == 0)
+				button->tile_id = representation_galaxy[DECODE_SHUTTLE];
+			else
+				button->tile_id = representation_galaxy[DECODE_EXIT_UNLOCKED];
+		}
 
 		button->button_id = BUTTON_GALAXY_OBJECT_FIRST + i;
 		button->click_handler = galaxy_object_click_handler;

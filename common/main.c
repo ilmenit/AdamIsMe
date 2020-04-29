@@ -78,7 +78,8 @@ void complete_level()
 	if (is_level_complete()==false)
 	{
 		game_progress.worlds_state[local_temp1] |= one_lshift_lookup[local_temp2];
-		++game_progress.completed_levels;
+		if (game_progress.completed_levels < (WORLDS_MAX * LEVELS_PER_WORLD))
+			++game_progress.completed_levels;
 	}
 }
 
@@ -110,6 +111,10 @@ void galaxy_check_trigger()
 			game_progress.landed_y = game_progress.galaxy_y;
 			audio_sfx(SFX_LANDING);
 			galaxy_display_planet();
+		}
+		else if (local_type == DECODE_EXIT_UNLOCKED)
+		{
+			game_phase = GAME_COMPLETED;
 		}
 	}
 }
@@ -280,9 +285,11 @@ void galaxy_loop()
 
 void game_loop()
 {
-	while (game_phase != GAME_COMPLETED)
+	for(;;)
 	{
 		galaxy_loop();
+		if (game_phase == GAME_COMPLETED)
+			break;
 		level_loop();
 	}
 }
@@ -292,7 +299,7 @@ int main(void)
 	init_platform();
 
 #if EDITOR_ENABLED
-	game_phase = LEVEL_LOAD;
+	init_new_game();
 	init_editor();
 	editor_loop();
 #else
@@ -303,6 +310,6 @@ int main(void)
 	game_phase = GALAXY_ONGOING;
 	game_loop();
 #endif
-	audio_music(MUSIC_DISABLED);
+	deinit_platform();
 	return EXIT_SUCCESS;
 }

@@ -12,13 +12,6 @@ void load_level()
 ///////////////////////////////////////////
 // level encoding - Galaxy Map
 ///////////////////////////////////////////
-// 8 worlds
-// 8 walls
-// 8 level numbers
-// 8 locks
-// 8 backgrounds
-// 1 shuttle
-///////////////////////////////////////////
 
 void decode_galaxy()
 {
@@ -35,7 +28,9 @@ void decode_galaxy()
 					game_progress.galaxy_y = local_y;
 				}
 				if (game_progress.completed_levels != LEVELS_MAX) // EDITOR
+				{
 					MapSet(local_x, local_y, LEVEL_DECODE_EMPTY);
+				}
 			}
 			else if (local_type >= DECODE_WORLDS_MIN && local_type < DECODE_WORLDS_MAX)
 			{
@@ -50,6 +45,13 @@ void decode_galaxy()
 					// lock this world
 					local_temp1 += DECODE_LOCKS_MIN;
 					MapSet(local_x, local_y, local_temp1);
+				}
+			}
+			else if (local_type == DECODE_EXIT_UNLOCKED)
+			{
+				if (game_progress.completed_levels < (WORLDS_MAX * LEVELS_PER_WORLD))
+				{
+					MapSet(local_x, local_y, DECODE_EXIT_LOCK);
 				}
 			}
 		}

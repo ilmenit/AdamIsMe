@@ -10,6 +10,7 @@
 
 // platform specific functions
 void init_platform();
+void deinit_platform();
 void audio_music(unsigned char music_id);
 void audio_sfx(unsigned char sfx_id);
 
