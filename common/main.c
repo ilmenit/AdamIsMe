@@ -81,8 +81,7 @@ void complete_level()
 		if (game_progress.completed_levels < (WORLDS_MAX * LEVELS_PER_WORLD))
 			++game_progress.completed_levels;
 	}
-}
-
+} 
 
 void galaxy_check_trigger()
 {

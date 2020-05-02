@@ -57,6 +57,7 @@ bool undo_redo_counter=0;
 
 byte joy_status;
 byte video_buffer_number = 0;
+byte draw_counter = 0;
 
 #define SetChar(x,y,a) *(video_lookup[(y)]+(x))=(a);
 #define GetChar(x,y) *(video_lookup[(y)]+(x))
@@ -981,6 +982,7 @@ void draw_tile(byte tile_to_set)
 
 void galaxy_draw_screen()
 {
+	++draw_counter;
 	// draw galaxy
 	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 	{
@@ -996,7 +998,7 @@ void galaxy_draw_screen()
 			else if (local_type == DECODE_EXIT_UNLOCKED)
 			{
 				local_temp1 = representation_galaxy[local_type];
-				if (video_buffer_number == 0)
+				if ( (draw_counter%2) == 0)
 					local_temp1 += 32;
 			}
 			else if (local_type >= DECODE_LEVEL_NUMBERS_MIN && local_type < DECODE_LEVEL_NUMBERS_MAX)
@@ -1046,7 +1048,7 @@ void galaxy_draw_screen()
 	{
 		local_temp1 = last_galaxy_move_direction * 2;
 	}
-	if (video_buffer_number == 0)
+	if ((draw_counter%2)==0)
 		local_temp1 += 32;
 
 	draw_tile(local_temp1);
@@ -1056,6 +1058,7 @@ void galaxy_draw_screen()
 
 void game_draw_screen()
 {
+	++draw_counter;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		if (IS_KILLED(local_index))
@@ -1077,7 +1080,7 @@ void game_draw_screen()
 			if (local_flags & REPRESENTATION_DIRECTIONS)
 				local_temp1 += (objects.direction[local_index] & DIR_MASK) * 2;
 
-			if (video_buffer_number == 0)
+			if ((draw_counter % 2) == 0)
 			{
 				if (local_flags & REPRESENTATION_ANIMATED)
 				{
@@ -1099,8 +1102,8 @@ void game_draw_screen()
 		local_temp2 = GetChar(local_x*2, local_y*2) % 128;
 		if (local_temp2 == EMPTY_TILE ||
 			(
-			((video_buffer_number == 0) && ((local_temp1 % 128) < local_temp2)) ||
-				((video_buffer_number == 1) && ((local_temp1 % 128) >= local_temp2))
+			(((draw_counter % 2) == 0) && ((local_temp1 % 128) < local_temp2)) ||
+				(((draw_counter % 2) == 1) && ((local_temp1 % 128) >= local_temp2))
 				)
 			)
 		{
