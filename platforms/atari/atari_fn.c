@@ -97,6 +97,14 @@ extern void dl_handler(void);
 
 extern byte background_color;
 
+/////////
+
+// we start game by showing unlocking of the first world
+// which indicates where to land
+extern byte unlocking_x;
+extern byte unlocking_y;
+void show_unlocking_world();
+
 // just one character
 #define REPRESENTATION_SINGLE     0x0
 // four next characters, according to direction
@@ -186,7 +194,7 @@ byte representation_galaxy[] = {
 	96, 98, 100, 102, 104, 106,
 
 	// shuttle, shuttle landed
-	10, 76,
+	10, 124,
 	// exit unlocked
 	8,
 	// exit lock
@@ -294,6 +302,7 @@ void fade_screen_to_black()
 		fade_to_black_one_step();
 	}
 }
+
 
 #define TEXT_OFFSET 19
 void fade_palette_to_level_colors()
@@ -640,6 +649,9 @@ void galaxy_get_action()
 
 	if (palette_can_be_modified)
 		fade_palette_to_level_colors();
+
+	if (unlocking_x != 0xFF)
+		show_unlocking_world();
 
 	// wait for joy fire release - because of e.g. test_quit() not to trigger it again
 	do {
@@ -1055,6 +1067,45 @@ void galaxy_draw_screen()
 
 	swap_video_buffer();
 }
+
+
+void show_unlocking_world()
+{
+	static byte previously_completed_levels = 0xFF;
+	byte unlocking_tile;
+	byte unlock_timer;
+	byte unlock_index;
+	byte unlock_sub;
+
+	if (previously_completed_levels == game_progress.completed_levels)
+		return;
+
+	previously_completed_levels = game_progress.completed_levels;
+
+	unlock_index = 0;
+	unlock_sub = 5;
+	MapGet(unlocking_x, unlocking_y, unlocking_tile);
+	for (unlock_timer = 30; unlock_timer != 0; unlock_timer-= unlock_sub)
+	{
+		wait_time(unlock_timer);
+		if (unlock_index%2 == 0)
+			unlocking_tile += DECODE_LOCKS_MIN;
+		else
+		{
+			unlocking_tile -= DECODE_LOCKS_MIN;
+			--unlock_sub;
+			if (unlock_sub == 0)
+				unlock_sub = 1;
+		}
+		MapSet(unlocking_x, unlocking_y, unlocking_tile);
+		galaxy_draw_screen();
+		++unlock_index;
+	}
+
+	// finish
+	unlocking_x = 0xFF;
+}
+
 
 void game_draw_screen()
 {

@@ -105,7 +105,7 @@ byte representation_galaxy[] = {
 	48, 49, 50, 51, 52, 53,
 
 	// shuttle  + shuttle landed 
-	5, 38,
+	5, 62,
 	// exit unlocked
 	4,
 	// exit lock

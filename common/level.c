@@ -1,6 +1,9 @@
 #include "headers.h"
 #include "extern.h"
 
+byte unlocking_x;
+byte unlocking_y;
+
 void load_level()
 {
 	load_level_data();
@@ -15,6 +18,7 @@ void load_level()
 
 void decode_galaxy()
 {
+	unlocking_x = 0xFF;
 	for (local_y = 0; local_y < MAP_SIZE_Y; ++local_y)
 	{
 		for (local_x = 0; local_x < MAP_SIZE_X; ++local_x)
@@ -40,11 +44,19 @@ void decode_galaxy()
 				// local_temp2 is number of required completed level to unlock
 				local_temp2 = 5 * local_temp1;
 
-				if (game_progress.completed_levels < local_temp2)
+				if (game_progress.completed_levels <= local_temp2)
 				{
-					// lock this world
-					local_temp1 += DECODE_LOCKS_MIN;
-					MapSet(local_x, local_y, local_temp1);
+					if (game_progress.completed_levels == local_temp2)
+					{
+						unlocking_x = local_x;
+						unlocking_y = local_y;
+					}
+					else
+					{
+						// lock this world
+						local_temp1 += DECODE_LOCKS_MIN;
+						MapSet(local_x, local_y, local_temp1);
+					}
 				}
 			}
 			else if (local_type == DECODE_EXIT_UNLOCKED)
