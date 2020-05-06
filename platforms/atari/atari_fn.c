@@ -58,6 +58,7 @@ bool undo_redo_counter=0;
 byte joy_status;
 byte video_buffer_number = 0;
 byte draw_counter = 0;
+byte previously_completed_levels = 0xFF;
 
 #define SetChar(x,y,a) *(video_lookup[(y)]+(x))=(a);
 #define GetChar(x,y) *(video_lookup[(y)]+(x))
@@ -460,7 +461,12 @@ bool load_game_progress()
 		close(file_progress_pointer);
 		post_disk_io();
 		if (read_bytes == sizeof(game_progress))
+		{
+			// skip unlocking animation if game has been loaded
+			if (game_progress.completed_levels!=0)
+				previously_completed_levels = game_progress.completed_levels;
 			return true;
+		}
 		else
 			return false;
 	}
@@ -1071,7 +1077,6 @@ void galaxy_draw_screen()
 
 void show_unlocking_world()
 {
-	static byte previously_completed_levels = 0xFF;
 	byte unlocking_tile;
 	byte unlock_timer;
 	byte unlock_index;

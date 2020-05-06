@@ -3,7 +3,7 @@
 //       this way we could lower memory needed for undo but may increase CPU requirement to store DIR_UNDO whenever object data is modified.
 //       Often only 1 characteristic (x,y,type...) of object is modified per turn.
 // TODO: Separate Atari platform specific things in Editor to prepare it to be multi-platform
-// TODO: Make initial build for other CC65 platform using CONIO?
+// TODO: Make initial build for other CC65 platform (using CONIO)?
 // TODO: In rules.c allow to have two texts standing on the same place as like with AND (BOX And BANG Is TELE)
 //  How to do it...?
 //  IDEA: Mark on helper map MULTIPLE_NOUN or MULTIPLE_PROP and parse this one differently (reading from all objects on this cell)
