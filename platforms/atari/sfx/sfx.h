@@ -3,7 +3,7 @@
 
 #define SFX_STEREOMODE 0x0000
 #define SFX_PLAYER 0x8400
-#define SFX_MODUL 0x8800
+#define SFX_MODUL 0x8770
 #define SFX_SFX_CODE 0xAA50
 #define SFX_TRACKS 0x0004
 #define SFX_FEAT_SFX 0x0001

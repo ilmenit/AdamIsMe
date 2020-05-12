@@ -14,7 +14,7 @@ Source: sfx.a65
     12 					icl "addresses.a65"			;include addresses
 Source: addresses.a65
      1 = 8400			PLAYER    equ $8400
-     2 = 8800			MODUL     equ $8800
+     2 = 8770			MODUL     equ $8770
      3 = AA50			SFX_CODE  equ $AA50
     13 					icl "rmtplayr.a65"			;include RMT player routine
 Source: rmtplayr.a65
@@ -59,7 +59,7 @@ Source: rmt_feat.a65
      4 = 0001			FEAT_GLOBALVOLUMEFADE	equ 1		;RMTGLOBALVOLUMEFADE variable
      5 = 0000			FEAT_NOSTARTINGSONGLINE	equ 0
      6 = 0001			FEAT_INSTRSPEED		equ 1
-     7 = 0000			FEAT_CONSTANTSPEED		equ 0		;(27 times)
+     7 = 0000			FEAT_CONSTANTSPEED		equ 0		;(30 times)
      8 = 0001			FEAT_COMMAND1		equ 1		;(199 times)
      9 = 0001			FEAT_COMMAND2		equ 1		;(26 times)
     10 = 0000			FEAT_COMMAND3		equ 0		;(0 times)
@@ -87,10 +87,10 @@ Source: rmt_feat.a65
     32 = 0000			FEAT_VOLUMEONLYG3R		equ 0		;(0 times)
     33 = 0000			FEAT_TABLETYPE		equ 0		;(0 times)
     34 = 0000			FEAT_TABLEMODE		equ 0		;(0 times)
-    35 = 0001			FEAT_TABLEGO		equ 1		;(4 times)
+    35 = 0001			FEAT_TABLEGO		equ 1		;(5 times)
     36 = 0000			FEAT_AUDCTLMANUALSET		equ 0		;(0 times)
-    37 = 0001			FEAT_VOLUMEMIN		equ 1		;(5 times)
-    38 = 0001			FEAT_EFFECTVIBRATO		equ 1		;(6 times)
+    37 = 0001			FEAT_VOLUMEMIN		equ 1		;(6 times)
+    38 = 0001			FEAT_EFFECTVIBRATO		equ 1		;(7 times)
     39 = 0001			FEAT_EFFECTFSHIFT		equ 1		;(1 times)
     40 				;* --------END--------
     35 				;*
@@ -1418,12 +1418,12 @@ Source: rmt_feat.a65
     14 				;
     15 				;
     16 					opt h-						;RMT module is standard Atari binary file already
-    17 876D FF FF 00 88 47 AA + 	ins "sfx.rmt"				;include music RMT module
+    17 876D FF FF 70 87 DC A9 + 	ins "sfx.rmt"				;include music RMT module
     18 					opt h+
     19 				;
     20 				;
     21 				;
-    22 A9BB				org SFX_CODE 
+    22 A9E0				org SFX_CODE 
     23 					
     24 AA50			new_init                        ; Set VBI address depending on the NTSC or PAL	
     25 AA50-AAEE> 78			sei
@@ -1502,8 +1502,8 @@ Source: rmt_feat.a65
     98 AACD AD E7 AA			lda track_to_play
     99 AAD0 30 0C			bmi not_setting_track	    ; if $ff then we are not setting a track
    100 					
-   101 AAD2 A2 00			ldx #<MODUL					;low byte of RMT module to X reg
-   102 AAD4 A0 88			ldy #>MODUL					;hi byte of RMT module to Y reg
+   101 AAD2 A2 70			ldx #<MODUL					;low byte of RMT module to X reg
+   102 AAD4 A0 87			ldy #>MODUL					;hi byte of RMT module to Y reg
    103 AAD6 20 00 84			jsr RASTERMUSICTRACKER		;Init
    104 					
    105 AAD9 A9 FF			lda #$ff

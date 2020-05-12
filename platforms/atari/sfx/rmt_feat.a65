@@ -4,7 +4,7 @@ FEAT_SFX		equ 1
 FEAT_GLOBALVOLUMEFADE	equ 1		;RMTGLOBALVOLUMEFADE variable
 FEAT_NOSTARTINGSONGLINE	equ 0
 FEAT_INSTRSPEED		equ 1
-FEAT_CONSTANTSPEED		equ 0		;(27 times)
+FEAT_CONSTANTSPEED		equ 0		;(30 times)
 FEAT_COMMAND1		equ 1		;(199 times)
 FEAT_COMMAND2		equ 1		;(26 times)
 FEAT_COMMAND3		equ 0		;(0 times)
@@ -32,9 +32,9 @@ FEAT_VOLUMEONLYG2R		equ 0		;(0 times)
 FEAT_VOLUMEONLYG3R		equ 0		;(0 times)
 FEAT_TABLETYPE		equ 0		;(0 times)
 FEAT_TABLEMODE		equ 0		;(0 times)
-FEAT_TABLEGO		equ 1		;(4 times)
+FEAT_TABLEGO		equ 1		;(5 times)
 FEAT_AUDCTLMANUALSET		equ 0		;(0 times)
-FEAT_VOLUMEMIN		equ 1		;(5 times)
-FEAT_EFFECTVIBRATO		equ 1		;(6 times)
+FEAT_VOLUMEMIN		equ 1		;(6 times)
+FEAT_EFFECTVIBRATO		equ 1		;(7 times)
 FEAT_EFFECTFSHIFT		equ 1		;(1 times)
 ;* --------END--------

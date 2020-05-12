@@ -19,11 +19,11 @@
 
 #if EDITOR_ATARI || PLATFORM_ATARI
 struct atari_tiles_info_def atari_tiles_info[WORLDS_MAX + 1];
-FILE *atari_tiles_info_file_pointer;
+FILE* atari_tiles_info_file_pointer;
 #endif
 
 //////////////////////////////////////////////////////
-FILE *level_set_file_pointer;
+FILE* level_set_file_pointer;
 const char *level_set_name;
 
 // just one character

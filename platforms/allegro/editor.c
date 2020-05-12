@@ -1,4 +1,5 @@
-// FIX SAVE AS
+// TODO:
+// improve how saving levels and data work - it was added incrementally to the code without redoing from scratch and now is really ugly
 
 #include "../../common/platform.h"
 #include "../../common/extern.h"
@@ -88,6 +89,14 @@ void test_level_click_handler(ui_button *button)
 	editor_active = true;
 }
 
+void save_atari_tiles()
+{
+	// save Atari Tiles information
+	fseek(atari_tiles_info_file_pointer, 0, SEEK_SET);
+	fwrite(atari_tiles_info, sizeof(atari_tiles_info), 1, atari_tiles_info_file_pointer);
+	fflush(atari_tiles_info_file_pointer);
+}
+
 void save_level(byte level_no)
 {
 	long offset;
@@ -97,9 +106,7 @@ void save_level(byte level_no)
 	fwrite(map, sizeof(map), 1, level_set_file_pointer);
 	fflush(level_set_file_pointer);
 
-	// save Atari Tiles information
-	fseek(atari_tiles_info_file_pointer, 0, SEEK_SET);
-	fwrite(atari_tiles_info, sizeof(atari_tiles_info), 1, atari_tiles_info_file_pointer);
+	save_atari_tiles();
 }
 
 void create_level_set()
@@ -165,6 +172,7 @@ void save_level_set_as_click_handler(ui_button *button)
 		fclose(new_fp);
 		al_destroy_native_file_dialog(file_chooser);
 		show_error("Cannot write to file!");
+		free(buffer);
 		return;
 	}
 	fflush(new_fp);
