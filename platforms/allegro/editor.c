@@ -1,6 +1,3 @@
-// TODO:
-// improve how saving levels and data work - it was added incrementally to the code without redoing from scratch and now is really ugly
-
 #include "../../common/platform.h"
 #include "../../common/extern.h"
 #include <stdio.h>

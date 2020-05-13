@@ -46,8 +46,9 @@ $D800-$E400 - undo data when game is running without extended memory
 
 
 #define FILE_OPEN_NONE (-1)
-#define FILE_OPEN_LEVEL 1
-#define FILE_OPEN_PROGRESS 2
+#define FILE_OPEN_LEVEL 0
+#define FILE_OPEN_PROGRESS_WRITE 1
+#define FILE_OPEN_PROGRESS_READ 2
 #define FILE_OPEN_FONT 3
 #define FILE_OPEN_INVERSE 4
 #define FILE_OPEN_TILE_INFO 5
@@ -374,8 +375,11 @@ void open_file_if_needed(byte to_open)
 	case FILE_OPEN_LEVEL:
 		file_pointer = open(level_file_name, O_RDONLY);
 		break;
-	case FILE_OPEN_PROGRESS:
-		file_pointer = open(progress_file_name, O_RDWR);
+	case FILE_OPEN_PROGRESS_READ:
+		file_pointer = open(progress_file_name, O_RDONLY);
+		break;
+	case FILE_OPEN_PROGRESS_WRITE:
+		file_pointer = open(progress_file_name, O_WRONLY);
 		break;
 	case FILE_OPEN_FONT:
 		file_pointer = open(font_file_name, O_RDONLY);
@@ -489,7 +493,7 @@ bool load_game_progress()
 
 	progress_loaded = false;
 	pre_disk_io();
-	open_file_if_needed(FILE_OPEN_PROGRESS);
+	open_file_if_needed(FILE_OPEN_PROGRESS_READ);
 	if (file_pointer != -1)
 	{
 		read_bytes = read(file_pointer, &game_progress, sizeof(game_progress));
@@ -510,7 +514,7 @@ bool load_game_progress()
 void save_game_progress()
 {
 	pre_disk_io();
-	open_file_if_needed(FILE_OPEN_PROGRESS);
+	open_file_if_needed(FILE_OPEN_PROGRESS_WRITE);
 	write(file_pointer, &game_progress, sizeof(game_progress));
 
 	// seems that for some reason write is buffered and there is no flush procedure to call
