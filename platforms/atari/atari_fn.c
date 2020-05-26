@@ -394,13 +394,35 @@ void open_file_if_needed(byte to_open)
 	file_opened = to_open;
 }
 
-void read_level_from_disk(byte level_id, byte *destination)
+void move_file_pointer_to_level_offset(byte level_id, byte* destination)
 {
 	off_t offset;
-	open_file_if_needed(FILE_OPEN_LEVEL);
 	offset = sizeof(struct level_set_header_def);
-	offset += (off_t)level_id * ((off_t) sizeof(map));
-	lseek(file_pointer, offset, SEEK_SET);
+	offset += (off_t)level_id * ((off_t)sizeof(map));
+	open_file_if_needed(FILE_OPEN_LEVEL);
+	if (lseek(file_pointer, offset, SEEK_SET) == -1)
+	{
+		// this is for cartridge. FoxDos on which J.Husak based cart DOS does not support lseek... but reading is fast
+		// so we don't need to split levels file into multiple files and instead of seek we can just read until open
+
+		// move file pointer to start
+		close(file_pointer);
+		file_opened = -1;
+		open_file_if_needed(FILE_OPEN_LEVEL);
+
+		// read until offset
+		while (offset >= sizeof(map))
+		{
+			read(file_pointer, destination, sizeof(map));
+			offset -= sizeof(map);
+		}
+		read(file_pointer, destination, offset);
+	}
+}
+
+void read_level_from_disk(byte *destination)
+{
+	// read actual level data
 	read(file_pointer, destination, sizeof(map));
 }
 
@@ -447,8 +469,9 @@ void load_level_data()
 		}
 		if (galaxy_cached==false)
 		{
-			pre_disk_io(); 
-			read_level_from_disk(LEVEL_GALAXY, galaxy_level_cache);
+			pre_disk_io();
+			move_file_pointer_to_level_offset(LEVEL_GALAXY, galaxy_level_cache);
+			read_level_from_disk(galaxy_level_cache);
 			read_font_tileset(galaxy_font_address, galaxy_inverse_cache);
 			galaxy_cached = true;
 		}
@@ -463,9 +486,10 @@ void load_level_data()
 		{
 			local_temp1 = game_progress.landed_on_world_number*LEVELS_PER_WORLD;
 			pre_disk_io();
+			move_file_pointer_to_level_offset(local_temp1, world_level_cache[0]);
 			for (local_index = 0; local_index < LEVELS_PER_WORLD; ++local_index)
 			{
-				read_level_from_disk(local_temp1 + local_index, world_level_cache[local_index]);
+				read_level_from_disk(world_level_cache[local_index]);
 			}
 			loaded_world_cache = game_progress.landed_on_world_number;
 		}
@@ -1218,7 +1242,7 @@ void print_error(char *s)
 }
 #endif
 
-void open_and_test_file_io()
+void read_tiles_info()
 {
 	// read "levels.atl" information about tiles and colors of worlds
 	open_file_if_needed(FILE_OPEN_TILE_INFO);
@@ -1235,9 +1259,11 @@ void deinit_platform()
 	fade_screen_to_black();
 	wait_time(50);
 	audio_music(MUSIC_DISABLED);
+	joy_uninstall();
 	pre_disk_io();
 	deinit_sfx();
 }
+
 
 void init_platform()
 {
@@ -1246,7 +1272,7 @@ void init_platform()
 	pre_disk_io(); // disable Antic and NMIEN
 
 	// read open file pointer
-	open_and_test_file_io();
+	read_tiles_info();
 	memory_handler_init();
 
 	// Set keyboard repeat speed
