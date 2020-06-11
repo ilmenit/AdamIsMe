@@ -20,14 +20,15 @@
 ;*									;1 => compile RMTplayer for 8 tracks stereo
 ;*									;2 => compile RMTplayer for 4 tracks stereo L1 R2 R3 L4
 ;*									;3 => compile RMTplayer for 4 tracks stereo L1 L2 R3 R4
+									;4 => compile RMTplayer for 4 tracks stereo L1 R1 L2 R2 L3 R3 L4 R4 without delay
 ;*
 	IFT STEREOMODE==1
 TRACKS		equ 8
 	ELS
 TRACKS		equ 4
 	EIF
+	
 ;*
-
 ;*
 ;* RMT FEATures definitions file
 ;* For optimizations of RMT player routine to concrete RMT modul only!
@@ -1304,6 +1305,92 @@ v_audctl equ *-1
 	sta $d200+6
 	stx $d201+6
 	sty $d208
+
+
+	ELI STEREOMODE==5		;* L1 L2 L3 L4 R1 R2 R3 R4 with delay
+
+dtrackn_audf0	lda #0
+				sta $d210
+dtrackn_audf1	lda #0
+				sta $d210+2
+dtrackn_audf2	lda #0
+				sta $d210+4
+dtrackn_audf3	lda #0
+				sta $d210+6
+
+dtrackn_audc0	lda #0
+				sta $d211
+dtrackn_audc1	lda #0
+				sta $d211+2
+dtrackn_audc2	lda #0
+				sta $d211+4
+dtrackn_audc3	lda #0
+				sta $d211+6
+
+vp1	ldy #0
+	sty $d218
+
+
+	ldy #$ff
+v_audctl equ *-1
+	lda trackn_audf+0
+	ldx trackn_audc+0
+	sta $d200
+	sta dtrackn_audf0+1
+	stx $d201
+	stx dtrackn_audc0+1
+	lda trackn_audf+1
+	ldx trackn_audc+1
+	sta $d200+2
+	stx $d201+2
+	sta dtrackn_audf1+1
+	stx dtrackn_audc1+1
+	lda trackn_audf+2
+	ldx trackn_audc+2
+	sta $d200+4
+	stx $d201+4
+	sta dtrackn_audf2+1
+	stx dtrackn_audc2+1
+	lda trackn_audf+3
+	ldx trackn_audc+3
+	sta $d200+6
+	stx $d201+6
+	sta dtrackn_audf3+1
+	stx dtrackn_audc3+1
+	sty $d208	
+	sty vp1+1
+
+
+	ELI STEREOMODE==4		;* L1 L2 L3 L4 R1 R2 R3 R4
+	ldy #$ff
+v_audctl equ *-1
+	lda trackn_audf+0
+	ldx trackn_audc+0
+	sta $d200
+	sta $d210
+	stx $d201
+	stx $d211
+	lda trackn_audf+1
+	ldx trackn_audc+1
+	sta $d200+2
+	stx $d201+2
+	sta $d210+2
+	stx $d211+2
+	lda trackn_audf+2
+	ldx trackn_audc+2
+	sta $d200+4
+	stx $d201+4
+	sta $d210+4
+	stx $d211+4
+	lda trackn_audf+3
+	ldx trackn_audc+3
+	sta $d200+6
+	stx $d201+6
+	sta $d210+6
+	stx $d211+6
+	sty $d208	
+	sty $d218
+
 	ELI STEREOMODE==2		;* L1 R2 R3 L4
 	ldy #$ff
 v_audctl equ *-1

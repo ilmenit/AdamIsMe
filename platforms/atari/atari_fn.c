@@ -281,6 +281,39 @@ void post_disk_io()
 	continue_music();
 }
 
+void set_timer(byte timer_value)
+{
+	MY_POKE(SFX_VBI_COUNTER, timer_value);
+}
+
+// music must be playing at this time
+void wait_for_timer()
+{
+	while (MY_PEEK(SFX_VBI_COUNTER))
+	{
+		asm("nop");
+	}
+}
+
+void wait_time(byte t)
+{
+	set_timer(t);
+	wait_for_timer();
+}
+
+void wait_for_fire()
+{
+	do
+	{
+		wait_time(1);
+	} while (JOY_BTN_1(joy_status) == false);
+	do
+	{
+		wait_time(1);
+	} while (JOY_BTN_1(joy_status));
+}
+
+
 void fade_to_black_one_step()
 {
 	HIDE_UNDO_ICON();
@@ -297,8 +330,8 @@ void fade_to_black_one_step()
 		else
 			*system_colors[local_index] = 0;
 	}
-	//wait_time(1); - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
-	wait_for_vblank();
+	wait_time(1); // - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
+	//wait_for_vblank();
 }
 
 void fade_screen_to_black()
@@ -343,7 +376,10 @@ void fade_palette_to_level_colors()
 			}
 		}
 		if (palette_can_be_modified)
-			wait_for_vblank();
+		{
+			wait_time(1); // - we wait for VBLANK because our timer can be disabled (it's in RMT playing procedure)
+			//wait_for_vblank();
+		}
 	}
 	for (local_index = 0; local_index < COLORS_MAX; ++local_index)
 		*system_colors[local_index] = atari_tiles_info[local_temp1].world_colors[local_index];
@@ -545,38 +581,6 @@ void save_game_progress()
 	// therefore we need to close and reopen the write file - property of BeWe DOS or general one?
 	close(file_pointer);
 	file_opened = -1;
-}
-
-void set_timer(byte timer_value)
-{
-	MY_POKE(SFX_VBI_COUNTER, timer_value);
-}
-
-// music must be playing at this time
-void wait_for_timer()
-{
-	while (MY_PEEK(SFX_VBI_COUNTER))
-	{
-		asm("nop");
-	}
-}
-
-void wait_time(byte t)
-{
-	set_timer(t);
-	wait_for_timer();
-}
-
-void wait_for_fire()
-{
-	do
-	{
-		wait_time(1);
-	} while (JOY_BTN_1(joy_status)==false);
-	do
-	{
-		wait_time(1);
-	} while (JOY_BTN_1(joy_status));
 }
 
 void swap_video_buffer()
