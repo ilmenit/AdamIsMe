@@ -1266,6 +1266,7 @@ void deinit_platform()
 	joy_uninstall();
 	pre_disk_io();
 	deinit_sfx();
+	ANTIC.nmien = NMIEN_VBI;
 }
 
 
