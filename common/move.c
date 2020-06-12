@@ -327,7 +327,6 @@ byte magnet_direction[MAX_OBJECTS];
 
 void preprocess_magnets()
 {
-	magnets_end = 0;
 	for (local_index = 0; local_index < last_obj_index; ++local_index)
 	{
 		local_temp1 = objects.type[local_index];
@@ -508,6 +507,7 @@ void perform_move()
 
 void handle_move()
 {
+	magnets_end = 0;
 	if (rule_exists[PROP_MAGNET] && rule_exists[PROP_IRON])
 		preprocess_magnets();
 
