@@ -194,6 +194,7 @@
     <None Include="build_atr\STARTUP-no-intro.BAT" />
     <None Include="build_atr\STARTUP-with-intro.BAT" />
     <None Include="build_atr\XBW130.DOS" />
+    <None Include="level_set\levels.aim" />
     <None Include="level_set\levels.atl" />
     <None Include="level_set\levels.riu" />
     <None Include="packages.config" />
