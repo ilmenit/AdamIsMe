@@ -1103,18 +1103,29 @@ void galaxy_draw_screen()
 		}
 	}
 	
-	if (game_progress.completed_levels > 0)
+	if (game_progress.completed_levels < LEVELS_TO_WIN)
 	{
 		// draw number of completed levels
-		local_temp1 = (game_progress.completed_levels / 10) * 2; // *2 because 2 chars per tile
-		local_x = MAP_SIZE_X - 2;
-		local_y = 0;
-		draw_tile(local_temp1 + 12 + 128); // 12 is 0
-		local_temp1 = (game_progress.completed_levels % 10) * 2;
-		++local_x;
-		draw_tile(local_temp1 + 12 + 128);
+		local_temp1 = LEVELS_TO_WIN - game_progress.completed_levels;
+		local_temp2 = local_temp1;
+		local_temp1 = (local_temp1 / 10) * 2; // *2 because 2 chars per tile
+		local_temp1 += 128;
+		local_temp2 = (local_temp2 % 10) * 2;
+		local_temp2 += 128;
 	}
-	
+	else
+	{
+		local_temp1 = game_progress.completed_levels - LEVELS_TO_WIN;
+		local_temp2 = local_temp1;
+		local_temp1 = (local_temp1 / 10) * 2; // *2 because 2 chars per tile
+		local_temp2 = (local_temp2 % 10) * 2;
+	}
+	// draw number of completed levels
+	local_x = MAP_SIZE_X - 2;
+	local_y = 0;
+	draw_tile(local_temp1 + 12); // 12 is 0
+	++local_x;
+	draw_tile(local_temp2 + 12);	
 
 	// draw adam or shuttle
 	local_x = game_progress.galaxy_x;

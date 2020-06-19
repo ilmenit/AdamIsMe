@@ -61,7 +61,7 @@ void decode_galaxy()
 			}
 			else if (local_type == DECODE_EXIT_UNLOCKED)
 			{
-				if (game_progress.completed_levels < (WORLDS_MAX * LEVELS_PER_WORLD))
+				if (game_progress.completed_levels < (LEVELS_TO_WIN))
 				{
 					MapSet(local_x, local_y, DECODE_EXIT_LOCK);
 				}

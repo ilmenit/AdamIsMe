@@ -45,6 +45,10 @@
 
 #define WORLDS_MAX 8
 #define LEVELS_PER_WORLD 8
+
+// #define LEVELS_TO_WIN (WORLDS_MAX*LEVELS_PER_WORLD)
+#define LEVELS_TO_WIN 40
+
 // +1 because the last one is Galaxy Map
 #define LEVELS_MAX ( (WORLDS_MAX*LEVELS_PER_WORLD) + 1)
 #define LEVEL_GALAXY (LEVELS_MAX - 1)

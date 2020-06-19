@@ -293,7 +293,7 @@ void game_loop()
 	}
 }
 
-int main(void)
+void main(void)
 {
 	init_platform();
 
@@ -311,5 +311,4 @@ int main(void)
 	game_loop();
 #endif
 	deinit_platform();
-	return EXIT_SUCCESS;
 }
