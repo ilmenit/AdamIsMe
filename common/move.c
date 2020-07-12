@@ -1,13 +1,12 @@
 /*
  Oh boy, making this one was HARD to make it both efficient and working as expected :)
+ - The code is hardly readable due to heavy optimizations (it's the most time critical part in the game engine)
  - Open/Shut has higher priority than STOP
  - Difference from BabaIsYou - Open/Shut is evaluated after move, therefore pushed objects need to wait to enter cleaned space
  - Difference from BabaIsYou - Push has higher priority than Open/Shut, therefore until object can be pushed, it won't open/close
  - Magnets makes IRON objects moving, and moving is used in the apply_force, so magnets have magnet_preprocess. 
    They work through STOP (not like in Atari Robbo but like in real-life), because STOP property is done in other preprocess...
 */
-// TODO: 
-// 1. Fix magnets - not to be pushed when iron is moving towards it?
 #include "extern.h"
 
 #define PREPROCESS_NONE		0x0
@@ -475,7 +474,7 @@ void move_ok_ones()
 				// we change direction of moving when hitting STOP, except YOU, because it looks strange
 				ObjPropGetByIndex(lookup_index, preprocess_type, array_value);
 				ObjPropGetByIndex(lookup_index, PROP_YOU, prop1);
-				if (array_value && move_direction == (objects.direction[local_index] & DIR_MASK) && prop1 == false)
+				if (array_value && move_direction == (objects.direction[local_index] & (DIR_MASK | DIR_CHANGED) ) && prop1 == false)
 				{
 					array_value = reverted_direction_lookup[objects.direction[local_index] & DIR_MASK] | DIR_CHANGED;
 					objects.direction[local_index] = array_value;
