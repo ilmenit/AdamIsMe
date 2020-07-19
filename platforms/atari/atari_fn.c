@@ -845,6 +845,7 @@ bool perform_undo()
 		}
 
 		init_level();
+		helpers.you_move_at_least_once = true; // to prevent quiting level on fire+up
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
 		wait_for_timer();
@@ -873,6 +874,7 @@ void perform_redo()
 		}
 
 		init_level();
+		helpers.you_move_at_least_once = true; // to prevent quiting level on fire+up
 		set_gray_palette();
 		audio_sfx(SFX_CLICK);
 		wait_for_timer();
