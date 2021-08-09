@@ -851,6 +851,8 @@ void init_editor()
 	ui_button *button;
 
 	font_small = al_load_ttf_font("font/MapMaker.ttf", 18, 0);
+	if (font_small==NULL)
+		show_error("Cannot load font/MapMaker.ttf");
 
 	//////// SET-UP GUI BUTTONS
 

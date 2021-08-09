@@ -691,6 +691,8 @@ void init_platform()
 
 	// load assets
 	font = al_load_ttf_font("font/MapMaker.ttf", 22, 0);
+	if (font == NULL)
+		show_error("Cannot load font/MapMaker.ttf");
 
 	char filename[50];
 	for (int i = 0; i < TILESET_MAX; ++i)
