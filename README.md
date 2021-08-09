@@ -1,4 +1,4 @@
-# Adam Is Me - source code and Editor
+# Adam Is Me - game source code and the Editor
 ## About
 This repository contains source code of the game that can be compiled for Atari 8bit platform and into Editor (currently for Windows platform). The source code is written in a portable C therefore making port of the game to other platforms (including 8bit or 16bit) should be not that hard.  
 ![Game](https://aim.atariscene.pl/images/s09.png)
